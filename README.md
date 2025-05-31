@@ -256,6 +256,11 @@ Once you have the server running with SSE transport, you can connect to it using
 >
 > **Note for Docker users**: Use `host.docker.internal` instead of `localhost` if your client is running in a different container. This will apply if you are using this MCP server within n8n!
 
+> **Note for Claude Code users**: 
+```
+claude mcp add-json crawl4ai-rag '{"type":"http","url":"http://localhost:8051/sse"}' --scope user
+```
+
 ### Stdio Configuration
 
 Add this server to your MCP configuration for Claude Desktop, Windsurf, or any other MCP client:
