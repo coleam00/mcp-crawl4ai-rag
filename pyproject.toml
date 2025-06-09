@@ -1,3 +1,7 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "crawl4ai-mcp"
 version = "0.1.0"
@@ -11,4 +15,45 @@ dependencies = [
     "openai==1.71.0",
     "dotenv==0.9.9",
     "sentence-transformers>=4.1.0",
+    "pytest>=8.3.5",
+    "pytest-asyncio>=1.0.0",
+    "pydantic-settings>=2.9.1",
 ]
+
+[project.scripts]
+crawl4ai-mcp = "crawl4ai_mcp.main:main"
+
+[dependency-groups]
+dev = [
+    "ipython>=9.3.0",
+    "mypy>=1.16.0",
+    "pytest-cov>=6.1.1",
+    "ruff>=0.11.13",
+    "types-requests>=2.32.0.20250602",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["src"]
+pythonpath = ["."]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "-v --tb=short"
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.hatch.build.targets.wheel]
+include = [
+    "src/**/*.py",
+    "src/**/*.sql",
+]
+
+[tool.hatch.build.targets.wheel.force-include]
+"src" = "crawl4ai_mcp"

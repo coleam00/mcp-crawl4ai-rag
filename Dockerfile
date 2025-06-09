@@ -18,4 +18,4 @@ RUN uv pip install --system -e . && \
 EXPOSE ${PORT}
 
 # Command to run the MCP server
-CMD ["python", "src/crawl4ai_mcp.py"]
+CMD ["crawl4ai-mcp"]
