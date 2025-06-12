@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "crawl4ai-mcp"
 version = "0.1.0"
@@ -12,3 +16,13 @@ dependencies = [
     "dotenv==0.9.9",
     "sentence-transformers>=4.1.0",
 ]
+
+[project.scripts]
+mcp-crawl4ai-rag = "crawl4ai_mcp:main"
+
+[tool.setuptools]
+packages = ["crawl4ai_mcp"]
+package-dir = {"" = "src"}
+
+[tool.setuptools.package-data]
+crawl4ai_mcp = ["*.py"]

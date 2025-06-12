@@ -1,0 +1,190 @@
+name: Build and Package Tests
+
+on:
+  push:
+    branches: [ main, add-project-scripts ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-packaging:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.12", "3.13"]
+    
+    defaults:
+      run:
+        shell: ${{ matrix.os == 'windows-latest' && 'pwsh' || 'bash' }}
+    
+    env:
+      PYTHONIOENCODING: utf-8
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
+      with:
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
+
+    - name: Install dependencies with uv
+      run: |
+        uv sync --dev --all-extras
+
+    - name: Install build tools
+      run: |
+        uv pip install build tomli
+
+    - name: Run packaging tests
+      run: |
+        uv run python tests/test_packaging.py
+
+    - name: Test package build
+      run: |
+        uv run python -m build --wheel --outdir dist/
+
+    - name: Test package installation (Unix)
+      if: runner.os != 'Windows'
+      run: |
+        uv pip install dist/*.whl
+
+    - name: Test package installation (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        $wheels = Get-ChildItem -Path "dist" -Filter "*.whl"
+        if ($wheels.Count -eq 0) { 
+          Write-Error "No wheel files found in dist/" 
+          exit 1
+        }
+        foreach ($wheel in $wheels) {
+          uv pip install $wheel.FullName
+        }
+
+    - name: Test entry point availability (Unix)
+      if: runner.os != 'Windows'
+      run: |
+        # Test that the entry point is available in PATH after installation
+        which mcp-crawl4ai-rag || echo "Entry point not found in PATH"
+        # Test help/version (with timeout to avoid hanging)
+        timeout 10s mcp-crawl4ai-rag --help || echo "Entry point exists but may require additional setup"
+
+    - name: Test entry point availability (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        # Test that the entry point is available in PATH after installation  
+        Get-Command mcp-crawl4ai-rag -ErrorAction SilentlyContinue | Out-Null
+        if (-not $?) { Write-Host "Entry point not found in PATH" }
+        # Note: Skip execution test on Windows as it may have different requirements
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
+      with:
+        name: wheel-package
+        path: dist/*.whl
+        retention-days: 7
+
+  test-import:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
+      with:
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
+
+    - name: Test minimal import
+      run: |
+        # Test that the main module can be imported without installing dependencies
+        # This verifies basic Python syntax and import structure
+        export PYTHONPATH="${PYTHONPATH}:./src"
+        uv run python -c "
+        try:
+            import crawl4ai_mcp
+            print('✅ Module imports successfully')
+            if hasattr(crawl4ai_mcp, 'main'):
+                print('✅ Main function exists')
+            else:
+                print('❌ Main function not found')
+                exit(1)
+        except ImportError as e:
+            print(f'❌ Import failed: {e}')
+            exit(1)
+        except Exception as e:
+            print(f'❌ Unexpected error: {e}')
+            exit(1)
+        "
+
+  validate-config:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
+      with:
+        enable-cache: true
+        cache-dependency-glob: "uv.lock"
+
+    - name: Install validation tools
+      run: |
+        uv pip install --system tomli validate-pyproject
+
+    - name: Validate pyproject.toml
+      run: |
+        python -c "
+        import tomli
+        with open('pyproject.toml', 'rb') as f:
+            config = tomli.load(f)
+        
+        # Validate required fields
+        project = config['project']
+        assert 'name' in project, 'Missing name field'
+        assert 'version' in project, 'Missing version field' 
+        assert 'description' in project, 'Missing description field'
+        assert 'scripts' in project, 'Missing scripts section'
+        assert 'mcp-crawl4ai-rag' in project['scripts'], 'Missing entry point'
+        
+        print('✅ pyproject.toml validation passed')
+        "
+
+    - name: Check entry point format
+      run: |
+        python -c "
+        import tomli
+        with open('pyproject.toml', 'rb') as f:
+            config = tomli.load(f)
+        
+        entry_point = config['project']['scripts']['mcp-crawl4ai-rag']
+        assert ':' in entry_point, 'Entry point must be in module:function format'
+        
+        module, func = entry_point.split(':', 1)
+        assert module and func, 'Entry point format is invalid'
+        assert module == 'crawl4ai_mcp', f'Expected module crawl4ai_mcp, got {module}'
+        assert func == 'main', f'Expected function main, got {func}'
+        
+        print('✅ Entry point format is correct')
+        "

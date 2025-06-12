@@ -24,7 +24,7 @@ import concurrent.futures
 
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig, CacheMode, MemoryAdaptiveDispatcher
 
-from utils import (
+from crawl4ai_mcp.utils import (
     get_supabase_client, 
     add_documents_to_supabase, 
     search_documents,

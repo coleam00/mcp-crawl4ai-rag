@@ -175,7 +175,7 @@ def add_documents_to_supabase(
 ) -> None:
     """
     Add documents to the Supabase crawled_pages table in batches.
-    Deletes existing records with the same URLs before inserting to prevent duplicates.
+    Deletes existing records with the same URLs before insertion to prevent duplicates.
     
     Args:
         client: Supabase client

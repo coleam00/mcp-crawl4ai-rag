@@ -227,6 +227,45 @@ The server will start and listen on the configured host and port.
 
 ## Integration with MCP Clients
 
+### uvx Configuration
+
+You can run the MCP server using `uvx` for easy installation and execution:
+
+```bash
+# Install and run directly with uvx
+uvx --from git+https://github.com/rsp2k/mcp-crawl4ai-rag.git src/crawl4ai_mcp.py
+```
+
+For MCP client configuration with uvx:
+
+```json
+{
+  "mcpServers": {
+    "crawl4ai-rag": {
+      "command": "uvx",
+      "args": ["--from", "git+https://github.com/rsp2k/mcp-crawl4ai-rag.git", "src/crawl4ai_mcp.py"],
+      "env": {
+        "TRANSPORT": "stdio",
+        "OPENAI_API_KEY": "your_openai_api_key",
+        "SUPABASE_URL": "your_supabase_url",
+        "SUPABASE_SERVICE_KEY": "your_supabase_service_key",
+        "MODEL_CHOICE": "gpt-4.1-nano",
+        "USE_CONTEXTUAL_EMBEDDINGS": "false",
+        "USE_HYBRID_SEARCH": "true",
+        "USE_AGENTIC_RAG": "false",
+        "USE_RERANKING": "true"
+      }
+    }
+  }
+}
+```
+
+The uvx approach is particularly useful for:
+- **Quick testing**: No need to clone the repository or manage dependencies
+- **CI/CD pipelines**: Easy integration in automated workflows  
+- **Distribution**: Share the MCP server without requiring users to install dependencies manually
+- **Version isolation**: Each execution gets a fresh environment
+
 ### SSE Configuration
 
 Once you have the server running with SSE transport, you can connect to it using this configuration:
