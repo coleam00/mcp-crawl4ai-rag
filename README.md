@@ -4,18 +4,22 @@
   <em>Web Crawling and RAG Capabilities for AI Agents and AI Coding Assistants</em>
 </p>
 
+
 A powerful implementation of the [Model Context Protocol (MCP)](https://modelcontextprotocol.io) integrated with [Crawl4AI](https://crawl4ai.com) and [Supabase](https://supabase.com/) for providing AI agents and AI coding assistants with advanced web crawling and RAG capabilities.
 
-With this MCP server, you can <b>scrape anything</b> and then <b>use that knowledge anywhere</b> for RAG.
+## Overview
+
+This MCP server provides tools that enable AI agents to crawl websites, store content in a vector database (Supabase), and perform RAG over the crawled content.
 
 The server includes several advanced RAG strategies that can be enabled to enhance retrieval quality:
+
 - **Contextual Embeddings** for enriched semantic understanding
 - **Hybrid Search** combining vector and keyword search
 - **Agentic RAG** for specialized code example extraction
 - **Reranking** for improved result relevance using cross-encoder models
 
 See the [Configuration section](#configuration) below for details on how to enable and configure these strategies.
-efev
+
 ## Features
 
 - **Smart URL Detection**: Automatically detects and handles different URL types (regular webpages, sitemaps, text files)
@@ -28,8 +32,9 @@ efev
 ## Tools
 
 The server provides essential web crawling and search tools:
-r
-### Core Tools (Always Available)fssss
+
+### Core Tools (Always Available)
+
 1. **`crawl_single_page`**: Quickly crawl a single web page and store its content in the vector database
 2. **`smart_crawl_url`**: Intelligently crawl a full website based on the type of URL provided (sitemap, llms-full.txt, or a regular webpage that needs to be crawled recursively)
 3. **`get_available_sources`**: Get a list of all available sources (domains) in the database
@@ -51,12 +56,14 @@ r
 ### Using Docker (Recommended)
 
 1. Clone this repository:
+
    ```bash
-   git clone https://github.com/coleam00/mcp-crawl4ai-rag.git
+   git clone https://github.com/veracityproducts/mcp-crawl4ai-rag.git
    cd mcp-crawl4ai-rag
    ```
 
 2. Build the Docker image:
+
    ```bash
    docker build -t mcp/crawl4ai-rag --build-arg PORT=8051 .
    ```
@@ -66,17 +73,20 @@ r
 ### Using uv directly (no Docker)
 
 1. Clone this repository:
+
    ```bash
-   git clone https://github.com/coleam00/mcp-crawl4ai-rag.git
+   git clone https://github.com/veracityproducts/mcp-crawl4ai-rag.git
    cd mcp-crawl4ai-rag
    ```
 
 2. Install uv if you don't have it:
+
    ```bash
    pip install uv
    ```
 
 3. Create and activate a virtual environment:
+
    ```bash
    uv venv
    .venv\Scripts\activate
@@ -84,6 +94,7 @@ r
    ```
 
 4. Install dependencies:
+
    ```bash
    uv pip install -e .
    crawl4ai-setup
@@ -152,6 +163,7 @@ The server supports both OpenAI and OpenRouter for LLM operations (contextual em
 The Crawl4AI RAG MCP server supports six powerful RAG strategies that can be enabled independently:
 
 #### 1. **USE_CONTEXTUAL_EMBEDDINGS**
+
 When enabled, this strategy enhances each chunk's embedding with additional context from the entire document. The system passes both the full document and the specific chunk to an LLM (configured via `MODEL_CHOICE`) to generate enriched context that gets embedded alongside the chunk content.
 
 - **When to use**: Enable this when you need high-precision retrieval where context matters, such as technical documentation where terms might have different meanings in different sections.
@@ -159,6 +171,7 @@ When enabled, this strategy enhances each chunk's embedding with additional cont
 - **Cost**: Additional LLM API calls during indexing.
 
 #### 2. **USE_HYBRID_SEARCH**
+
 Combines traditional keyword search with semantic vector search to provide more comprehensive results. The system performs both searches in parallel and intelligently merges results, prioritizing documents that appear in both result sets.
 
 - **When to use**: Enable this when users might search using specific technical terms, function names, or when exact keyword matches are important alongside semantic understanding.
@@ -166,6 +179,7 @@ Combines traditional keyword search with semantic vector search to provide more 
 - **Cost**: No additional API costs, just computational overhead.
 
 #### 3. **USE_AGENTIC_RAG**
+
 Enables specialized code example extraction and storage. When crawling documentation, the system identifies code blocks (≥300 characters), extracts them with surrounding context, generates summaries, and stores them in a separate vector database table specifically designed for code search.
 
 - **When to use**: Essential for AI coding assistants that need to find specific code examples, implementation patterns, or usage examples from documentation.
@@ -174,6 +188,7 @@ Enables specialized code example extraction and storage. When crawling documenta
 - **Benefits**: Provides a dedicated `search_code_examples` tool that AI agents can use to find specific code implementations.
 
 #### 4. **USE_RERANKING**
+
 Applies cross-encoder reranking to search results after initial retrieval. Uses a lightweight cross-encoder model (`cross-encoder/ms-marco-MiniLM-L-6-v2`) to score each result against the original query, then reorders results by relevance.
 
 - **When to use**: Enable this when search precision is critical and you need the most relevant results at the top. Particularly useful for complex queries where semantic similarity alone might not capture query intent.
@@ -182,6 +197,7 @@ Applies cross-encoder reranking to search results after initial retrieval. Uses 
 - **Benefits**: Better result relevance, especially for complex queries. Works with both regular RAG search and code example search.
 
 #### 5. **USE_QUERY_EXPANSION**
+
 Automatically expands user queries with synonyms, related terms, and variations to improve retrieval recall. The system uses an LLM to generate expanded queries that capture different ways the same concept might be expressed in documentation.
 
 - **When to use**: Enable this when users might not know the exact terminology used in documentation, or when dealing with diverse documentation that uses different terms for similar concepts.
@@ -190,6 +206,7 @@ Automatically expands user queries with synonyms, related terms, and variations 
 - **Benefits**: Better coverage of relevant documents, especially helpful for beginners who might not know specific technical terms.
 
 #### 6. **USE_OVERLAPPING_CHUNKS**
+
 Creates document chunks with configurable overlap to preserve context at chunk boundaries. By default, uses 10% overlap between consecutive chunks, ensuring that information at chunk boundaries isn't lost during retrieval.
 
 - **When to use**: Enable this when dealing with documents where important information might span chunk boundaries, such as technical documentation with multi-paragraph explanations or code examples with surrounding context.
@@ -200,6 +217,7 @@ Creates document chunks with configurable overlap to preserve context at chunk b
 ### Recommended Configurations
 
 **For general documentation RAG:**
+
 ```
 USE_CONTEXTUAL_EMBEDDINGS=false
 USE_HYBRID_SEARCH=true
@@ -208,6 +226,7 @@ USE_RERANKING=true
 ```
 
 **For AI coding assistant with code examples:**
+
 ```
 USE_CONTEXTUAL_EMBEDDINGS=true
 USE_HYBRID_SEARCH=true
@@ -216,6 +235,7 @@ USE_RERANKING=true
 ```
 
 **For fast, basic RAG:**
+
 ```
 USE_CONTEXTUAL_EMBEDDINGS=false
 USE_HYBRID_SEARCH=true
@@ -257,14 +277,15 @@ Once you have the server running with SSE transport, you can connect to it using
 ```
 
 > **Note for Windsurf users**: Use `serverUrl` instead of `url` in your configuration:
+>
 > ```json
 > {
->   "mcpServers": {
->     "crawl4ai-rag": {
->       "transport": "sse",
->       "serverUrl": "http://localhost:8051/sse"
->     }
->   }
+> "mcpServers": {
+>  "crawl4ai-rag": {
+>    "transport": "sse",
+>    "serverUrl": "http://localhost:8051/sse"
+>  }
+> }
 > }
 > ```
 >
