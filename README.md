@@ -104,10 +104,14 @@ The server provides essential web crawling and search tools:
    # on Mac/Linux: source .venv/bin/activate
    ```
 
-4. Install dependencies:
+4. Install the package:
    ```bash
    uv pip install -e .
-   crawl4ai-setup
+   ```
+
+5. Initialize Playwright (for web crawling):
+   ```bash
+   uv run crawl4ai-setup
    ```
 
 5. Create a `.env` file based on the configuration section below
@@ -220,7 +224,7 @@ docker run --env-file .env -p 8051:8051 mcp/crawl4ai-rag
 ### Using Python
 
 ```bash
-uv run src/crawl4ai_mcp.py
+uv run crawl4ai-mcp
 ```
 
 The server will start and listen on the configured host and port.
@@ -269,8 +273,8 @@ Add this server to your MCP configuration for Claude Desktop, Windsurf, or any o
 {
   "mcpServers": {
     "crawl4ai-rag": {
-      "command": "python",
-      "args": ["path/to/crawl4ai-mcp/src/crawl4ai_mcp.py"],
+      "command": "uv",
+      "args": ["run", "crawl4ai-mcp"],
       "env": {
         "TRANSPORT": "stdio",
         "OPENAI_API_KEY": "your_openai_api_key",

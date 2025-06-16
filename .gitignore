@@ -2,3 +2,17 @@
 .venv
 __pycache__
 crawl4ai_mcp.egg-info
+
+.vscode
+
+supabase
+
+PRPs/code_reviews
+PRPs/ai_docs
+
+.mcp.json
+
+# Cache directories
+.mypy_cache
+.pytest_cache
+.ruff_cache
