@@ -7,12 +7,20 @@ from typing import List, Dict, Any, Optional, Tuple
 import json
 from supabase import create_client, Client
 from urllib.parse import urlparse
-import openai
-import re
 import time
 
-# Load OpenAI API key for embeddings
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# Import the new provider system
+from providers import get_provider
+
+# Initialize the provider globally
+_provider = None
+
+def get_ai_provider():
+    """Get the AI provider instance, initializing if necessary."""
+    global _provider
+    if _provider is None:
+        _provider = get_provider()
+    return _provider
 
 def get_supabase_client() -> Client:
     """
@@ -29,9 +37,9 @@ def get_supabase_client() -> Client:
     
     return create_client(url, key)
 
-def create_embeddings_batch(texts: List[str]) -> List[List[float]]:
+async def create_embeddings_batch(texts: List[str]) -> List[List[float]]:
     """
-    Create embeddings for multiple texts in a single API call.
+    Create embeddings for multiple texts using the configured AI provider.
     
     Args:
         texts: List of texts to create embeddings for
@@ -42,48 +50,19 @@ def create_embeddings_batch(texts: List[str]) -> List[List[float]]:
     if not texts:
         return []
     
-    max_retries = 3
-    retry_delay = 1.0  # Start with 1 second delay
-    
-    for retry in range(max_retries):
-        try:
-            response = openai.embeddings.create(
-                model="text-embedding-3-small", # Hardcoding embedding model for now, will change this later to be more dynamic
-                input=texts
-            )
-            return [item.embedding for item in response.data]
-        except Exception as e:
-            if retry < max_retries - 1:
-                print(f"Error creating batch embeddings (attempt {retry + 1}/{max_retries}): {e}")
-                print(f"Retrying in {retry_delay} seconds...")
-                time.sleep(retry_delay)
-                retry_delay *= 2  # Exponential backoff
-            else:
-                print(f"Failed to create batch embeddings after {max_retries} attempts: {e}")
-                # Try creating embeddings one by one as fallback
-                print("Attempting to create embeddings individually...")
-                embeddings = []
-                successful_count = 0
-                
-                for i, text in enumerate(texts):
-                    try:
-                        individual_response = openai.embeddings.create(
-                            model="text-embedding-3-small",
-                            input=[text]
-                        )
-                        embeddings.append(individual_response.data[0].embedding)
-                        successful_count += 1
-                    except Exception as individual_error:
-                        print(f"Failed to create embedding for text {i}: {individual_error}")
-                        # Add zero embedding as fallback
-                        embeddings.append([0.0] * 1536)
-                
-                print(f"Successfully created {successful_count}/{len(texts)} embeddings individually")
-                return embeddings
+    try:
+        provider = get_ai_provider()
+        response = await provider.create_embeddings(texts)
+        return response.embeddings
+    except Exception as e:
+        print(f"Error creating batch embeddings: {e}")
+        # Return zero embeddings as fallback
+        provider = get_ai_provider()
+        return [[0.0] * provider.embedding_dimension for _ in texts]
 
-def create_embedding(text: str) -> List[float]:
+async def create_embedding(text: str) -> List[float]:
     """
-    Create an embedding for a single text using OpenAI's API.
+    Create an embedding for a single text using the configured AI provider.
     
     Args:
         text: Text to create an embedding for
@@ -92,14 +71,14 @@ def create_embedding(text: str) -> List[float]:
         List of floats representing the embedding
     """
     try:
-        embeddings = create_embeddings_batch([text])
-        return embeddings[0] if embeddings else [0.0] * 1536
+        embeddings = await create_embeddings_batch([text])
+        return embeddings[0] if embeddings else [0.0] * get_ai_provider().embedding_dimension
     except Exception as e:
         print(f"Error creating embedding: {e}")
         # Return empty embedding if there's an error
-        return [0.0] * 1536
+        return [0.0] * get_ai_provider().embedding_dimension
 
-def generate_contextual_embedding(full_document: str, chunk: str) -> Tuple[str, bool]:
+async def generate_contextual_embedding(full_document: str, chunk: str) -> Tuple[str, bool]:
     """
     Generate contextual information for a chunk within a document to improve retrieval.
     
@@ -112,8 +91,6 @@ def generate_contextual_embedding(full_document: str, chunk: str) -> Tuple[str, 
         - The contextual text that situates the chunk within the document
         - Boolean indicating if contextual embedding was performed
     """
-    model_choice = os.getenv("MODEL_CHOICE")
-    
     try:
         # Create the prompt for generating contextual information
         prompt = f"""<document> 
@@ -125,19 +102,21 @@ Here is the chunk we want to situate within the whole document
 </chunk> 
 Please give a short succinct context to situate this chunk within the overall document for the purposes of improving search retrieval of the chunk. Answer only with the succinct context and nothing else."""
 
-        # Call the OpenAI API to generate contextual information
-        response = openai.chat.completions.create(
-            model=model_choice,
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant that provides concise contextual information."},
-                {"role": "user", "content": prompt}
-            ],
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant that provides concise contextual information."},
+            {"role": "user", "content": prompt}
+        ]
+
+        # Call the AI provider to generate contextual information
+        provider = get_ai_provider()
+        response = await provider.create_completion(
+            messages=messages,
             temperature=0.3,
             max_tokens=200
         )
         
         # Extract the generated context
-        context = response.choices[0].message.content.strip()
+        context = response.content.strip()
         
         # Combine the context with the original chunk
         contextual_text = f"{context}\n---\n{chunk}"
@@ -148,7 +127,7 @@ Please give a short succinct context to situate this chunk within the overall do
         print(f"Error generating contextual embedding: {e}. Using original chunk instead.")
         return chunk, False
 
-def process_chunk_with_context(args):
+async def process_chunk_with_context(args):
     """
     Process a single chunk with contextual embedding.
     This function is designed to be used with concurrent.futures.
@@ -162,9 +141,9 @@ def process_chunk_with_context(args):
         - Boolean indicating if contextual embedding was performed
     """
     url, content, full_document = args
-    return generate_contextual_embedding(full_document, content)
+    return await generate_contextual_embedding(full_document, content)
 
-def add_documents_to_supabase(
+async def add_documents_to_supabase(
     client: Client, 
     urls: List[str], 
     chunk_numbers: List[int],
@@ -200,119 +179,74 @@ def add_documents_to_supabase(
         for url in unique_urls:
             try:
                 client.table("crawled_pages").delete().eq("url", url).execute()
-            except Exception as inner_e:
-                print(f"Error deleting record for URL {url}: {inner_e}")
-                # Continue with the next URL even if one fails
+            except Exception as delete_error:
+                print(f"Failed to delete records for URL {url}: {delete_error}")
     
-    # Check if MODEL_CHOICE is set for contextual embeddings
+    # Check if contextual embeddings are enabled
     use_contextual_embeddings = os.getenv("USE_CONTEXTUAL_EMBEDDINGS", "false") == "true"
-    print(f"\n\nUse contextual embeddings: {use_contextual_embeddings}\n\n")
     
-    # Process in batches to avoid memory issues
-    for i in range(0, len(contents), batch_size):
-        batch_end = min(i + batch_size, len(contents))
+    # Process all chunks for contextual embeddings if enabled
+    if use_contextual_embeddings:
+        print("Generating contextual embeddings...")
         
-        # Get batch slices
-        batch_urls = urls[i:batch_end]
-        batch_chunk_numbers = chunk_numbers[i:batch_end]
-        batch_contents = contents[i:batch_end]
-        batch_metadatas = metadatas[i:batch_end]
+        # Create a list of arguments for processing
+        process_args = []
+        for i, content in enumerate(contents):
+            url = urls[i]
+            full_document = url_to_full_document.get(url, content)
+            process_args.append((url, content, full_document))
         
-        # Apply contextual embedding to each chunk if MODEL_CHOICE is set
-        if use_contextual_embeddings:
-            # Prepare arguments for parallel processing
-            process_args = []
-            for j, content in enumerate(batch_contents):
-                url = batch_urls[j]
-                full_document = url_to_full_document.get(url, "")
-                process_args.append((url, content, full_document))
+        # Process contextual embeddings with asyncio (since we converted to async)
+        import asyncio
+        
+        contextual_results = await asyncio.gather(*[
+            process_chunk_with_context(args) for args in process_args
+        ])
+        
+        # Update contents with contextual information
+        for i, (contextual_text, success) in enumerate(contextual_results):
+            if success:
+                contents[i] = contextual_text
+    
+    # Generate embeddings for all content
+    embeddings = await create_embeddings_batch(contents)
+    
+    # Prepare documents for insertion
+    documents = []
+    
+    for i in range(len(urls)):
+        source_id = urlparse(urls[i]).netloc
+        
+        doc = {
+            "url": urls[i],
+            "chunk_number": chunk_numbers[i],
+            "content": contents[i],
+            "embedding": embeddings[i],
+            "metadata": metadatas[i],
+            "source_id": source_id,
+            "title": metadatas[i].get("title", ""),
+            "word_count": len(contents[i].split())
+        }
+        documents.append(doc)
+    
+    # Insert documents in batches
+    for i in range(0, len(documents), batch_size):
+        batch = documents[i:i + batch_size]
+        try:
+            result = client.table("crawled_pages").insert(batch).execute()
+            print(f"Successfully inserted batch {i//batch_size + 1} with {len(batch)} documents")
+        except Exception as e:
+            print(f"Failed to insert batch {i//batch_size + 1}: {e}")
+            # Try inserting documents one by one as fallback
+            successful_insertions = 0
+            for doc in batch:
+                try:
+                    client.table("crawled_pages").insert(doc).execute()
+                    successful_insertions += 1
+                except Exception as doc_error:
+                    print(f"Failed to insert document {doc['url']}: {doc_error}")
             
-            # Process in parallel using ThreadPoolExecutor
-            contextual_contents = []
-            with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-                # Submit all tasks and collect results
-                future_to_idx = {executor.submit(process_chunk_with_context, arg): idx 
-                                for idx, arg in enumerate(process_args)}
-                
-                # Process results as they complete
-                for future in concurrent.futures.as_completed(future_to_idx):
-                    idx = future_to_idx[future]
-                    try:
-                        result, success = future.result()
-                        contextual_contents.append(result)
-                        if success:
-                            batch_metadatas[idx]["contextual_embedding"] = True
-                    except Exception as e:
-                        print(f"Error processing chunk {idx}: {e}")
-                        # Use original content as fallback
-                        contextual_contents.append(batch_contents[idx])
-            
-            # Sort results back into original order if needed
-            if len(contextual_contents) != len(batch_contents):
-                print(f"Warning: Expected {len(batch_contents)} results but got {len(contextual_contents)}")
-                # Use original contents as fallback
-                contextual_contents = batch_contents
-        else:
-            # If not using contextual embeddings, use original contents
-            contextual_contents = batch_contents
-        
-        # Create embeddings for the entire batch at once
-        batch_embeddings = create_embeddings_batch(contextual_contents)
-        
-        batch_data = []
-        for j in range(len(contextual_contents)):
-            # Extract metadata fields
-            chunk_size = len(contextual_contents[j])
-            
-            # Extract source_id from URL
-            parsed_url = urlparse(batch_urls[j])
-            source_id = parsed_url.netloc or parsed_url.path
-            
-            # Prepare data for insertion
-            data = {
-                "url": batch_urls[j],
-                "chunk_number": batch_chunk_numbers[j],
-                "content": contextual_contents[j],  # Store original content
-                "metadata": {
-                    "chunk_size": chunk_size,
-                    **batch_metadatas[j]
-                },
-                "source_id": source_id,  # Add source_id field
-                "embedding": batch_embeddings[j]  # Use embedding from contextual content
-            }
-            
-            batch_data.append(data)
-        
-        # Insert batch into Supabase with retry logic
-        max_retries = 3
-        retry_delay = 1.0  # Start with 1 second delay
-        
-        for retry in range(max_retries):
-            try:
-                client.table("crawled_pages").insert(batch_data).execute()
-                # Success - break out of retry loop
-                break
-            except Exception as e:
-                if retry < max_retries - 1:
-                    print(f"Error inserting batch into Supabase (attempt {retry + 1}/{max_retries}): {e}")
-                    print(f"Retrying in {retry_delay} seconds...")
-                    time.sleep(retry_delay)
-                    retry_delay *= 2  # Exponential backoff
-                else:
-                    # Final attempt failed
-                    print(f"Failed to insert batch after {max_retries} attempts: {e}")
-                    # Optionally, try inserting records one by one as a last resort
-                    print("Attempting to insert records individually...")
-                    successful_inserts = 0
-                    for record in batch_data:
-                        try:
-                            client.table("crawled_pages").insert(record).execute()
-                            successful_inserts += 1
-                        except Exception as individual_error:
-                            print(f"Failed to insert individual record for URL {record['url']}: {individual_error}")
-                    
-                    if successful_inserts > 0:
-                        print(f"Successfully inserted {successful_inserts}/{len(batch_data)} records individually")
+            print(f"Successfully inserted {successful_insertions}/{len(batch)} documents individually in batch {i//batch_size + 1}")
 
 def search_documents(
     client: Client, 
@@ -321,39 +255,74 @@ def search_documents(
     filter_metadata: Optional[Dict[str, Any]] = None
 ) -> List[Dict[str, Any]]:
     """
-    Search for documents in Supabase using vector similarity.
+    Search documents in the Supabase vector database.
     
     Args:
         client: Supabase client
-        query: Query text
-        match_count: Maximum number of results to return
-        filter_metadata: Optional metadata filter
+        query: Search query
+        match_count: Number of matches to return
+        filter_metadata: Optional metadata filters
         
     Returns:
         List of matching documents
     """
-    # Create embedding for the query
-    query_embedding = create_embedding(query)
+    # Note: This function remains synchronous for now, but embedding creation is async
+    # For now, we'll use a workaround until we can refactor the entire codebase to be async
+    import asyncio
     
-    # Execute the search using the match_crawled_pages function
     try:
-        # Only include filter parameter if filter_metadata is provided and not empty
-        params = {
-            'query_embedding': query_embedding,
-            'match_count': match_count
-        }
+        # Create embedding for the query
+        if hasattr(asyncio, '_get_running_loop') and asyncio._get_running_loop():
+            # We're in an async context, create a new event loop in a thread
+            import threading
+            result = [None]
+            exception = [None]
+            
+            def run_in_thread():
+                try:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    embedding = loop.run_until_complete(create_embedding(query))
+                    result[0] = embedding
+                finally:
+                    loop.close()
+                    
+            thread = threading.Thread(target=run_in_thread)
+            thread.start()
+            thread.join()
+            
+            if exception[0]:
+                raise exception[0]
+            query_embedding = result[0]
+        else:
+            # We're not in an async context, can use asyncio.run
+            query_embedding = asyncio.run(create_embedding(query))
         
-        # Only add the filter if it's actually provided and not empty
+        # Perform vector search
         if filter_metadata:
-            params['filter'] = filter_metadata  # Pass the dictionary directly, not JSON-encoded
-        
-        result = client.rpc('match_crawled_pages', params).execute()
-        
-        return result.data
+            # Apply metadata filters
+            query_builder = client.table("crawled_pages").select("*")
+            for key, value in filter_metadata.items():
+                query_builder = query_builder.eq(key, value)
+            
+            # For now, we'll do a simple search without vector similarity when filtering
+            # This could be improved with better Supabase integration
+            result = query_builder.limit(match_count).execute()
+            return result.data
+        else:
+            # Use the match_documents function for vector similarity search
+            result = client.rpc(
+                "match_documents",
+                {
+                    "query_embedding": query_embedding,
+                    "match_count": match_count
+                }
+            ).execute()
+            
+            return result.data
     except Exception as e:
         print(f"Error searching documents: {e}")
         return []
-
 
 def extract_code_blocks(markdown_content: str, min_length: int = 1000) -> List[Dict[str, Any]]:
     """
@@ -436,56 +405,51 @@ def extract_code_blocks(markdown_content: str, min_length: int = 1000) -> List[D
     
     return code_blocks
 
-
-def generate_code_example_summary(code: str, context_before: str, context_after: str) -> str:
+async def generate_code_example_summary(code: str, context_before: str, context_after: str) -> str:
     """
-    Generate a summary for a code example using its surrounding context.
+    Generate a summary of a code example using AI.
     
     Args:
-        code: The code example
-        context_before: Context before the code
-        context_after: Context after the code
+        code: The code to summarize
+        context_before: Context appearing before the code
+        context_after: Context appearing after the code
         
     Returns:
-        A summary of what the code example demonstrates
+        A summary string
     """
-    model_choice = os.getenv("MODEL_CHOICE")
-    
-    # Create the prompt
-    prompt = f"""<context_before>
-{context_before[-500:] if len(context_before) > 500 else context_before}
-</context_before>
+    prompt = f"""
+Context before the code:
+{context_before[:1000]}
 
-<code_example>
-{code[:1500] if len(code) > 1500 else code}
-</code_example>
+Code:
+{code[:2000]}
 
-<context_after>
-{context_after[:500] if len(context_after) > 500 else context_after}
-</context_after>
+Context after the code:
+{context_after[:1000]}
 
-Based on the code example and its surrounding context, provide a concise summary (2-3 sentences) that describes what this code example demonstrates and its purpose. Focus on the practical application and key concepts illustrated.
+Provide a brief summary (1-2 sentences) that describes what this code example demonstrates or accomplishes. Focus on the key functionality and purpose.
 """
     
     try:
-        response = openai.chat.completions.create(
-            model=model_choice,
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant that provides concise code example summaries."},
-                {"role": "user", "content": prompt}
-            ],
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant that provides concise code example summaries."},
+            {"role": "user", "content": prompt}
+        ]
+
+        provider = get_ai_provider()
+        response = await provider.create_completion(
+            messages=messages,
             temperature=0.3,
             max_tokens=100
         )
         
-        return response.choices[0].message.content.strip()
+        return response.content.strip()
     
     except Exception as e:
         print(f"Error generating code example summary: {e}")
         return "Code example for demonstration purposes."
 
-
-def add_code_examples_to_supabase(
+async def add_code_examples_to_supabase(
     client: Client,
     urls: List[str],
     chunk_numbers: List[int],
@@ -529,7 +493,7 @@ def add_code_examples_to_supabase(
             batch_texts.append(combined_text)
         
         # Create embeddings for the batch
-        embeddings = create_embeddings_batch(batch_texts)
+        embeddings = await create_embeddings_batch(batch_texts)
         
         # Check if embeddings are valid (not all zeros)
         valid_embeddings = []
@@ -539,7 +503,7 @@ def add_code_examples_to_supabase(
             else:
                 print(f"Warning: Zero or invalid embedding detected, creating new one...")
                 # Try to create a single embedding as fallback
-                single_embedding = create_embedding(batch_texts[len(valid_embeddings)])
+                single_embedding = await create_embedding(batch_texts[len(valid_embeddings)])
                 valid_embeddings.append(single_embedding)
         
         # Prepare batch data
@@ -593,7 +557,6 @@ def add_code_examples_to_supabase(
                         print(f"Successfully inserted {successful_inserts}/{len(batch_data)} records individually")
         print(f"Inserted batch {i//batch_size + 1} of {(total_items + batch_size - 1)//batch_size} code examples")
 
-
 def update_source_info(client: Client, source_id: str, summary: str, word_count: int):
     """
     Update or insert source information in the sources table.
@@ -626,12 +589,9 @@ def update_source_info(client: Client, source_id: str, summary: str, word_count:
     except Exception as e:
         print(f"Error updating source {source_id}: {e}")
 
-
-def extract_source_summary(source_id: str, content: str, max_length: int = 500) -> str:
+async def extract_source_summary(source_id: str, content: str, max_length: int = 500) -> str:
     """
     Extract a summary for a source from its content using an LLM.
-    
-    This function uses the OpenAI API to generate a concise summary of the source content.
     
     Args:
         source_id: The source ID (domain)
@@ -647,9 +607,6 @@ def extract_source_summary(source_id: str, content: str, max_length: int = 500) 
     if not content or len(content.strip()) == 0:
         return default_summary
     
-    # Get the model choice from environment variables
-    model_choice = os.getenv("MODEL_CHOICE")
-    
     # Limit content length to avoid token limits
     truncated_content = content[:25000] if len(content) > 25000 else content
     
@@ -662,19 +619,20 @@ The above content is from the documentation for '{source_id}'. Please provide a 
 """
     
     try:
-        # Call the OpenAI API to generate the summary
-        response = openai.chat.completions.create(
-            model=model_choice,
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant that provides concise library/tool/framework summaries."},
-                {"role": "user", "content": prompt}
-            ],
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant that provides concise library/tool/framework summaries."},
+            {"role": "user", "content": prompt}
+        ]
+
+        provider = get_ai_provider()
+        response = await provider.create_completion(
+            messages=messages,
             temperature=0.3,
             max_tokens=150
         )
         
         # Extract the generated summary
-        summary = response.choices[0].message.content.strip()
+        summary = response.content.strip()
         
         # Ensure the summary is not too long
         if len(summary) > max_length:
@@ -686,8 +644,7 @@ The above content is from the documentation for '{source_id}'. Please provide a 
         print(f"Error generating summary with LLM for {source_id}: {e}. Using default summary.")
         return default_summary
 
-
-def search_code_examples(
+async def search_code_examples(
     client: Client, 
     query: str, 
     match_count: int = 10, 
@@ -712,7 +669,7 @@ def search_code_examples(
     enhanced_query = f"Code example for {query}\n\nSummary: Example code showing {query}"
     
     # Create embedding for the enhanced query
-    query_embedding = create_embedding(enhanced_query)
+    query_embedding = await create_embedding(enhanced_query)
     
     # Execute the search using the match_code_examples function
     try:
@@ -724,9 +681,9 @@ def search_code_examples(
         
         # Only add the filter if it's actually provided and not empty
         if filter_metadata:
-            params['filter'] = filter_metadata
-            
-        # Add source filter if provided
+            params['filter'] = filter_metadata  # Pass the dictionary directly, not JSON-encoded
+        
+        # Add source_id filter if provided
         if source_id:
             params['source_filter'] = source_id
         

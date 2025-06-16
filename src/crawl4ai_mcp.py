@@ -24,6 +24,8 @@ import concurrent.futures
 
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig, CacheMode, MemoryAdaptiveDispatcher
 
+# Import the new provider system and updated utils
+from providers import get_provider, BaseProvider
 from utils import (
     get_supabase_client, 
     add_documents_to_supabase, 
@@ -49,6 +51,7 @@ class Crawl4AIContext:
     """Context for the Crawl4AI MCP server."""
     crawler: AsyncWebCrawler
     supabase_client: Client
+    ai_provider: BaseProvider
     reranking_model: Optional[CrossEncoder] = None
 
 @asynccontextmanager
@@ -60,7 +63,7 @@ async def crawl4ai_lifespan(server: FastMCP) -> AsyncIterator[Crawl4AIContext]:
         server: The FastMCP server instance
         
     Yields:
-        Crawl4AIContext: The context containing the Crawl4AI crawler and Supabase client
+        Crawl4AIContext: The context containing the Crawl4AI crawler, Supabase client, and AI provider
     """
     # Create browser configuration
     browser_config = BrowserConfig(
@@ -75,6 +78,10 @@ async def crawl4ai_lifespan(server: FastMCP) -> AsyncIterator[Crawl4AIContext]:
     # Initialize Supabase client
     supabase_client = get_supabase_client()
     
+    # Initialize AI provider
+    ai_provider = get_provider()
+    print(f"Initialized AI provider: {ai_provider.provider_name}")
+    
     # Initialize cross-encoder model for reranking if enabled
     reranking_model = None
     if os.getenv("USE_RERANKING", "false") == "true":
@@ -88,6 +95,7 @@ async def crawl4ai_lifespan(server: FastMCP) -> AsyncIterator[Crawl4AIContext]:
         yield Crawl4AIContext(
             crawler=crawler,
             supabase_client=supabase_client,
+            ai_provider=ai_provider,
             reranking_model=reranking_model
         )
     finally:
@@ -251,10 +259,10 @@ def extract_section_info(chunk: str) -> Dict[str, Any]:
         "word_count": len(chunk.split())
     }
 
-def process_code_example(args):
+async def process_code_example(args):
     """
     Process a single code example to generate its summary.
-    This function is designed to be used with concurrent.futures.
+    This function is designed to be used with asyncio.
     
     Args:
         args: Tuple containing (code, context_before, context_after)
@@ -263,7 +271,7 @@ def process_code_example(args):
         The generated summary
     """
     code, context_before, context_after = args
-    return generate_code_example_summary(code, context_before, context_after)
+    return await generate_code_example_summary(code, context_before, context_after)
 
 @mcp.tool()
 async def crawl_single_page(ctx: Context, url: str) -> str:
@@ -326,11 +334,11 @@ async def crawl_single_page(ctx: Context, url: str) -> str:
             url_to_full_document = {url: result.markdown}
             
             # Update source information FIRST (before inserting documents)
-            source_summary = extract_source_summary(source_id, result.markdown[:5000])  # Use first 5000 chars for summary
+            source_summary = await extract_source_summary(source_id, result.markdown[:5000])  # Use first 5000 chars for summary
             update_source_info(supabase_client, source_id, source_summary, total_word_count)
             
             # Add documentation chunks to Supabase (AFTER source exists)
-            add_documents_to_supabase(supabase_client, urls, chunk_numbers, contents, metadatas, url_to_full_document)
+            await add_documents_to_supabase(supabase_client, urls, chunk_numbers, contents, metadatas, url_to_full_document)
             
             # Extract and process code examples only if enabled
             extract_code_examples = os.getenv("USE_AGENTIC_RAG", "false") == "true"
@@ -343,14 +351,14 @@ async def crawl_single_page(ctx: Context, url: str) -> str:
                     code_summaries = []
                     code_metadatas = []
                     
-                    # Process code examples in parallel
-                    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-                        # Prepare arguments for parallel processing
-                        summary_args = [(block['code'], block['context_before'], block['context_after']) 
-                                        for block in code_blocks]
-                        
-                        # Generate summaries in parallel
-                        summaries = list(executor.map(process_code_example, summary_args))
+                    # Process code examples in parallel with asyncio
+                    summary_args = [(block['code'], block['context_before'], block['context_after']) 
+                                    for block in code_blocks]
+                    
+                    # Generate summaries in parallel using asyncio
+                    summaries = await asyncio.gather(*[
+                        process_code_example(args) for args in summary_args
+                    ])
                     
                     # Prepare code example data
                     for i, (block, summary) in enumerate(zip(code_blocks, summaries)):
@@ -370,7 +378,7 @@ async def crawl_single_page(ctx: Context, url: str) -> str:
                         code_metadatas.append(code_meta)
                     
                     # Add code examples to Supabase
-                    add_code_examples_to_supabase(
+                    await add_code_examples_to_supabase(
                         supabase_client, 
                         code_urls, 
                         code_chunk_numbers, 
@@ -514,9 +522,12 @@ async def smart_crawl_url(ctx: Context, url: str, max_depth: int = 3, max_concur
             url_to_full_document[doc['url']] = doc['markdown']
         
         # Update source information for each unique source FIRST (before inserting documents)
-        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-            source_summary_args = [(source_id, content) for source_id, content in source_content_map.items()]
-            source_summaries = list(executor.map(lambda args: extract_source_summary(args[0], args[1]), source_summary_args))
+        source_summary_args = [(source_id, content) for source_id, content in source_content_map.items()]
+        
+        # Generate source summaries in parallel using asyncio
+        source_summaries = await asyncio.gather(*[
+            extract_source_summary(args[0], args[1]) for args in source_summary_args
+        ])
         
         for (source_id, _), summary in zip(source_summary_args, source_summaries):
             word_count = source_word_counts.get(source_id, 0)
@@ -524,7 +535,7 @@ async def smart_crawl_url(ctx: Context, url: str, max_depth: int = 3, max_concur
         
         # Add documentation chunks to Supabase (AFTER sources exist)
         batch_size = 20
-        add_documents_to_supabase(supabase_client, urls, chunk_numbers, contents, metadatas, url_to_full_document, batch_size=batch_size)
+        await add_documents_to_supabase(supabase_client, urls, chunk_numbers, contents, metadatas, url_to_full_document, batch_size=batch_size)
         
         # Extract and process code examples from all documents only if enabled
         extract_code_examples_enabled = os.getenv("USE_AGENTIC_RAG", "false") == "true"
@@ -543,14 +554,14 @@ async def smart_crawl_url(ctx: Context, url: str, max_depth: int = 3, max_concur
                 code_blocks = extract_code_blocks(md)
                 
                 if code_blocks:
-                    # Process code examples in parallel
-                    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-                        # Prepare arguments for parallel processing
-                        summary_args = [(block['code'], block['context_before'], block['context_after']) 
-                                        for block in code_blocks]
-                        
-                        # Generate summaries in parallel
-                        summaries = list(executor.map(process_code_example, summary_args))
+                    # Process code examples in parallel with asyncio
+                    summary_args = [(block['code'], block['context_before'], block['context_after']) 
+                                    for block in code_blocks]
+                    
+                    # Generate summaries in parallel using asyncio
+                    summaries = await asyncio.gather(*[
+                        process_code_example(args) for args in summary_args
+                    ])
                     
                     # Prepare code example data
                     parsed_url = urlparse(source_url)
@@ -574,7 +585,7 @@ async def smart_crawl_url(ctx: Context, url: str, max_depth: int = 3, max_concur
             
             # Add all code examples to Supabase
             if code_examples:
-                add_code_examples_to_supabase(
+                await add_code_examples_to_supabase(
                     supabase_client, 
                     code_urls, 
                     code_chunk_numbers, 
@@ -838,7 +849,7 @@ async def search_code_examples(ctx: Context, query: str, source_id: str = None, 
             from utils import search_code_examples as search_code_examples_impl
             
             # 1. Get vector search results (get more to account for filtering)
-            vector_results = search_code_examples_impl(
+            vector_results = await search_code_examples_impl(
                 client=supabase_client,
                 query=query,
                 match_count=match_count * 2,  # Get double to have room for filtering
@@ -904,7 +915,7 @@ async def search_code_examples(ctx: Context, query: str, source_id: str = None, 
             # Standard vector search only
             from utils import search_code_examples as search_code_examples_impl
             
-            results = search_code_examples_impl(
+            results = await search_code_examples_impl(
                 client=supabase_client,
                 query=query,
                 match_count=match_count,

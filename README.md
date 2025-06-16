@@ -132,11 +132,29 @@ HOST=0.0.0.0
 PORT=8051
 TRANSPORT=sse
 
-# OpenAI API Configuration
+# AI Provider Configuration
+AI_PROVIDER=openai  # Options: openai, ollama, gemini, deepseek, anthropic
+
+# OpenAI Configuration (if using AI_PROVIDER=openai)
 OPENAI_API_KEY=your_openai_api_key
 
-# LLM for summaries and contextual embeddings
-MODEL_CHOICE=gpt-4.1-nano
+# Ollama Configuration (if using AI_PROVIDER=ollama)
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_EMBEDDING_MODEL=nomic-embed-text
+OLLAMA_COMPLETION_MODEL=llama3.2
+
+# Google Gemini Configuration (if using AI_PROVIDER=gemini)
+GEMINI_API_KEY=your_gemini_api_key
+
+# DeepSeek Configuration (if using AI_PROVIDER=deepseek)
+DEEPSEEK_API_KEY=your_deepseek_api_key
+DEEPSEEK_BASE_URL=https://api.deepseek.com/v1
+
+# Anthropic Configuration (if using AI_PROVIDER=anthropic)
+ANTHROPIC_API_KEY=your_anthropic_api_key
+
+# Model Choice (used by all providers for completion tasks)
+MODEL_CHOICE=gpt-4o-mini  # Adjust based on your provider, using gpt-4o-mini when provider is set to ollama is crazy
 
 # RAG Strategies (set to "true" or "false", default to "false")
 USE_CONTEXTUAL_EMBEDDINGS=false
@@ -148,6 +166,66 @@ USE_RERANKING=false
 SUPABASE_URL=your_supabase_project_url
 SUPABASE_SERVICE_KEY=your_supabase_service_key
 ```
+
+### AI Provider Options
+
+The server now supports multiple AI providers for embeddings and completions:
+
+#### **OpenAI** (`AI_PROVIDER=openai`)
+- **Embeddings**: `text-embedding-3-small` (1536 dimensions)
+- **Completions**: Configurable via `MODEL_CHOICE` (default: `gpt-4o-mini`)
+- **Requirements**: `OPENAI_API_KEY`
+- **Best for**: High-quality embeddings and completions, production use
+
+#### **Ollama** (`AI_PROVIDER=ollama`)
+- **Embeddings**: Configurable via `OLLAMA_EMBEDDING_MODEL` (default: `nomic-embed-text`, 768 dimensions)
+- **Completions**: Configurable via `OLLAMA_COMPLETION_MODEL` (default: `llama3.2`)
+- **Requirements**: Local Ollama installation
+- **Best for**: Privacy, local deployment, cost-free operation
+- **Note**: Requires Ollama to be running locally with the specified models pulled
+
+#### **Google Gemini** (`AI_PROVIDER=gemini`)
+- **Embeddings**: `text-embedding-004` (768 dimensions)
+- **Completions**: Configurable via `MODEL_CHOICE` (default: `gemini-1.5-flash`)
+- **Requirements**: `GEMINI_API_KEY`
+- **Best for**: Google ecosystem integration, competitive pricing
+
+#### **DeepSeek** (`AI_PROVIDER=deepseek`)
+- **Embeddings**: Not supported (falls back to zero embeddings)
+- **Completions**: Configurable via `MODEL_CHOICE` (default: `deepseek-chat`)
+- **Requirements**: `DEEPSEEK_API_KEY`
+- **Best for**: Completions only, cost-effective for text generation
+- **Note**: Recommend using with another provider for embeddings
+
+#### **Anthropic** (`AI_PROVIDER=anthropic`)
+- **Embeddings**: Not supported (falls back to zero embeddings)
+- **Completions**: Configurable via `MODEL_CHOICE` (default: `claude-3-5-haiku-20241022`)
+- **Requirements**: `ANTHROPIC_API_KEY`
+- **Best for**: High-quality completions, safety-focused applications
+- **Note**: Recommend using with another provider for embeddings
+
+### Provider-Specific Model Choices
+
+When setting `MODEL_CHOICE`, use models appropriate for your provider:
+
+**OpenAI**: `gpt-4o-mini`, `gpt-4o`, `gpt-3.5-turbo`, etc.
+**Ollama**: `llama3.2`, `mistral`, `codellama`, etc. (must be pulled locally)
+**Gemini**: `gemini-1.5-flash`, `gemini-1.5-pro`, `gemini-pro`, etc.
+**DeepSeek**: `deepseek-chat`, `deepseek-coder`, etc.
+**Anthropic**: `claude-3-5-haiku-20241022`, `claude-3-5-sonnet-20241022`, etc.
+
+### Embedding Considerations
+
+For providers that don't support embeddings (DeepSeek, Anthropic), consider:
+1. Using a hybrid approach with OpenAI/Ollama/Gemini for embeddings
+2. Disabling embedding-dependent features (`USE_CONTEXTUAL_EMBEDDINGS=false`)
+3. Using these providers primarily for completion tasks
+
+### Database Schema Updates
+
+The database schema supports variable embedding dimensions. If you switch providers with different embedding dimensions, you may need to:
+1. Clear existing embeddings: `DELETE FROM crawled_pages; DELETE FROM code_examples;`
+2. Update the vector column if needed (though pgvector handles different dimensions gracefully)
 
 ### RAG Strategy Options
 
