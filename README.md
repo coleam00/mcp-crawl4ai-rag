@@ -158,16 +158,16 @@ SUPABASE_SERVICE_KEY=your_supabase_service_key
 # AZURE_OPENAI_EMBEDDING_DEPLOYMENT=your_embedding_deployment_name
 ```
 
-### Azure AI Studio Integration (Optional)
+### Azure AI Foundry Integration (Optional)
 
-This server supports integration with Azure AI Studio for leveraging Azure OpenAI models. If you have access to Azure OpenAI, you can configure the server to use your Azure deployments for embeddings and chat completions.
+This server supports integration with Azure AI Foundry for leveraging Azure OpenAI models. If you have access to Azure OpenAI, you can configure the server to use your Azure deployments for embeddings and chat completions.
 
-To enable Azure AI Studio integration, set the following environment variables:
+To enable Azure AI Foundry integration, set the following environment variables:
 
 -   `AZURE_OPENAI_API_KEY`: Your API key for Azure OpenAI service.
 -   `AZURE_OPENAI_ENDPOINT`: The endpoint URL for your Azure OpenAI service.
--   `AZURE_OPENAI_CHAT_DEPLOYMENT`: The name of your chat model deployment in Azure AI Studio (e.g., for GPT-3.5-Turbo or GPT-4). This will be used for contextual embeddings, code summaries, and source summaries.
--   `AZURE_OPENAI_EMBEDDING_DEPLOYMENT`: The name of your embedding model deployment in Azure AI Studio (e.g., for `text-embedding-ada-002` or other compatible embedding models).
+-   `AZURE_OPENAI_CHAT_DEPLOYMENT`: The name of your chat model deployment in Azure AI Foundry (e.g., for GPT-3.5-Turbo or GPT-4). This will be used for contextual embeddings, code summaries, and source summaries.
+-   `AZURE_OPENAI_EMBEDDING_DEPLOYMENT`: The name of your embedding model deployment in Azure AI Foundry (e.g., for `text-embedding-ada-002` or other compatible embedding models).
 
 **Important Considerations:**
 
