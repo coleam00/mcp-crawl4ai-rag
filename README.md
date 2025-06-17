@@ -154,26 +154,30 @@ SUPABASE_SERVICE_KEY=your_supabase_service_key
 # with the models expected by this application (e.g., embedding dimensions).
 # AZURE_OPENAI_API_KEY=your_azure_openai_api_key
 # AZURE_OPENAI_ENDPOINT=your_azure_openai_endpoint
+# AZURE_OPENAI_API_VERSION=your_azure_api_version (e.g., 2023-07-01-preview)
 # AZURE_OPENAI_CHAT_DEPLOYMENT=your_chat_deployment_name
 # AZURE_OPENAI_EMBEDDING_DEPLOYMENT=your_embedding_deployment_name
 ```
 
 ### Azure AI Foundry Integration (Optional)
 
-This server supports integration with Azure AI Foundry for leveraging Azure OpenAI models. If you have access to Azure OpenAI, you can configure the server to use your Azure deployments for embeddings and chat completions.
+This server supports integration with Azure AI Foundry for leveraging Azure OpenAI models. If you have access to Azure OpenAI, you can configure the server to use your Azure deployments for embeddings and chat completions. The Azure OpenAI client will be initialized if `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, and `AZURE_OPENAI_API_VERSION` are all provided.
 
 To enable Azure AI Foundry integration, set the following environment variables:
 
--   `AZURE_OPENAI_API_KEY`: Your API key for Azure OpenAI service.
--   `AZURE_OPENAI_ENDPOINT`: The endpoint URL for your Azure OpenAI service.
--   `AZURE_OPENAI_CHAT_DEPLOYMENT`: The name of your chat model deployment in Azure AI Foundry (e.g., for GPT-3.5-Turbo or GPT-4). This will be used for contextual embeddings, code summaries, and source summaries.
--   `AZURE_OPENAI_EMBEDDING_DEPLOYMENT`: The name of your embedding model deployment in Azure AI Foundry (e.g., for `text-embedding-ada-002` or other compatible embedding models).
+-   `AZURE_OPENAI_API_KEY`: Your API key for the Azure OpenAI service.
+-   `AZURE_OPENAI_ENDPOINT`: The endpoint URL for your Azure OpenAI service (e.g., `https://your-resource-name.openai.azure.com/`).
+-   `AZURE_OPENAI_API_VERSION`: The API version for your Azure OpenAI service (e.g., `2023-07-01-preview`). This is required to initialize the Azure client.
+-   `AZURE_OPENAI_CHAT_DEPLOYMENT`: The name of your chat model deployment in Azure AI Foundry (e.g., `gpt-35-turbo` or `gpt-4`). This deployment name is used as the `model` parameter when making API calls for chat completions (contextual embeddings, code summaries, source summaries).
+-   `AZURE_OPENAI_EMBEDDING_DEPLOYMENT`: The name of your embedding model deployment in Azure AI Foundry (e.g., `text-embedding-ada-002`). This deployment name is used as the `model` parameter when making API calls for embeddings.
 
 **Important Considerations:**
 
-*   When these Azure variables are set, they will take precedence over the standard `OPENAI_API_KEY` and `MODEL_CHOICE` for the respective functionalities (embeddings or chat completions).
-*   Ensure that the Azure deployment names you provide are for models compatible with how they are used in this application. For example, the embedding model should ideally have the same output dimensions (e.g., 1536 for `text-embedding-3-small` compatibility) if you want to mix and match or switch between OpenAI and Azure without re-indexing.
-*   If only some Azure variables are set (e.g., only for embeddings but not chat), the system will try to use Azure for the configured part and fall back to standard OpenAI for the other. However, it's recommended to configure all or none for clarity.
+*   If `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, and `AZURE_OPENAI_API_VERSION` are all set, the Azure OpenAI client will be used. If any of these are missing, the system will fall back to the standard OpenAI configuration.
+*   `AZURE_OPENAI_CHAT_DEPLOYMENT` and `AZURE_OPENAI_EMBEDDING_DEPLOYMENT` specify the model (deployment) names to be used for Azure API calls. If these are not set, corresponding Azure functionalities will not be used even if the client is initialized.
+*   When Azure functionalities are used, they take precedence over the standard `OPENAI_API_KEY` and `MODEL_CHOICE` for the respective operations.
+*   Ensure that the Azure deployment names you provide are for models compatible with how they are used in this application. For example, the embedding model specified by `AZURE_OPENAI_EMBEDDING_DEPLOYMENT` should ideally have the same output dimensions (e.g., 1536 for `text-embedding-3-small` compatibility) if you want to mix and match or switch between OpenAI and Azure without re-indexing.
+*   It's recommended to set all relevant Azure variables (`API_KEY`, `ENDPOINT`, `API_VERSION`, and the specific `CHAT_DEPLOYMENT` or `EMBEDDING_DEPLOYMENT` for the functionalities you intend to use with Azure) for clarity and predictable behavior.
 
 **Example `.env` configuration for Azure OpenAI:**
 ```
@@ -182,15 +186,16 @@ HOST=0.0.0.0
 PORT=8051
 TRANSPORT=sse
 
-# OpenAI API Configuration (can be omitted if Azure is fully configured)
+# OpenAI API Configuration (can be omitted or used as fallback if Azure is not fully configured/fails)
 # OPENAI_API_KEY=your_openai_api_key
 # MODEL_CHOICE=gpt-4.1-nano
 
 # Azure OpenAI Configuration
 AZURE_OPENAI_API_KEY=your_azure_openai_api_key
 AZURE_OPENAI_ENDPOINT=https://your-resource-name.openai.azure.com/
-AZURE_OPENAI_CHAT_DEPLOYMENT=your-chat-deployment
-AZURE_OPENAI_EMBEDDING_DEPLOYMENT=your-embedding-deployment
+AZURE_OPENAI_API_VERSION=2023-07-01-preview # Or your specific API version
+AZURE_OPENAI_CHAT_DEPLOYMENT=your-chat-deployment-name
+AZURE_OPENAI_EMBEDDING_DEPLOYMENT=your-embedding-deployment-name
 
 # RAG Strategies
 USE_CONTEXTUAL_EMBEDDINGS=false

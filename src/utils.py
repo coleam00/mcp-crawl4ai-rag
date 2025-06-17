@@ -17,17 +17,18 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 # Azure OpenAI credentials
 AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
 AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
+AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION") # New API version env var
 AZURE_OPENAI_CHAT_DEPLOYMENT = os.getenv("AZURE_OPENAI_CHAT_DEPLOYMENT")
 AZURE_OPENAI_EMBEDDING_DEPLOYMENT = os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT")
 
 # Initialize Azure OpenAI client
 azure_openai_client = None
-if AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT:
+if AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_API_VERSION:
     try:
         azure_openai_client = openai.AzureOpenAI(
             api_key=AZURE_OPENAI_API_KEY,
             azure_endpoint=AZURE_OPENAI_ENDPOINT,
-            api_version="2023-07-01-preview"  # Use an appropriate API version
+            api_version=AZURE_OPENAI_API_VERSION
         )
     except Exception as e:
         print(f"Error initializing Azure OpenAI client: {e}")
