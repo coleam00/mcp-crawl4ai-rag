@@ -147,6 +147,58 @@ USE_RERANKING=false
 # Supabase Configuration
 SUPABASE_URL=your_supabase_project_url
 SUPABASE_SERVICE_KEY=your_supabase_service_key
+
+# Azure OpenAI Configuration (Optional)
+# If these are set, Azure OpenAI will be used instead of the default OpenAI.
+# Ensure your Azure OpenAI deployments for chat and embeddings are compatible
+# with the models expected by this application (e.g., embedding dimensions).
+# AZURE_OPENAI_API_KEY=your_azure_openai_api_key
+# AZURE_OPENAI_ENDPOINT=your_azure_openai_endpoint
+# AZURE_OPENAI_CHAT_DEPLOYMENT=your_chat_deployment_name
+# AZURE_OPENAI_EMBEDDING_DEPLOYMENT=your_embedding_deployment_name
+```
+
+### Azure AI Studio Integration (Optional)
+
+This server supports integration with Azure AI Studio for leveraging Azure OpenAI models. If you have access to Azure OpenAI, you can configure the server to use your Azure deployments for embeddings and chat completions.
+
+To enable Azure AI Studio integration, set the following environment variables:
+
+-   `AZURE_OPENAI_API_KEY`: Your API key for Azure OpenAI service.
+-   `AZURE_OPENAI_ENDPOINT`: The endpoint URL for your Azure OpenAI service.
+-   `AZURE_OPENAI_CHAT_DEPLOYMENT`: The name of your chat model deployment in Azure AI Studio (e.g., for GPT-3.5-Turbo or GPT-4). This will be used for contextual embeddings, code summaries, and source summaries.
+-   `AZURE_OPENAI_EMBEDDING_DEPLOYMENT`: The name of your embedding model deployment in Azure AI Studio (e.g., for `text-embedding-ada-002` or other compatible embedding models).
+
+**Important Considerations:**
+
+*   When these Azure variables are set, they will take precedence over the standard `OPENAI_API_KEY` and `MODEL_CHOICE` for the respective functionalities (embeddings or chat completions).
+*   Ensure that the Azure deployment names you provide are for models compatible with how they are used in this application. For example, the embedding model should ideally have the same output dimensions (e.g., 1536 for `text-embedding-3-small` compatibility) if you want to mix and match or switch between OpenAI and Azure without re-indexing.
+*   If only some Azure variables are set (e.g., only for embeddings but not chat), the system will try to use Azure for the configured part and fall back to standard OpenAI for the other. However, it's recommended to configure all or none for clarity.
+
+**Example `.env` configuration for Azure OpenAI:**
+```
+# MCP Server Configuration
+HOST=0.0.0.0
+PORT=8051
+TRANSPORT=sse
+
+# OpenAI API Configuration (can be omitted if Azure is fully configured)
+# OPENAI_API_KEY=your_openai_api_key
+# MODEL_CHOICE=gpt-4.1-nano
+
+# Azure OpenAI Configuration
+AZURE_OPENAI_API_KEY=your_azure_openai_api_key
+AZURE_OPENAI_ENDPOINT=https://your-resource-name.openai.azure.com/
+AZURE_OPENAI_CHAT_DEPLOYMENT=your-chat-deployment
+AZURE_OPENAI_EMBEDDING_DEPLOYMENT=your-embedding-deployment
+
+# RAG Strategies
+USE_CONTEXTUAL_EMBEDDINGS=false
+# ... other strategy flags
+
+# Supabase Configuration
+SUPABASE_URL=your_supabase_project_url
+SUPABASE_SERVICE_KEY=your_supabase_service_key
 ```
 
 ### RAG Strategy Options

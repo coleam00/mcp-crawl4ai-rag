@@ -14,6 +14,25 @@ import time
 # Load OpenAI API key for embeddings
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+# Azure OpenAI credentials
+AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
+AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
+AZURE_OPENAI_CHAT_DEPLOYMENT = os.getenv("AZURE_OPENAI_CHAT_DEPLOYMENT")
+AZURE_OPENAI_EMBEDDING_DEPLOYMENT = os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT")
+
+# Initialize Azure OpenAI client
+azure_openai_client = None
+if AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT:
+    try:
+        azure_openai_client = openai.AzureOpenAI(
+            api_key=AZURE_OPENAI_API_KEY,
+            azure_endpoint=AZURE_OPENAI_ENDPOINT,
+            api_version="2023-07-01-preview"  # Use an appropriate API version
+        )
+    except Exception as e:
+        print(f"Error initializing Azure OpenAI client: {e}")
+        azure_openai_client = None
+
 def get_supabase_client() -> Client:
     """
     Get a Supabase client with the URL and key from environment variables.
@@ -44,42 +63,67 @@ def create_embeddings_batch(texts: List[str]) -> List[List[float]]:
     
     max_retries = 3
     retry_delay = 1.0  # Start with 1 second delay
+
+    if azure_openai_client and AZURE_OPENAI_EMBEDDING_DEPLOYMENT:
+        # Use Azure OpenAI
+        for retry in range(max_retries):
+            try:
+                response = azure_openai_client.embeddings.create(
+                    model=AZURE_OPENAI_EMBEDDING_DEPLOYMENT,
+                    input=texts
+                )
+                return [item.embedding for item in response.data]
+            except Exception as e:
+                if retry < max_retries - 1:
+                    print(f"Error creating batch embeddings with Azure (attempt {retry + 1}/{max_retries}): {e}")
+                    print(f"Retrying in {retry_delay} seconds...")
+                    time.sleep(retry_delay)
+                    retry_delay *= 2  # Exponential backoff
+                else:
+                    print(f"Failed to create batch embeddings with Azure after {max_retries} attempts: {e}")
+                    # Fallback to OpenAI or individual embeddings
+                    break  # Exit Azure attempt loop and try OpenAI below or individual
     
+    # Fallback to OpenAI or if Azure is not configured
     for retry in range(max_retries):
         try:
             response = openai.embeddings.create(
-                model="text-embedding-3-small", # Hardcoding embedding model for now, will change this later to be more dynamic
+                model="text-embedding-3-small",
                 input=texts
             )
             return [item.embedding for item in response.data]
         except Exception as e:
             if retry < max_retries - 1:
-                print(f"Error creating batch embeddings (attempt {retry + 1}/{max_retries}): {e}")
+                print(f"Error creating batch embeddings with OpenAI (attempt {retry + 1}/{max_retries}): {e}")
                 print(f"Retrying in {retry_delay} seconds...")
                 time.sleep(retry_delay)
-                retry_delay *= 2  # Exponential backoff
+                retry_delay *= 2
             else:
-                print(f"Failed to create batch embeddings after {max_retries} attempts: {e}")
-                # Try creating embeddings one by one as fallback
+                print(f"Failed to create batch embeddings with OpenAI after {max_retries} attempts: {e}")
                 print("Attempting to create embeddings individually...")
                 embeddings = []
                 successful_count = 0
-                
                 for i, text in enumerate(texts):
                     try:
-                        individual_response = openai.embeddings.create(
-                            model="text-embedding-3-small",
-                            input=[text]
-                        )
+                        # Try Azure first for individual if available
+                        if azure_openai_client and AZURE_OPENAI_EMBEDDING_DEPLOYMENT:
+                             individual_response = azure_openai_client.embeddings.create(
+                                model=AZURE_OPENAI_EMBEDDING_DEPLOYMENT,
+                                input=[text]
+                            )
+                        else: # Fallback to OpenAI for individual
+                            individual_response = openai.embeddings.create(
+                                model="text-embedding-3-small",
+                                input=[text]
+                            )
                         embeddings.append(individual_response.data[0].embedding)
                         successful_count += 1
                     except Exception as individual_error:
                         print(f"Failed to create embedding for text {i}: {individual_error}")
-                        # Add zero embedding as fallback
-                        embeddings.append([0.0] * 1536)
-                
+                        embeddings.append([0.0] * 1536) # Default embedding size
                 print(f"Successfully created {successful_count}/{len(texts)} embeddings individually")
                 return embeddings
+    return [[0.0] * 1536 for _ in texts] # Should not be reached if individual fallback works
 
 def create_embedding(text: str) -> List[float]:
     """
@@ -96,8 +140,8 @@ def create_embedding(text: str) -> List[float]:
         return embeddings[0] if embeddings else [0.0] * 1536
     except Exception as e:
         print(f"Error creating embedding: {e}")
-        # Return empty embedding if there's an error
-        return [0.0] * 1536
+        # Return zero embedding if there's an error
+        return [0.0] * 1536 # Default embedding size
 
 def generate_contextual_embedding(full_document: str, chunk: str) -> Tuple[str, bool]:
     """
@@ -125,16 +169,29 @@ Here is the chunk we want to situate within the whole document
 </chunk> 
 Please give a short succinct context to situate this chunk within the overall document for the purposes of improving search retrieval of the chunk. Answer only with the succinct context and nothing else."""
 
-        # Call the OpenAI API to generate contextual information
-        response = openai.chat.completions.create(
-            model=model_choice,
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant that provides concise contextual information."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.3,
-            max_tokens=200
-        )
+        # Call the API to generate contextual information
+        if azure_openai_client and AZURE_OPENAI_CHAT_DEPLOYMENT:
+            # Use Azure OpenAI
+            response = azure_openai_client.chat.completions.create(
+                model=AZURE_OPENAI_CHAT_DEPLOYMENT,
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant that provides concise contextual information."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.3,
+                max_tokens=200
+            )
+        else:
+            # Use OpenAI
+            response = openai.chat.completions.create(
+                model=model_choice,
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant that provides concise contextual information."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.3,
+                max_tokens=200
+            )
         
         # Extract the generated context
         context = response.choices[0].message.content.strip()
@@ -449,7 +506,7 @@ def generate_code_example_summary(code: str, context_before: str, context_after:
     Returns:
         A summary of what the code example demonstrates
     """
-    model_choice = os.getenv("MODEL_CHOICE")
+    model_choice = os.getenv("MODEL_CHOICE") # Keep for OpenAI fallback
     
     # Create the prompt
     prompt = f"""<context_before>
@@ -468,15 +525,28 @@ Based on the code example and its surrounding context, provide a concise summary
 """
     
     try:
-        response = openai.chat.completions.create(
-            model=model_choice,
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant that provides concise code example summaries."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.3,
-            max_tokens=100
-        )
+        if azure_openai_client and AZURE_OPENAI_CHAT_DEPLOYMENT:
+            # Use Azure OpenAI
+            response = azure_openai_client.chat.completions.create(
+                model=AZURE_OPENAI_CHAT_DEPLOYMENT,
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant that provides concise code example summaries."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.3,
+                max_tokens=100
+            )
+        else:
+            # Use OpenAI
+            response = openai.chat.completions.create(
+                model=model_choice,
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant that provides concise code example summaries."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.3,
+                max_tokens=100
+            )
         
         return response.choices[0].message.content.strip()
     
@@ -648,7 +718,7 @@ def extract_source_summary(source_id: str, content: str, max_length: int = 500) 
         return default_summary
     
     # Get the model choice from environment variables
-    model_choice = os.getenv("MODEL_CHOICE")
+    model_choice = os.getenv("MODEL_CHOICE") # Keep for OpenAI fallback
     
     # Limit content length to avoid token limits
     truncated_content = content[:25000] if len(content) > 25000 else content
@@ -662,16 +732,28 @@ The above content is from the documentation for '{source_id}'. Please provide a 
 """
     
     try:
-        # Call the OpenAI API to generate the summary
-        response = openai.chat.completions.create(
-            model=model_choice,
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant that provides concise library/tool/framework summaries."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.3,
-            max_tokens=150
-        )
+        if azure_openai_client and AZURE_OPENAI_CHAT_DEPLOYMENT:
+            # Use Azure OpenAI
+            response = azure_openai_client.chat.completions.create(
+                model=AZURE_OPENAI_CHAT_DEPLOYMENT,
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant that provides concise library/tool/framework summaries."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.3,
+                max_tokens=150
+            )
+        else:
+            # Use OpenAI
+            response = openai.chat.completions.create(
+                model=model_choice,
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant that provides concise library/tool/framework summaries."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.3,
+                max_tokens=150
+            )
         
         # Extract the generated summary
         summary = response.choices[0].message.content.strip()
