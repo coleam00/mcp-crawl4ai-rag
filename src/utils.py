@@ -10,9 +10,25 @@ from urllib.parse import urlparse
 import openai
 import re
 import time
+import threading
 
 # Load OpenAI API key for embeddings
 openai.api_key = os.getenv("OPENAI_API_KEY")
+
+# Concurrency and throttling for OpenAI API calls
+LLM_MAX_CONCURRENCY = int(os.getenv("LLM_MAX_CONCURRENCY", "3"))
+LLM_REQUEST_DELAY = float(os.getenv("LLM_REQUEST_DELAY", "0"))
+_llm_semaphore = threading.Semaphore(LLM_MAX_CONCURRENCY)
+
+def _with_llm_limits(func, *args, **kwargs):
+    """Call OpenAI API with concurrency limits and optional delay."""
+    _llm_semaphore.acquire()
+    try:
+        return func(*args, **kwargs)
+    finally:
+        _llm_semaphore.release()
+        if LLM_REQUEST_DELAY > 0:
+            time.sleep(LLM_REQUEST_DELAY)
 
 def get_supabase_client() -> Client:
     """
@@ -47,8 +63,9 @@ def create_embeddings_batch(texts: List[str]) -> List[List[float]]:
     
     for retry in range(max_retries):
         try:
-            response = openai.embeddings.create(
-                model="text-embedding-3-small", # Hardcoding embedding model for now, will change this later to be more dynamic
+            response = _with_llm_limits(
+                openai.embeddings.create,
+                model="text-embedding-3-small",  # Hardcoding embedding model for now
                 input=texts
             )
             return [item.embedding for item in response.data]
@@ -67,7 +84,8 @@ def create_embeddings_batch(texts: List[str]) -> List[List[float]]:
                 
                 for i, text in enumerate(texts):
                     try:
-                        individual_response = openai.embeddings.create(
+                        individual_response = _with_llm_limits(
+                            openai.embeddings.create,
                             model="text-embedding-3-small",
                             input=[text]
                         )
@@ -126,7 +144,8 @@ Here is the chunk we want to situate within the whole document
 Please give a short succinct context to situate this chunk within the overall document for the purposes of improving search retrieval of the chunk. Answer only with the succinct context and nothing else."""
 
         # Call the OpenAI API to generate contextual information
-        response = openai.chat.completions.create(
+        response = _with_llm_limits(
+            openai.chat.completions.create,
             model=model_choice,
             messages=[
                 {"role": "system", "content": "You are a helpful assistant that provides concise contextual information."},
@@ -229,7 +248,7 @@ def add_documents_to_supabase(
             
             # Process in parallel using ThreadPoolExecutor
             contextual_contents = []
-            with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=LLM_MAX_CONCURRENCY) as executor:
                 # Submit all tasks and collect results
                 future_to_idx = {executor.submit(process_chunk_with_context, arg): idx 
                                 for idx, arg in enumerate(process_args)}
@@ -468,7 +487,8 @@ Based on the code example and its surrounding context, provide a concise summary
 """
     
     try:
-        response = openai.chat.completions.create(
+        response = _with_llm_limits(
+            openai.chat.completions.create,
             model=model_choice,
             messages=[
                 {"role": "system", "content": "You are a helpful assistant that provides concise code example summaries."},
@@ -663,7 +683,8 @@ The above content is from the documentation for '{source_id}'. Please provide a 
     
     try:
         # Call the OpenAI API to generate the summary
-        response = openai.chat.completions.create(
+        response = _with_llm_limits(
+            openai.chat.completions.create,
             model=model_choice,
             messages=[
                 {"role": "system", "content": "You are a helpful assistant that provides concise library/tool/framework summaries."},

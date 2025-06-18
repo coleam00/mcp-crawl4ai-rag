@@ -39,7 +39,8 @@ from utils import (
     add_code_examples_to_supabase,
     update_source_info,
     extract_source_summary,
-    search_code_examples
+    search_code_examples,
+    LLM_MAX_CONCURRENCY
 )
 
 # Import knowledge graph modules
@@ -464,7 +465,7 @@ async def crawl_single_page(ctx: Context, url: str) -> str:
                     code_metadatas = []
                     
                     # Process code examples in parallel
-                    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+                    with concurrent.futures.ThreadPoolExecutor(max_workers=LLM_MAX_CONCURRENCY) as executor:
                         # Prepare arguments for parallel processing
                         summary_args = [(block['code'], block['context_before'], block['context_after']) 
                                         for block in code_blocks]
@@ -634,7 +635,7 @@ async def smart_crawl_url(ctx: Context, url: str, max_depth: int = 3, max_concur
             url_to_full_document[doc['url']] = doc['markdown']
         
         # Update source information for each unique source FIRST (before inserting documents)
-        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=LLM_MAX_CONCURRENCY) as executor:
             source_summary_args = [(source_id, content) for source_id, content in source_content_map.items()]
             source_summaries = list(executor.map(lambda args: extract_source_summary(args[0], args[1]), source_summary_args))
         
@@ -664,7 +665,7 @@ async def smart_crawl_url(ctx: Context, url: str, max_depth: int = 3, max_concur
                 
                 if code_blocks:
                     # Process code examples in parallel
-                    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+                    with concurrent.futures.ThreadPoolExecutor(max_workers=LLM_MAX_CONCURRENCY) as executor:
                         # Prepare arguments for parallel processing
                         summary_args = [(block['code'], block['context_before'], block['context_after']) 
                                         for block in code_blocks]

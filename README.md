@@ -185,6 +185,10 @@ OPENAI_API_KEY=your_openai_api_key
 # LLM for summaries and contextual embeddings
 MODEL_CHOICE=gpt-4.1-nano
 
+# LLM API Rate Limit Settings
+LLM_MAX_CONCURRENCY=3
+LLM_REQUEST_DELAY=0
+
 # RAG Strategies (set to "true" or "false", default to "false")
 USE_CONTEXTUAL_EMBEDDINGS=false
 USE_HYBRID_SEARCH=false
@@ -243,6 +247,12 @@ Enables AI hallucination detection and repository analysis using Neo4j knowledge
 - **Trade-offs**: Requires Neo4j setup and additional dependencies. Repository parsing can be slow for large codebases, and validation requires repositories to be pre-indexed.
 - **Cost**: No additional API costs for validation, but requires Neo4j infrastructure (can use free local installation or cloud AuraDB).
 - **Benefits**: Provides three powerful tools: `parse_github_repository` for indexing codebases, `check_ai_script_hallucinations` for validating AI-generated code, and `query_knowledge_graph` for exploring indexed repositories.
+
+### OpenAI Rate Limit Tuning
+Control LLM API load with two variables:
+- `LLM_MAX_CONCURRENCY` sets the number of parallel OpenAI requests.
+- `LLM_REQUEST_DELAY` waits (in seconds) after each request.
+For free or low-tier plans, try values like `LLM_MAX_CONCURRENCY=2` and `LLM_REQUEST_DELAY=0.5`.
 
 ### Recommended Configurations
 
