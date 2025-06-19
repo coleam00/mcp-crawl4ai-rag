@@ -286,8 +286,8 @@ def search_documents(
             # We're in an async context, create a new event loop in a thread
             import threading
 
-            result = [None]
-            exception = [None]
+            result: List[Optional[List[float]]] = [None]
+            exception: List[Optional[Exception]] = [None]
 
             def run_in_thread():
                 try:
@@ -378,15 +378,15 @@ def extract_code_blocks(markdown_content: str, min_length: int = 1000) -> List[D
             {
                 "code": code_content,
                 "language": language,
-                            "start_line": start_line,
-                            "end_line": i,
+                "start_line": start_line,
+                "end_line": i,
                 "context_before": context_before,
                 "context_after": context_after,
-                        }
-                    )
-                current_block = []
-                language = ""
-        elif in_code_block:
+            }
+        )
+        current_block = []
+        language = ""
+        if in_code_block:
             current_block.append(line)
 
     return code_blocks
@@ -474,9 +474,9 @@ async def add_code_examples_to_supabase(
             client.table("code_examples").delete().in_("url", unique_urls).execute()
     except Exception as error:
         print(f"Batch delete failed: {error}. Trying one-by-one deletion as fallback.")
-    for url in unique_urls:
-        try:
-            client.table("code_examples").delete().eq("url", url).execute()
+        for url in unique_urls:
+            try:
+                client.table("code_examples").delete().eq("url", url).execute()
             except Exception as delete_error:
                 print(f"Failed to delete code examples for URL {url}: {delete_error}")
 
@@ -496,15 +496,15 @@ async def add_code_examples_to_supabase(
             "summary": summaries[i],
             "embedding": embeddings[i],
             "metadata": metadatas[i],
-                    "source_id": source_id,
+            "source_id": source_id,
             "language": metadatas[i].get("language", ""),
-                }
+        }
         examples.append(example)
 
     # Insert examples in batches
     for i in range(0, len(examples), batch_size):
         batch = examples[i : i + batch_size]
-            try:
+        try:
             client.table("code_examples").insert(batch).execute()
             print(
                 f"Successfully inserted code examples batch "
@@ -515,16 +515,16 @@ async def add_code_examples_to_supabase(
             # Try inserting examples one by one as fallback
             successful_insertions = 0
             for example in batch:
-                        try:
+                try:
                     client.table("code_examples").insert(example).execute()
                     successful_insertions += 1
                 except Exception as example_error:
-                    print(f"Failed to insert code example {example['url']}: " f"{example_error}")
+                    print(f"Failed to insert code example {example['url']}: {example_error}")
 
-                        print(
+            print(
                 f"Successfully inserted {successful_insertions}/{len(batch)} "
                 f"code examples individually in batch {i//batch_size + 1}"
-        )
+            )
 
 
 def update_source_info(client: Client, source_id: str, summary: str, word_count: int):

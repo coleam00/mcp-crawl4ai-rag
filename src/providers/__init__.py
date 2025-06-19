@@ -13,22 +13,16 @@ Each provider implements the same interface for embeddings and completions.
 
 from .anthropic_provider import AnthropicProvider
 from .base import BaseProvider, CompletionResponse, EmbeddingResponse
-from .deepseek_provider import DeepSeekProvider
 from .factory import get_provider
 from .gemini_provider import GeminiProvider
 from .manager import ProviderManager, get_provider_manager
-from .ollama_provider import OllamaProvider
 from .openai_compatible import OpenAICompatibleProvider
-from .openai_provider import OpenAIProvider
 
 __all__ = [
     "BaseProvider",
     "EmbeddingResponse",
     "CompletionResponse",
-    "OpenAIProvider",
-    "OllamaProvider",
     "GeminiProvider",
-    "DeepSeekProvider",
     "AnthropicProvider",
     "OpenAICompatibleProvider",
     "ProviderManager",

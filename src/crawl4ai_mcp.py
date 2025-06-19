@@ -33,7 +33,7 @@ except ImportError:
 from providers import ProviderManager, get_provider_manager
 from utils import (
     add_code_examples_to_supabase,
-    add_documents_to_supabase, 
+    add_documents_to_supabase,
     extract_code_blocks,
     extract_source_summary,
     generate_code_example_summary,
@@ -60,24 +60,24 @@ class Crawl4AIContext:
 async def crawl4ai_lifespan(server: FastMCP) -> AsyncIterator[Crawl4AIContext]:
     """
     Lifespan context manager for the Crawl4AI MCP server.
-    
+
     Args:
         server: The FastMCP server instance
-        
+
     Yields:
         Crawl4AIContext: The context containing the Crawl4AI crawler, Supabase client, and AI provider
     """
     # Create browser configuration
     browser_config = BrowserConfig(headless=True, verbose=False)
-    
+
     # Initialize the crawler
     crawler = AsyncWebCrawler(config=browser_config)
     # Use context manager directly instead of dunder method
     await crawler.start()
-    
+
     # Initialize Supabase client
     supabase_client = get_supabase_client()
-    
+
     # Initialize AI provider manager
     ai_provider = get_provider_manager()
     provider_info = ai_provider.provider_info
@@ -89,7 +89,7 @@ async def crawl4ai_lifespan(server: FastMCP) -> AsyncIterator[Crawl4AIContext]:
         f"Models: {provider_info['embedding_model']} (embeddings) + "
         f"{provider_info['llm_model']} (completions)"
     )
-    
+
     # Initialize cross-encoder model for reranking if enabled
     reranking_model = None
     if os.getenv("USE_RERANKING", "false") == "true" and CrossEncoder is not None:
@@ -103,7 +103,7 @@ async def crawl4ai_lifespan(server: FastMCP) -> AsyncIterator[Crawl4AIContext]:
             "Reranking requested but sentence_transformers not installed. "
             "Install with: pip install sentence-transformers"
         )
-    
+
     try:
         yield Crawl4AIContext(
             crawler=crawler,
@@ -134,36 +134,36 @@ def rerank_results(
 ) -> List[Dict[str, Any]]:
     """
     Rerank search results using a cross-encoder model.
-    
+
     Args:
         model: The cross-encoder model to use for reranking
         query: The search query
         results: List of search results
         content_key: The key in each result dict that contains the text content
-        
+
     Returns:
         Reranked list of results
     """
     if not model or not results:
         return results
-    
+
     try:
         # Extract content from results
         texts = [result.get(content_key, "") for result in results]
-        
+
         # Create pairs of [query, document] for the cross-encoder
         pairs = [[query, text] for text in texts]
-        
+
         # Get relevance scores from the cross-encoder
         scores = model.predict(pairs)
-        
+
         # Add scores to results and sort by score (descending)
         for i, result in enumerate(results):
             result["rerank_score"] = float(scores[i])
-        
+
         # Sort by rerank score
         reranked = sorted(results, key=lambda x: x.get("rerank_score", 0), reverse=True)
-        
+
         return reranked
     # Use more specific exception handling where possible
     except Exception as error:
@@ -174,10 +174,10 @@ def rerank_results(
 def is_sitemap(url: str) -> bool:
     """
     Check if a URL is a sitemap.
-    
+
     Args:
         url: URL to check
-        
+
     Returns:
         True if the URL is a sitemap, False otherwise
     """
@@ -187,10 +187,10 @@ def is_sitemap(url: str) -> bool:
 def is_txt(url: str) -> bool:
     """
     Check if a URL is a text file.
-    
+
     Args:
         url: URL to check
-        
+
     Returns:
         True if the URL is a text file, False otherwise
     """
@@ -200,10 +200,10 @@ def is_txt(url: str) -> bool:
 def parse_sitemap(sitemap_url: str) -> List[str]:
     """
     Parse a sitemap and extract URLs.
-    
+
     Args:
         sitemap_url: URL of the sitemap
-        
+
     Returns:
         List of URLs found in the sitemap
     """
@@ -299,10 +299,10 @@ async def process_code_example(args):
 async def crawl_single_page(ctx: Context, url: str) -> str:
     """
     Crawl a single page and extract its content.
-    
+
     Args:
         url: The URL to crawl
-    
+
     Returns:
         Summary of the crawled page with metadata
     """
@@ -323,8 +323,8 @@ async def crawl_single_page(ctx: Context, url: str) -> str:
                 source_id = urlparse(url).netloc
 
                 # Add sitemap info to Supabase
-            contents = []
-            metadatas = []
+                contents = []
+                metadatas = []
                 chunk_numbers = []
                 urls_list = []
 
@@ -378,7 +378,7 @@ async def crawl_single_page(ctx: Context, url: str) -> str:
             base_metadata = {
                 "title": result.metadata.get("title", ""),
                 "description": result.metadata.get("description", ""),
-                            "url": url,
+                "url": url,
                 "timestamp": datetime.now().isoformat(),
                 "source": urlparse(url).netloc,
             }
@@ -391,7 +391,7 @@ async def crawl_single_page(ctx: Context, url: str) -> str:
                     coro = current_task.get_coro()
                     if coro and hasattr(coro, "__name__"):
                         base_metadata["crawl_time"] = str(coro.__name__)
-        else:
+                    else:
                         base_metadata["crawl_time"] = "unknown"
                 else:
                     base_metadata["crawl_time"] = "no_task"
@@ -514,7 +514,7 @@ async def _process_crawl_results(
     all_contents = []
     all_metadatas = []
     all_chunk_numbers = []
-        url_to_full_document = {}
+    url_to_full_document = {}
 
     # Process each result
     for result_data in results:
@@ -562,7 +562,7 @@ async def _process_code_examples(crawl_ctx, results: List[Dict[str, Any]]) -> in
 
         # Extract code examples
         code_examples = extract_code_blocks(content)
-            if code_examples:
+        if code_examples:
             # Generate summaries for code examples
             code_args = [
                 (example["code"], example["context_before"], example["context_after"])
@@ -585,7 +585,7 @@ async def _process_code_examples(crawl_ctx, results: List[Dict[str, Any]]) -> in
 
                 all_code_data.append(
                     {
-            "url": url,
+                        "url": url,
                         "code": example["code"],
                         "summary": summary,
                         "metadata": code_metadata,
@@ -619,13 +619,13 @@ async def smart_crawl_url(
 ) -> str:
     """
     Intelligently crawl a URL and its related pages.
-    
+
     Args:
         url: The starting URL to crawl
         max_depth: Maximum depth for recursive crawling (default: 3)
         max_concurrent: Maximum number of concurrent requests (default: 10)
         chunk_size: Size of text chunks for processing (default: 5000)
-    
+
     Returns:
         Summary of the crawling results
     """
@@ -813,12 +813,12 @@ async def perform_rag_query(
 ) -> str:
     """
     Perform a RAG (Retrieval-Augmented Generation) query against the knowledge base.
-    
+
     Args:
         query: The question or query to search for
         source: Optional source filter (e.g., 'docs.python.org')
         match_count: Number of relevant chunks to retrieve (default: 5)
-    
+
     Returns:
         AI-generated response based on retrieved context
     """
@@ -986,7 +986,7 @@ async def search_code_examples(
 
         return json.dumps(
             {
-            "query": query,
+                "query": query,
                 "total_found": len(results),
                 "results": results,
             },
@@ -1002,11 +1002,11 @@ async def search_code_examples(
 async def crawl_markdown_file(crawler: AsyncWebCrawler, url: str) -> List[Dict[str, Any]]:
     """
     Crawl a markdown file from a URL.
-    
+
     Args:
         crawler: The AsyncWebCrawler instance
         url: URL of the markdown file
-        
+
     Returns:
         List containing the crawled markdown content
     """
@@ -1047,12 +1047,12 @@ async def crawl_batch(
 ) -> List[Dict[str, Any]]:
     """
     Crawl a batch of URLs concurrently.
-    
+
     Args:
         crawler: The AsyncWebCrawler instance
         urls: List of URLs to crawl
         max_concurrent: Maximum number of concurrent requests
-        
+
     Returns:
         List of crawled results
     """
@@ -1106,13 +1106,13 @@ async def crawl_recursive_internal_links(
 ) -> List[Dict[str, Any]]:
     """
     Crawl internal links recursively up to a specified depth.
-    
+
     Args:
         crawler: The AsyncWebCrawler instance
         start_urls: List of starting URLs
         max_depth: Maximum recursion depth
         max_concurrent: Maximum number of concurrent requests
-        
+
     Returns:
         List of crawled results
     """

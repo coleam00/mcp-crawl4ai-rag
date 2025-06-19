@@ -146,13 +146,3 @@ MODEL_CHOICE=gpt-4o-mini
 4. **Simplified Maintenance**: Fewer provider-specific files
 5. **Future-Proof**: Easy to add new OpenAI-compatible services
 6. **Improved Performance**: Full async architecture throughout
-
-## 📝 Next Steps for PR
-
-1. **Update PR description** with this implementation summary
-2. **Highlight backward compatibility** to address any concerns
-3. **Emphasize cost benefits** of dual-provider approach
-4. **Document async improvements** specifically as requested
-5. **Show OpenRouter integration** without zero embeddings fallback
-
-The implementation now addresses all three points from the owner's feedback while maintaining full backward compatibility. 

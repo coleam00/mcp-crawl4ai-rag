@@ -7,10 +7,8 @@ from typing import Any, Dict, Optional
 
 from .anthropic_provider import AnthropicProvider
 from .base import BaseProvider
-from .deepseek_provider import DeepSeekProvider
 from .gemini_provider import GeminiProvider
-from .ollama_provider import OllamaProvider
-from .openai_provider import OpenAIProvider
+from .openai_compatible import OpenAICompatibleProvider
 
 
 def get_provider(provider_name: Optional[str] = None) -> BaseProvider:
@@ -40,10 +38,10 @@ def get_provider(provider_name: Optional[str] = None) -> BaseProvider:
 
     # Provider class mapping
     provider_classes = {
-        "openai": OpenAIProvider,
-        "ollama": OllamaProvider,
+        "openai": OpenAICompatibleProvider,
+        "ollama": OpenAICompatibleProvider,
         "gemini": GeminiProvider,
-        "deepseek": DeepSeekProvider,
+        "deepseek": OpenAICompatibleProvider,
         "anthropic": AnthropicProvider,
     }
 
@@ -55,7 +53,11 @@ def get_provider(provider_name: Optional[str] = None) -> BaseProvider:
     config = provider_configs[provider]()
 
     # Create and return provider instance
-    return provider_classes[provider](config)
+    provider_class = provider_classes[provider]
+    if provider_class == OpenAICompatibleProvider:
+        return provider_class(config, provider)
+
+    return provider_class(config)
 
 
 def _get_openai_config() -> Dict[str, Any]:
@@ -64,16 +66,20 @@ def _get_openai_config() -> Dict[str, Any]:
     if not api_key:
         raise ValueError("OPENAI_API_KEY environment variable is required for OpenAI provider")
 
-    return {"api_key": api_key, "model_choice": os.getenv("MODEL_CHOICE", "gpt-4o-mini")}
+    return {
+        "api_key": api_key,
+        "llm_model": os.getenv("MODEL_CHOICE", "gpt-4o-mini"),
+        "embedding_model": os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"),
+    }
 
 
 def _get_ollama_config() -> Dict[str, Any]:
     """Get Ollama provider configuration."""
     return {
-        "base_url": os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
+        "base_url": os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1"),
+        "api_key": "ollama",  # Dummy key for OpenAI-compatible mode
         "embedding_model": os.getenv("OLLAMA_EMBEDDING_MODEL", "nomic-embed-text"),
-        "completion_model": os.getenv("OLLAMA_COMPLETION_MODEL", "llama3.2"),
-        "model_choice": os.getenv("MODEL_CHOICE", "llama3.2"),
+        "llm_model": os.getenv("MODEL_CHOICE", "llama3.2"),
     }
 
 
@@ -95,7 +101,8 @@ def _get_deepseek_config() -> Dict[str, Any]:
     return {
         "api_key": api_key,
         "base_url": os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1"),
-        "model_choice": os.getenv("MODEL_CHOICE", "deepseek-chat"),
+        "llm_model": os.getenv("MODEL_CHOICE", "deepseek-chat"),
+        "embedding_model": None,  # DeepSeek doesn't support embeddings
     }
 
 

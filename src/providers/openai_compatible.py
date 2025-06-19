@@ -63,7 +63,9 @@ class OpenAICompatibleProvider(BaseProvider):
         embedding_model = model or self.embedding_model
         if not embedding_model:
             print(
-                f"Warning: {self.provider_type} doesn't support embeddings. Using zero embeddings as fallback."
+                "Warning: {} doesn't support embeddings. Using zero embeddings as fallback.".format(
+                    self.provider_type
+                )
             )
             embeddings = [[0.0] * self.embedding_dimension for _ in texts]
             return EmbeddingResponse(embeddings=embeddings, model=f"{self.provider_type}-fallback")
@@ -117,6 +119,12 @@ class OpenAICompatibleProvider(BaseProvider):
                     )
                     return EmbeddingResponse(embeddings=embeddings, model=embedding_model)
 
+        # Fallback if all retries failed
+        return EmbeddingResponse(
+            embeddings=[[0.0] * self.embedding_dimension for _ in texts],
+            model=embedding_model or f"{self.provider_type}-fallback",
+        )
+
     async def create_completion(
         self,
         messages: List[Dict[str, str]],
@@ -155,7 +163,7 @@ class OpenAICompatibleProvider(BaseProvider):
                 "text-embedding-3-large": 3072,
                 "text-embedding-ada-002": 1536,
             }
-            return model_dimensions.get(self.embedding_model, 1536)
+            return model_dimensions.get(self.embedding_model or "", 1536)
 
         elif self.provider_type == "ollama":
             # Ollama embedding dimensions (based on model)
@@ -165,7 +173,7 @@ class OpenAICompatibleProvider(BaseProvider):
                 "snowflake-arctic-embed": 1024,
                 "all-minilm": 384,
             }
-            return model_dimensions.get(self.embedding_model, 768)
+            return model_dimensions.get(self.embedding_model or "", 768)
 
         elif self.provider_type == "deepseek":
             # DeepSeek doesn't have embeddings, but return standard dimension

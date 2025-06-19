@@ -1,8 +1,5 @@
 """
-Provider manager for handling separate embedding and LLM providers.
-
-This manager enables using different providers for embeddings and completions,
-e.g., OpenAI for embeddings and DeepSeek for completions.
+Provider manager for handling multiple AI providers and embeddings.
 """
 
 import os
@@ -10,9 +7,9 @@ from typing import Any, Dict, Optional, Tuple
 
 from .anthropic_provider import AnthropicProvider
 from .base import BaseProvider
+from .factory import get_provider
 from .gemini_provider import GeminiProvider
 from .openai_compatible import OpenAICompatibleProvider
-from .openai_provider import OpenAIProvider  # Keep for backward compatibility
 
 
 class ProviderManager:
@@ -68,10 +65,14 @@ class ProviderManager:
 
     async def create_embeddings(self, texts, model=None):
         """Create embeddings using the embedding provider."""
+        if self.embedding_provider is None:
+            raise RuntimeError("Embedding provider not initialized")
         return await self.embedding_provider.create_embeddings(texts, model)
 
     async def create_completion(self, messages, model=None, temperature=0.3, max_tokens=None):
         """Create completion using the LLM provider."""
+        if self.llm_provider is None:
+            raise RuntimeError("LLM provider not initialized")
         return await self.llm_provider.create_completion(messages, model, temperature, max_tokens)
 
     @property

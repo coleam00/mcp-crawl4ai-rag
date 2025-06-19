@@ -1,11 +1,11 @@
 """
-Anthropic provider implementation.
+Anthropic provider implementation using Claude models.
 """
 
-import json
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 import aiohttp
+import anthropic
 
 from .base import BaseProvider, CompletionResponse, EmbeddingResponse
 

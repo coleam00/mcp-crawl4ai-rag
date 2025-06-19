@@ -2,7 +2,6 @@
 Google Gemini provider implementation.
 """
 
-import json
 from typing import Any, Dict, List, Optional
 
 import aiohttp

@@ -12,6 +12,9 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "sentence-transformers>=4.1.0",
     "aiohttp>=3.8.0",
+    "anthropic>=0.25.0",
+    "google-generativeai>=0.8.0",
+    "fastmcp>=0.3.0",
 ]
 
 # Development dependencies for linting and formatting
