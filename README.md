@@ -10,6 +10,8 @@ With this MCP server, you can <b>scrape anything</b> and then <b>use that knowle
 
 The primary goal is to bring this MCP server into [Archon](https://github.com/coleam00/Archon) as I evolve it to be more of a knowledge engine for AI coding assistants to build AI agents. This first version of the Crawl4AI/RAG MCP server will be improved upon greatly soon, especially making it more configurable so you can use different embedding models and run everything locally with Ollama.
 
+Consider this GitHub repository a testbed, hence why I haven't been super actively address issues and pull requests yet. I certainly will though as I bring this into Archon V2!
+
 ## Overview
 
 This MCP server provides tools that enable AI agents to crawl websites, store content in a vector database (Supabase), and perform RAG over the crawled content. It follows the best practices for building MCP servers based on the [Mem0 MCP server template](https://github.com/coleam00/mcp-mem0/) I provided on my channel previously.
@@ -61,7 +63,7 @@ The server provides essential web crawling and search tools:
 
 5. **`search_code_examples`** (requires `USE_AGENTIC_RAG=true`): Search specifically for code examples and their summaries from crawled documentation. This tool provides targeted code snippet retrieval for AI coding assistants.
 
-### Knowledge Graph Tools (requires `USE_KNOWLEDGE_GRAPH=true`)
+### Knowledge Graph Tools (requires `USE_KNOWLEDGE_GRAPH=true`, see below)
 
 6. **`parse_github_repository`**: Parse a GitHub repository into a Neo4j knowledge graph, extracting classes, methods, functions, and their relationships for hallucination detection
 7. **`check_ai_script_hallucinations`**: Analyze Python scripts for AI hallucinations by validating imports, method calls, and class usage against the knowledge graph
@@ -132,7 +134,11 @@ Before running the server, you need to set up the database with the pgvector ext
 
 ## Knowledge Graph Setup (Optional)
 
-To enable AI hallucination detection and repository analysis features, you need to set up Neo4j:
+To enable AI hallucination detection and repository analysis features, you need to set up Neo4j.
+
+Also, the knowledge graph implementation isn't fully compatible with Docker yet, so I would recommend right now running directly through uv if you want to use the hallucination detection within the MCP server!
+
+For installing Neo4j:
 
 ### Local AI Package (Recommended)
 
@@ -241,18 +247,41 @@ Applies cross-encoder reranking to search results after initial retrieval. Uses 
 - **Benefits**: Better result relevance, especially for complex queries. Works with both regular RAG search and code example search.
 
 #### 5. **USE_KNOWLEDGE_GRAPH**
-Enables AI hallucination detection and repository analysis using Neo4j knowledge graphs. When enabled, the system can parse GitHub repositories into a graph database and validate AI-generated code against real repository structures.
+Enables AI hallucination detection and repository analysis using Neo4j knowledge graphs. When enabled, the system can parse GitHub repositories into a graph database and validate AI-generated code against real repository structures. (NOT fully compatible with Docker yet, I'd recommend running through uv)
 
 - **When to use**: Enable this for AI coding assistants that need to validate generated code against real implementations, or when you want to detect when AI models hallucinate non-existent methods, classes, or incorrect usage patterns.
 - **Trade-offs**: Requires Neo4j setup and additional dependencies. Repository parsing can be slow for large codebases, and validation requires repositories to be pre-indexed.
 - **Cost**: No additional API costs for validation, but requires Neo4j infrastructure (can use free local installation or cloud AuraDB).
 - **Benefits**: Provides three powerful tools: `parse_github_repository` for indexing codebases, `check_ai_script_hallucinations` for validating AI-generated code, and `query_knowledge_graph` for exploring indexed repositories.
 
-### OpenAI Rate Limit Tuning
-Control LLM API load with two variables:
-- `LLM_MAX_CONCURRENCY` sets the number of parallel OpenAI requests.
-- `LLM_REQUEST_DELAY` waits (in seconds) after each request.
-For free or low-tier plans, try values like `LLM_MAX_CONCURRENCY=2` and `LLM_REQUEST_DELAY=0.5`.
+### OpenAI Rate-Limit Tuning
+Control LLM API load with two environment variables:
+
+| Variable               | What it does                                               | Typical values (low–tier plans) |
+|------------------------|------------------------------------------------------------|----------------------------------------|
+| `LLM_MAX_CONCURRENCY`  | Maximum parallel OpenAI requests the server will issue     | `2`                                    |
+| `LLM_REQUEST_DELAY`    | Seconds to wait after *each* request before sending another| `0.5`                                  |
+
+Tweak these if you hit `429: rate_limit_exceeded` errors.
+
+---
+
+### Knowledge-Graph Usage Examples
+Once `USE_KNOWLEDGE_GRAPH=true` is set and Neo4j is running, you can:
+
+1. **Add a repository**
+
+   > “Add `https://github.com/pydantic/pydantic-ai.git` to the knowledge graph”
+
+   (The URL **must** end in `.git`.)
+
+2. **Check a script for hallucinations**
+
+   ```bash
+   python knowledge_graphs/ai_hallucination_detector.py /path/to/your_script.py
+   ```
+   
+These commands are also available to AI coding assistants through the parse_github_repository and check_ai_script_hallucinations tools.
 
 ### Recommended Configurations
 
