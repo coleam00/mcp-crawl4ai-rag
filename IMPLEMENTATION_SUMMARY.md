@@ -131,20 +131,6 @@ MODEL_CHOICE=gpt-4o-mini
 - `get_provider()` still works for single-provider mode
 - `get_provider_manager()` is the new recommended approach
 
-## 🧪 Testing
-
-Run the test script to validate the implementation:
-```bash
-python test_providers.py
-```
-
-This tests:
-- Configuration detection logic
-- Dual-provider mode functionality
-- Single-provider backward compatibility
-- Mixed provider combinations
-- Provider information reporting
-
 ## 🆕 New Files Created
 
 1. `src/providers/manager.py` - Main provider manager with dual-provider support
