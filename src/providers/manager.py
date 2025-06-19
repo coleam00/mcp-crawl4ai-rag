@@ -24,158 +24,47 @@ class ProviderManager:
     2. Single-provider mode: Single AI_PROVIDER (backward compatibility)
     """
 
-    def __init__(self):
-        self.embedding_provider: BaseProvider = None
-        self.llm_provider: BaseProvider = None
-        self._initialize_providers()
+    def __init__(self, config: Dict[str, str]):
+        """Initialize the provider manager with configuration."""
+        self.config = config
+        self.embedding_provider = None
+        self.llm_provider = None
+        self._setup_providers()
 
-    def _initialize_providers(self):
-        """Initialize embedding and LLM providers based on configuration."""
-        # Check if using dual-provider mode
-        embedding_provider_name = os.getenv("EMBEDDING_PROVIDER")
-        llm_provider_name = os.getenv("LLM_PROVIDER")
+    def _setup_providers(self):
+        """Set up embedding and LLM providers based on configuration."""
+        # Check if dual-provider mode is configured
+        embedding_provider_name = self.config.get("EMBEDDING_PROVIDER")
+        llm_provider_name = self.config.get("LLM_PROVIDER")
 
         if embedding_provider_name and llm_provider_name:
             # Dual-provider mode
-            print(
-                f"Using dual-provider mode: {embedding_provider_name} (embeddings) + {llm_provider_name} (LLM)"
-            )
             self.embedding_provider = self._create_provider(embedding_provider_name, "embedding")
             self.llm_provider = self._create_provider(llm_provider_name, "llm")
-        else:
+        elif self.config.get("AI_PROVIDER"):
             # Single-provider mode (backward compatibility)
-            ai_provider = os.getenv("AI_PROVIDER", "openai").lower()
-            print(f"Using single-provider mode: {ai_provider}")
-            provider = self._create_provider(ai_provider, "both")
-            self.embedding_provider = provider
-            self.llm_provider = provider
+            single_provider_name = self.config["AI_PROVIDER"]
+            single_provider = self._create_provider(single_provider_name, "both")
+            self.embedding_provider = single_provider
+            self.llm_provider = single_provider
+        else:
+            # Default to OpenAI-compatible provider
+            default_provider = self._create_provider("openai", "both")
+            self.embedding_provider = default_provider
+            self.llm_provider = default_provider
 
-    def _create_provider(self, provider_name: str, usage_type: str) -> BaseProvider:
-        """
-        Create a provider instance.
-
-        Args:
-            provider_name: Name of the provider
-            usage_type: "embedding", "llm", or "both"
-
-        Returns:
-            Configured provider instance
-        """
+    def _create_provider(self, provider_name: str, mode: str) -> BaseProvider:
+        """Create a provider instance based on name and mode."""
         provider_name = provider_name.lower()
 
-        # OpenAI-compatible providers
         if provider_name in ["openai", "deepseek", "ollama", "openrouter"]:
-            config = self._get_openai_compatible_config(provider_name, usage_type)
-            return OpenAICompatibleProvider(config, provider_name)
+            return OpenAICompatibleProvider(self.config, provider_name)
+        if provider_name == "gemini":
+            return GeminiProvider(self.config)
+        if provider_name == "anthropic":
+            return AnthropicProvider(self.config)
 
-        # Custom providers
-        elif provider_name == "gemini":
-            config = self._get_gemini_config(usage_type)
-            return GeminiProvider(config)
-
-        elif provider_name == "anthropic":
-            config = self._get_anthropic_config(usage_type)
-            return AnthropicProvider(config)
-
-        else:
-            supported_providers = [
-                "openai",
-                "deepseek",
-                "ollama",
-                "openrouter",
-                "gemini",
-                "anthropic",
-            ]
-            raise ValueError(
-                f"Unsupported provider '{provider_name}'. Supported: {', '.join(supported_providers)}"
-            )
-
-    def _get_openai_compatible_config(self, provider_name: str, usage_type: str) -> Dict[str, Any]:
-        """Get configuration for OpenAI-compatible providers."""
-        config = {"provider_type": provider_name}
-
-        if provider_name == "openai":
-            api_key = os.getenv("OPENAI_API_KEY")
-            if not api_key:
-                raise ValueError("OPENAI_API_KEY environment variable is required")
-            config.update(
-                {
-                    "api_key": api_key,
-                    "base_url": None,  # Use default OpenAI base URL
-                    "embedding_model": os.getenv("EMBEDDING_MODEL", "text-embedding-3-small"),
-                    "llm_model": os.getenv("LLM_MODEL", os.getenv("MODEL_CHOICE", "gpt-4o-mini")),
-                }
-            )
-
-        elif provider_name == "deepseek":
-            api_key = os.getenv("DEEPSEEK_API_KEY")
-            if not api_key:
-                raise ValueError("DEEPSEEK_API_KEY environment variable is required")
-            config.update(
-                {
-                    "api_key": api_key,
-                    "base_url": os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1"),
-                    "embedding_model": None,  # DeepSeek doesn't support embeddings
-                    "llm_model": os.getenv("LLM_MODEL", os.getenv("MODEL_CHOICE", "deepseek-chat")),
-                }
-            )
-
-        elif provider_name == "ollama":
-            config.update(
-                {
-                    "api_key": "ollama",  # Ollama doesn't require API key
-                    "base_url": os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1"),
-                    "embedding_model": os.getenv(
-                        "EMBEDDING_MODEL", os.getenv("OLLAMA_EMBEDDING_MODEL", "nomic-embed-text")
-                    ),
-                    "llm_model": os.getenv(
-                        "LLM_MODEL",
-                        os.getenv("OLLAMA_COMPLETION_MODEL", os.getenv("MODEL_CHOICE", "llama3.2")),
-                    ),
-                }
-            )
-
-        elif provider_name == "openrouter":
-            api_key = os.getenv("OPENROUTER_API_KEY")
-            if not api_key:
-                raise ValueError("OPENROUTER_API_KEY environment variable is required")
-            config.update(
-                {
-                    "api_key": api_key,
-                    "base_url": "https://openrouter.ai/api/v1",
-                    "embedding_model": None,  # Most OpenRouter models don't support embeddings
-                    "llm_model": os.getenv(
-                        "LLM_MODEL", os.getenv("MODEL_CHOICE", "anthropic/claude-3-5-haiku")
-                    ),
-                }
-            )
-
-        return config
-
-    def _get_gemini_config(self, usage_type: str) -> Dict[str, Any]:
-        """Get Gemini provider configuration."""
-        api_key = os.getenv("GEMINI_API_KEY")
-        if not api_key:
-            raise ValueError("GEMINI_API_KEY environment variable is required")
-
-        return {
-            "api_key": api_key,
-            "embedding_model": os.getenv("EMBEDDING_MODEL", "text-embedding-004"),
-            "llm_model": os.getenv("LLM_MODEL", os.getenv("MODEL_CHOICE", "gemini-1.5-flash")),
-        }
-
-    def _get_anthropic_config(self, usage_type: str) -> Dict[str, Any]:
-        """Get Anthropic provider configuration."""
-        api_key = os.getenv("ANTHROPIC_API_KEY")
-        if not api_key:
-            raise ValueError("ANTHROPIC_API_KEY environment variable is required")
-
-        return {
-            "api_key": api_key,
-            "llm_model": os.getenv(
-                "LLM_MODEL", os.getenv("MODEL_CHOICE", "claude-3-5-haiku-20241022")
-            ),
-        }
+        raise ValueError(f"Unknown provider: {provider_name}")
 
     async def create_embeddings(self, texts, model=None):
         """Create embeddings using the embedding provider."""
@@ -186,21 +75,47 @@ class ProviderManager:
         return await self.llm_provider.create_completion(messages, model, temperature, max_tokens)
 
     @property
-    def embedding_dimension(self) -> int:
-        """Get embedding dimension from the embedding provider."""
-        return self.embedding_provider.embedding_dimension
-
-    @property
     def provider_info(self) -> Dict[str, str]:
-        """Get information about the current providers."""
+        """Get information about the configured providers."""
         return {
-            "embedding_provider": self.embedding_provider.provider_name,
-            "llm_provider": self.llm_provider.provider_name,
-            "embedding_model": self.embedding_provider.default_embedding_model,
-            "llm_model": self.llm_provider.default_completion_model,
+            "embedding_provider": (
+                self.embedding_provider.provider_name if self.embedding_provider else "none"
+            ),
+            "llm_provider": (self.llm_provider.provider_name if self.llm_provider else "none"),
+            "embedding_model": (
+                self.embedding_provider.default_embedding_model
+                if self.embedding_provider
+                else "none"
+            ),
+            "llm_model": (
+                self.llm_provider.default_completion_model if self.llm_provider else "none"
+            ),
         }
 
 
 def get_provider_manager() -> ProviderManager:
-    """Get a configured provider manager instance."""
-    return ProviderManager()
+    """
+    Factory function to create a ProviderManager instance.
+
+    Returns:
+        ProviderManager: Configured provider manager instance
+    """
+    config = {
+        # Dual-provider configuration
+        "EMBEDDING_PROVIDER": os.getenv("EMBEDDING_PROVIDER"),
+        "EMBEDDING_MODEL": os.getenv("EMBEDDING_MODEL"),
+        "LLM_PROVIDER": os.getenv("LLM_PROVIDER"),
+        "LLM_MODEL": os.getenv("LLM_MODEL"),
+        # Single-provider configuration (backward compatibility)
+        "AI_PROVIDER": os.getenv("AI_PROVIDER"),
+        "AI_MODEL": os.getenv("AI_MODEL"),
+        # API keys and configurations
+        "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY"),
+        "ANTHROPIC_API_KEY": os.getenv("ANTHROPIC_API_KEY"),
+        "GEMINI_API_KEY": os.getenv("GEMINI_API_KEY"),
+        "DEEPSEEK_API_KEY": os.getenv("DEEPSEEK_API_KEY"),
+        "OLLAMA_BASE_URL": os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
+        "OPENROUTER_API_KEY": os.getenv("OPENROUTER_API_KEY"),
+    }
+
+    return ProviderManager(config)

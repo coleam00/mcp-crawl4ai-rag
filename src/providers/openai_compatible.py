@@ -85,13 +85,16 @@ class OpenAICompatibleProvider(BaseProvider):
             except Exception as e:
                 if retry < max_retries - 1:
                     print(
-                        f"Error creating batch embeddings (attempt {retry + 1}/{max_retries}): {e}"
+                        f"Error creating batch embeddings "
+                        f"(attempt {retry + 1}/{max_retries}): {e}"
                     )
                     print(f"Retrying in {retry_delay} seconds...")
                     time.sleep(retry_delay)
                     retry_delay *= 2
                 else:
-                    print(f"Failed to create batch embeddings after {max_retries} attempts: {e}")
+                    print(
+                        f"Failed to create batch embeddings " f"after {max_retries} attempts: {e}"
+                    )
                     # Try individual embeddings as fallback
                     print("Attempting to create embeddings individually...")
                     embeddings = []

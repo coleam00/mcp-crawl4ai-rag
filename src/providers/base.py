@@ -4,7 +4,7 @@ Base provider interface for AI services.
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 
 @dataclass
@@ -41,7 +41,7 @@ class BaseProvider(ABC):
     @abstractmethod
     def _validate_config(self) -> None:
         """Validate provider configuration."""
-        pass
+        ...
 
     @abstractmethod
     async def create_embeddings(
@@ -57,7 +57,7 @@ class BaseProvider(ABC):
         Returns:
             EmbeddingResponse containing embeddings and metadata
         """
-        pass
+        ...
 
     @abstractmethod
     async def create_completion(
@@ -79,28 +79,28 @@ class BaseProvider(ABC):
         Returns:
             CompletionResponse containing generated content and metadata
         """
-        pass
+        ...
 
     @property
     @abstractmethod
     def embedding_dimension(self) -> int:
         """Get the dimension of embeddings from this provider."""
-        pass
+        ...
 
     @property
     @abstractmethod
     def default_embedding_model(self) -> str:
         """Get the default embedding model for this provider."""
-        pass
+        ...
 
     @property
     @abstractmethod
     def default_completion_model(self) -> str:
         """Get the default completion model for this provider."""
-        pass
+        ...
 
     @property
     @abstractmethod
     def provider_name(self) -> str:
         """Get the name of this provider."""
-        pass
+        ...
