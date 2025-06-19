@@ -191,6 +191,10 @@ OPENAI_API_KEY=your_openai_api_key
 # LLM for summaries and contextual embeddings
 MODEL_CHOICE=gpt-4.1-nano
 
+# LLM API Rate Limit Settings
+LLM_MAX_CONCURRENCY=3
+LLM_REQUEST_DELAY=0
+
 # RAG Strategies (set to "true" or "false", default to "false")
 USE_CONTEXTUAL_EMBEDDINGS=false
 USE_HYBRID_SEARCH=false
@@ -250,17 +254,34 @@ Enables AI hallucination detection and repository analysis using Neo4j knowledge
 - **Cost**: No additional API costs for validation, but requires Neo4j infrastructure (can use free local installation or cloud AuraDB).
 - **Benefits**: Provides three powerful tools: `parse_github_repository` for indexing codebases, `check_ai_script_hallucinations` for validating AI-generated code, and `query_knowledge_graph` for exploring indexed repositories.
 
-You can now tell the AI coding assistant to add a Python GitHub repository to the knowledge graph like:
+### OpenAI Rate-Limit Tuning
+Control LLM API load with two environment variables:
 
-"Add https://github.com/pydantic/pydantic-ai.git to the knowledge graph"
+| Variable               | What it does                                               | Typical values (low–tier plans) |
+|------------------------|------------------------------------------------------------|----------------------------------------|
+| `LLM_MAX_CONCURRENCY`  | Maximum parallel OpenAI requests the server will issue     | `2`                                    |
+| `LLM_REQUEST_DELAY`    | Seconds to wait after *each* request before sending another| `0.5`                                  |
 
-Make sure the repo URL ends with .git.
+Tweak these if you hit `429: rate_limit_exceeded` errors.
 
-You can also have the AI coding assistant check for hallucinations with scripts it just created, or you can manually run the command:
+---
 
-```
-python knowledge_graphs/ai_hallucination_detector.py [full path to your script to analyze]
-```
+### Knowledge-Graph Usage Examples
+Once `USE_KNOWLEDGE_GRAPH=true` is set and Neo4j is running, you can:
+
+1. **Add a repository**
+
+   > “Add `https://github.com/pydantic/pydantic-ai.git` to the knowledge graph”
+
+   (The URL **must** end in `.git`.)
+
+2. **Check a script for hallucinations**
+
+   ```bash
+   python knowledge_graphs/ai_hallucination_detector.py /path/to/your_script.py
+   ```
+   
+These commands are also available to AI coding assistants through the parse_github_repository and check_ai_script_hallucinations tools.
 
 ### Recommended Configurations
 
