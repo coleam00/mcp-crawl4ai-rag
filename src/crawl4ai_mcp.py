@@ -1850,5 +1850,237 @@ async def main():
         # Run the MCP server with stdio transport
         await mcp.run_stdio_async()
 
+@mcp.tool()
+async def ingest_local_file(ctx: Context, path: str, chunk_size: int = 5000) -> str:
+    """
+    Ingest a local text or markdown file, or all files in a directory (recursively), chunk their content, generate embeddings, and store in Supabase.
+
+    Args:
+        ctx: The MCP server provided context
+        path: Absolute or relative path to the local file or directory
+        chunk_size: Maximum size of each content chunk in characters (default: 5000)
+
+    Returns:
+        JSON string summarizing the ingestion operation and storage in Supabase
+    """
+    import os
+    import pathlib
+    import mimetypes
+    from typing import List
+    import json
+
+    def is_text_file(file_path: pathlib.Path) -> bool:
+        # Accept .txt, .md, .markdown, .rst, .csv, .py, .json, .yaml, .yml, .log, .ini, etc.
+        text_exts = {'.txt', '.md', '.markdown', '.rst', '.csv', '.py', '.json', '.yaml', '.yml', '.log', '.ini'}
+        if file_path.suffix.lower() in text_exts:
+            return True
+        # Fallback on mimetype
+        mime, _ = mimetypes.guess_type(str(file_path))
+        return mime is not None and (mime.startswith('text/') or mime == 'application/json')
+
+    try:
+        file_path = pathlib.Path(path).expanduser().resolve()
+        if not file_path.exists():
+            return json.dumps({
+                "success": False,
+                "error": f"Path not found: {file_path}"
+            }, indent=2)
+
+        files_to_process: List[pathlib.Path] = []
+        if file_path.is_file():
+            files_to_process = [file_path]
+        elif file_path.is_dir():
+            # Recursively collect all files
+            files_to_process = [p for p in file_path.rglob('*') if p.is_file()]
+        else:
+            return json.dumps({
+                "success": False,
+                "error": f"Path is neither file nor directory: {file_path}"
+            }, indent=2)
+
+        supabase_client = ctx.request_context.lifespan_context.supabase_client
+        total_chunks = 0
+        total_files = 0
+        error_files = []
+        all_urls = []
+
+        for f in files_to_process:
+            if not is_text_file(f):
+                continue  # skip binaries and non-text files
+            try:
+                with open(f, "r", encoding="utf-8") as fin:
+                    content = fin.read()
+            except Exception as e:
+                error_files.append({"file": str(f), "error": str(e)})
+                continue
+                
+            # Chunk the content
+            chunks = smart_chunk_markdown(content, chunk_size=chunk_size)
+            
+            # Prepare data for Supabase
+            urls = []
+            chunk_numbers = []
+            contents = []
+            metadatas = []
+            url_to_full_document = {}
+            
+            # Use relative path from the file's parent directory as source_id
+            # This matches the format used in the URLs
+            parent = f.parent.name if f.parent.name else "root"
+            source_id = f"{parent}/{f.name}" if parent != "root" else f.name
+            
+            # First, ensure the source exists in the sources table
+            source_summary = extract_source_summary(source_id, content[:5000])
+            word_count = sum(len(chunk.split()) for chunk in smart_chunk_markdown(content, chunk_size=chunk_size))
+            
+            # Delete all existing entries for this source in crawled_pages and code_examples
+            try:
+                # Delete from crawled_pages where source_id = source_id
+                supabase_client.table('crawled_pages').delete().eq('source_id', source_id).execute()
+                
+                # Delete from code_examples where source_id = source_id
+                supabase_client.table('code_examples').delete().eq('source_id', source_id).execute()
+                
+                print(f"Deleted existing entries for source_id: {source_id}")
+            except Exception as e:
+                print(f"Error deleting existing entries for source {source_id}: {str(e)}")
+                error_files.append({"file": str(f), "error": f"Error cleaning up existing entries: {str(e)}"})
+            
+            # Update or insert source info
+            update_source_info(
+                supabase_client,
+                source_id,
+                source_summary,
+                word_count
+            )
+            
+            # Generate metadata for each chunk
+            for idx, chunk in enumerate(chunks):
+                # Format: parent_dir/filename#chunk=XX
+                parent = f.parent.name if f.parent.name else "root"
+                url_short = f"{parent}/{f.name}#chunk={idx}"
+                urls.append(url_short)
+                chunk_numbers.append(idx)
+                contents.append(chunk)
+                
+                # Extract metadata for each chunk
+                meta = extract_section_info(chunk)
+                meta.update({
+                    "source_id": source_id,  # Use source_id to be consistent with the table schema
+                    "chunk_index": idx,
+                    "filename": f.name,
+                    "filepath": str(f.relative_to(file_path.parent)) if file_path.is_dir() else f.name,
+                    "local_file": True,
+                    "absolute_path": str(f.resolve())  # Store full path in metadata if needed
+                })
+                metadatas.append(meta)
+            
+            # Map each URL to its full document content
+            for url in urls:
+                url_to_full_document[url] = content
+            
+            # Map each URL to its full document content
+            
+            if urls:
+                try:
+                    # Add documents to Supabase
+                    add_documents_to_supabase(
+                        client=supabase_client,
+                        urls=urls,
+                        chunk_numbers=chunk_numbers,
+                        contents=contents,
+                        metadatas=metadatas,
+                        url_to_full_document=url_to_full_document
+                    )
+                    
+                    # Extract and process code examples if enabled
+                    extract_code_examples_enabled = os.getenv("USE_AGENTIC_RAG", "false") == "true"
+                    if extract_code_examples_enabled and content.strip():
+                        try:
+                            # Extract code blocks from the full content
+                            code_blocks = extract_code_blocks(content)
+                            
+                            if code_blocks:
+                                # Process code examples in parallel
+                                with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+                                    # Prepare arguments for parallel processing
+                                    summary_args = [(block['code'], block['context_before'], block['context_after']) 
+                                                for block in code_blocks]
+                                    
+                                    # Generate summaries in parallel
+                                    summaries = list(executor.map(process_code_example, summary_args))
+                                
+                                # Prepare code example data
+                                code_urls = []
+                                code_chunk_numbers = []
+                                code_examples = []
+                                code_summaries = []
+                                code_metadatas = []
+                                
+                                for i, (block, summary) in enumerate(zip(code_blocks, summaries)):
+                                    # Use the first URL as the base for code examples
+                                    code_url = urls[0] if urls else f"file://{f.absolute()}"
+                                    code_urls.append(code_url)
+                                    code_chunk_numbers.append(i)  # Use local index within file
+                                    code_examples.append(block['code'])
+                                    code_summaries.append(summary)
+                                    
+                                    # Create metadata for code example
+                                    code_meta = {
+                                        "chunk_index": i,
+                                        "url": code_url,
+                                        "source_id": source_id,
+                                        "language": block.get('language', ''),
+                                        "char_count": len(block['code']),
+                                        "word_count": len(block['code'].split()),
+                                        "local_file": True,
+                                        "filename": f.name,
+                                        "filepath": str(f.relative_to(file_path.parent)) if file_path.is_dir() else f.name,
+                                        "absolute_path": str(f.resolve())
+                                    }
+                                    code_metadatas.append(code_meta)
+                                
+                                # Add code examples to Supabase
+                                if code_examples:
+                                    add_code_examples_to_supabase(
+                                        client=supabase_client,
+                                        urls=code_urls,
+                                        chunk_numbers=code_chunk_numbers,
+                                        code_examples=code_examples,
+                                        summaries=code_summaries,
+                                        metadatas=code_metadatas
+                                    )
+                                    print(f"Added {len(code_examples)} code examples from {f}")
+                        except Exception as e:
+                            print(f"Error processing code examples from {f}: {str(e)}")
+                            error_files.append({"file": str(f), "error": f"Error processing code examples: {str(e)}"})
+                    
+                    total_files += 1
+                    total_chunks += len(chunks)
+                    all_urls.extend(urls)
+                    
+                except Exception as e:
+                    error_files.append({"file": str(f), "error": f"Error processing file: {str(e)}"})
+
+        return json.dumps({
+            "success": True,
+            "path": str(file_path),
+            "files_ingested": total_files,
+            "chunks_ingested": total_chunks,
+            "urls": all_urls,
+            "error_files": error_files,
+            "code_examples_extracted": sum(1 for f in files_to_process if is_text_file(f)) - len(error_files),
+            "message": f"Ingestion complete. {total_files} file(s) processed, {total_chunks} chunk(s) created. Code examples extracted from {sum(1 for f in files_to_process if is_text_file(f)) - len(error_files)} file(s)."
+        }, indent=2)
+        
+    except Exception as e:
+        import traceback
+        return json.dumps({
+            "success": False,
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }, indent=2)
+
+
 if __name__ == "__main__":
     asyncio.run(main())
