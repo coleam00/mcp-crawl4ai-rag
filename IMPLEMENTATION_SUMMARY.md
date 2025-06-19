@@ -85,7 +85,7 @@ LLM_MODEL=deepseek-chat
 DEEPSEEK_API_KEY=...
 ```
 
-### Free Tier Setup
+### Free Tier Setup (Fan Favourite)
 ```env
 # Gemini for both (generous free quotas)
 EMBEDDING_PROVIDER=gemini
