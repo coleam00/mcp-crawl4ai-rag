@@ -95,7 +95,7 @@ LLM_MODEL=gemini-1.5-flash
 GEMINI_API_KEY=...
 ```
 
-### Local/Private Setup
+### Local/Private Setup (Anon Mode)
 ```env
 # Ollama for everything (no data leaves machine)
 EMBEDDING_PROVIDER=ollama
