@@ -9,7 +9,67 @@ dependencies = [
     "mcp==1.7.1",
     "supabase==2.15.1",
     "openai==1.71.0",
-    "dotenv==0.9.9",
+    "python-dotenv>=1.0.0",
     "sentence-transformers>=4.1.0",
     "aiohttp>=3.8.0",
 ]
+
+# Development dependencies for linting and formatting
+[project.optional-dependencies]
+dev = [
+    "pylint>=3.0.0",
+    "black>=24.0.0",
+    "isort>=5.0.0",
+    "flake8>=6.0.0",
+]
+
+# Black configuration
+[tool.black]
+line-length = 100
+target-version = ['py312']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+# isort configuration
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+line_length = 100
+
+# Pylint configuration
+[tool.pylint]
+max-line-length = 100
+disable = [
+    "C0103",  # Invalid name (for constants)
+    "R0903",  # Too few public methods
+    "W0613",  # Unused argument (common in async handlers)
+    "E0401",  # Import errors (handled by environment)
+    "C0415",  # Import outside toplevel (sometimes needed)
+]
+
+[tool.pylint.MESSAGES_CONTROL]
+extension-pkg-whitelist = ["pydantic"]
+
+[tool.pylint.DESIGN]
+max-args = 8
+max-locals = 20
+max-branches = 15
+max-statements = 60
