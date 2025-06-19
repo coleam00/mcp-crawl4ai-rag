@@ -17,6 +17,7 @@ Consider this GitHub repository a testbed, hence why I haven't been super active
 This MCP server provides tools that enable AI agents to crawl websites, store content in a vector database (Supabase), and perform RAG over the crawled content. It follows the best practices for building MCP servers based on the [Mem0 MCP server template](https://github.com/coleam00/mcp-mem0/) I provided on my channel previously.
 
 The server includes several advanced RAG strategies that can be enabled to enhance retrieval quality:
+
 - **Contextual Embeddings** for enriched semantic understanding
 - **Hybrid Search** combining vector and keyword search
 - **Agentic RAG** for specialized code example extraction
@@ -82,12 +83,14 @@ The server provides essential web crawling and search tools:
 ### Using Docker (Recommended)
 
 1. Clone this repository:
+
    ```bash
    git clone https://github.com/coleam00/mcp-crawl4ai-rag.git
    cd mcp-crawl4ai-rag
    ```
 
 2. Build the Docker image:
+
    ```bash
    docker build -t mcp/crawl4ai-rag --build-arg PORT=8051 .
    ```
@@ -97,17 +100,20 @@ The server provides essential web crawling and search tools:
 ### Using uv directly (no Docker)
 
 1. Clone this repository:
+
    ```bash
    git clone https://github.com/coleam00/mcp-crawl4ai-rag.git
    cd mcp-crawl4ai-rag
    ```
 
 2. Install uv if you don't have it:
+
    ```bash
    pip install uv
    ```
 
 3. Create and activate a virtual environment:
+
    ```bash
    uv venv
    .venv\Scripts\activate
@@ -115,6 +121,7 @@ The server provides essential web crawling and search tools:
    ```
 
 4. Install dependencies:
+
    ```bash
    uv pip install -e .
    crawl4ai-setup
@@ -145,6 +152,7 @@ For installing Neo4j:
 The easiest way to get Neo4j running locally is with the [Local AI Package](https://github.com/coleam00/local-ai-packaged) - a curated collection of local AI services including Neo4j:
 
 1. **Clone the Local AI Package**:
+
    ```bash
    git clone https://github.com/coleam00/local-ai-packaged.git
    cd local-ai-packaged
@@ -165,6 +173,7 @@ Alternatively, install Neo4j directly:
 1. **Install Neo4j Desktop**: Download from [neo4j.com/download](https://neo4j.com/download/)
 
 2. **Create a new database**:
+
    - Open Neo4j Desktop
    - Create a new project and database
    - Set a password for the `neo4j` user
@@ -191,6 +200,16 @@ OPENAI_API_KEY=your_openai_api_key
 # LLM for summaries and contextual embeddings
 MODEL_CHOICE=gpt-4.1-nano
 
+# Azure OpenAI Configuration (Optional)
+# If these are set, Azure OpenAI will be used instead of the default OpenAI.
+# Ensure your Azure OpenAI deployments for chat and embeddings are compatible
+# with the models expected by this application (e.g., embedding dimensions).
+# AZURE_OPENAI_API_KEY=your_azure_openai_api_key
+# AZURE_OPENAI_ENDPOINT=https://your-azure-resource-name.openai.azure.com/
+# AZURE_OPENAI_API_VERSION=your_api_version (e.g., 2023-07-01-preview)
+# AZURE_OPENAI_CHAT_DEPLOYMENT=your_chat_deployment_name # Used as 'model' for Azure chat completions
+# AZURE_OPENAI_EMBEDDING_DEPLOYMENT=your_embedding_deployment_name # Used as 'model' for Azure embeddings
+
 # RAG Strategies (set to "true" or "false", default to "false")
 USE_CONTEXTUAL_EMBEDDINGS=false
 USE_HYBRID_SEARCH=false
@@ -208,11 +227,24 @@ NEO4J_USER=neo4j
 NEO4J_PASSWORD=your_neo4j_password
 ```
 
+### Notes on Azure AI Foundry Configuration:
+
+*   **Priority**: If `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, and `AZURE_OPENAI_API_VERSION` are all correctly set, the system will attempt to use Azure OpenAI for relevant operations.
+*   **Chat Operations**: If `AZURE_OPENAI_CHAT_DEPLOYMENT` is also set, Azure will be used for chat-based functionalities (like generating contextual summaries, code example summaries, or source summaries). The value of this variable is used as the `model` in API calls to Azure.
+*   **Embedding Operations**: If `AZURE_OPENAI_EMBEDDING_DEPLOYMENT` is also set, Azure will be used for creating embeddings. The value of this variable is used as the `model` in API calls to Azure.
+*   **Fallback**:
+    *   If any of the three core Azure variables (`API_KEY`, `ENDPOINT`, `API_VERSION`) are missing, the system fully defaults to using the standard OpenAI configuration (`OPENAI_API_KEY`, `MODEL_CHOICE`).
+    *   If the core Azure variables are set, but a specific deployment name (e.g., `AZURE_OPENAI_CHAT_DEPLOYMENT`) is missing, only that specific functionality will fall back to standard OpenAI. For example, embeddings might use Azure while chat uses standard OpenAI.
+    *   If an API call to Azure fails despite being configured, the system will also attempt to fall back to the standard OpenAI for that specific call.
+*   **Compatibility**: Ensure your Azure deployments (chat and embedding models) are compatible with the application's usage (e.g., embedding dimensions should match if you intend to switch or use interchangeably with OpenAI's `text-embedding-3-small` which has 1536 dimensions).
+*   **Recommendation**: For clarity, either set all necessary Azure variables for the functionalities you intend to use with Azure, or omit them to use the standard OpenAI configuration.
+
 ### RAG Strategy Options
 
 The Crawl4AI RAG MCP server supports four powerful RAG strategies that can be enabled independently:
 
 #### 1. **USE_CONTEXTUAL_EMBEDDINGS**
+
 When enabled, this strategy enhances each chunk's embedding with additional context from the entire document. The system passes both the full document and the specific chunk to an LLM (configured via `MODEL_CHOICE`) to generate enriched context that gets embedded alongside the chunk content.
 
 - **When to use**: Enable this when you need high-precision retrieval where context matters, such as technical documentation where terms might have different meanings in different sections.
@@ -220,6 +252,7 @@ When enabled, this strategy enhances each chunk's embedding with additional cont
 - **Cost**: Additional LLM API calls during indexing.
 
 #### 2. **USE_HYBRID_SEARCH**
+
 Combines traditional keyword search with semantic vector search to provide more comprehensive results. The system performs both searches in parallel and intelligently merges results, prioritizing documents that appear in both result sets.
 
 - **When to use**: Enable this when users might search using specific technical terms, function names, or when exact keyword matches are important alongside semantic understanding.
@@ -227,6 +260,7 @@ Combines traditional keyword search with semantic vector search to provide more 
 - **Cost**: No additional API costs, just computational overhead.
 
 #### 3. **USE_AGENTIC_RAG**
+
 Enables specialized code example extraction and storage. When crawling documentation, the system identifies code blocks (≥300 characters), extracts them with surrounding context, generates summaries, and stores them in a separate vector database table specifically designed for code search.
 
 - **When to use**: Essential for AI coding assistants that need to find specific code examples, implementation patterns, or usage examples from documentation.
@@ -235,6 +269,7 @@ Enables specialized code example extraction and storage. When crawling documenta
 - **Benefits**: Provides a dedicated `search_code_examples` tool that AI agents can use to find specific code implementations.
 
 #### 4. **USE_RERANKING**
+
 Applies cross-encoder reranking to search results after initial retrieval. Uses a lightweight cross-encoder model (`cross-encoder/ms-marco-MiniLM-L-6-v2`) to score each result against the original query, then reorders results by relevance.
 
 - **When to use**: Enable this when search precision is critical and you need the most relevant results at the top. Particularly useful for complex queries where semantic similarity alone might not capture query intent.
@@ -243,6 +278,7 @@ Applies cross-encoder reranking to search results after initial retrieval. Uses 
 - **Benefits**: Better result relevance, especially for complex queries. Works with both regular RAG search and code example search.
 
 #### 5. **USE_KNOWLEDGE_GRAPH**
+
 Enables AI hallucination detection and repository analysis using Neo4j knowledge graphs. When enabled, the system can parse GitHub repositories into a graph database and validate AI-generated code against real repository structures. (NOT fully compatible with Docker yet, I'd recommend running through uv)
 
 - **When to use**: Enable this for AI coding assistants that need to validate generated code against real implementations, or when you want to detect when AI models hallucinate non-existent methods, classes, or incorrect usage patterns.
@@ -265,6 +301,7 @@ python knowledge_graphs/ai_hallucination_detector.py [full path to your script t
 ### Recommended Configurations
 
 **For general documentation RAG:**
+
 ```
 USE_CONTEXTUAL_EMBEDDINGS=false
 USE_HYBRID_SEARCH=true
@@ -273,6 +310,7 @@ USE_RERANKING=true
 ```
 
 **For AI coding assistant with code examples:**
+
 ```
 USE_CONTEXTUAL_EMBEDDINGS=true
 USE_HYBRID_SEARCH=true
@@ -282,6 +320,7 @@ USE_KNOWLEDGE_GRAPH=false
 ```
 
 **For AI coding assistant with hallucination detection:**
+
 ```
 USE_CONTEXTUAL_EMBEDDINGS=true
 USE_HYBRID_SEARCH=true
@@ -291,6 +330,7 @@ USE_KNOWLEDGE_GRAPH=true
 ```
 
 **For fast, basic RAG:**
+
 ```
 USE_CONTEXTUAL_EMBEDDINGS=false
 USE_HYBRID_SEARCH=true
@@ -333,6 +373,7 @@ Once you have the server running with SSE transport, you can connect to it using
 ```
 
 > **Note for Windsurf users**: Use `serverUrl` instead of `url` in your configuration:
+>
 > ```json
 > {
 >   "mcpServers": {
@@ -346,7 +387,8 @@ Once you have the server running with SSE transport, you can connect to it using
 >
 > **Note for Docker users**: Use `host.docker.internal` instead of `localhost` if your client is running in a different container. This will apply if you are using this MCP server within n8n!
 
-> **Note for Claude Code users**: 
+> **Note for Claude Code users**:
+
 ```
 claude mcp add-json crawl4ai-rag '{"type":"http","url":"http://localhost:8051/sse"}' --scope user
 ```
@@ -383,16 +425,28 @@ Add this server to your MCP configuration for Claude Desktop, Windsurf, or any o
   "mcpServers": {
     "crawl4ai-rag": {
       "command": "docker",
-      "args": ["run", "--rm", "-i", 
-               "-e", "TRANSPORT", 
-               "-e", "OPENAI_API_KEY", 
-               "-e", "SUPABASE_URL", 
-               "-e", "SUPABASE_SERVICE_KEY",
-               "-e", "USE_KNOWLEDGE_GRAPH",
-               "-e", "NEO4J_URI",
-               "-e", "NEO4J_USER",
-               "-e", "NEO4J_PASSWORD",
-               "mcp/crawl4ai"],
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "-e",
+        "TRANSPORT",
+        "-e",
+        "OPENAI_API_KEY",
+        "-e",
+        "SUPABASE_URL",
+        "-e",
+        "SUPABASE_SERVICE_KEY",
+        "-e",
+        "USE_KNOWLEDGE_GRAPH",
+        "-e",
+        "NEO4J_URI",
+        "-e",
+        "NEO4J_USER",
+        "-e",
+        "NEO4J_PASSWORD",
+        "mcp/crawl4ai"
+      ],
       "env": {
         "TRANSPORT": "stdio",
         "OPENAI_API_KEY": "your_openai_api_key",
@@ -425,14 +479,16 @@ The knowledge graph system stores repository code structure in Neo4j with the fo
 The Neo4j database stores code structure as:
 
 **Nodes:**
+
 - `Repository`: GitHub repositories
-- `File`: Python files within repositories  
+- `File`: Python files within repositories
 - `Class`: Python classes with methods and attributes
 - `Method`: Class methods with parameter information
 - `Function`: Standalone functions
 - `Attribute`: Class attributes
 
 **Relationships:**
+
 - `Repository` -[:CONTAINS]-> `File`
 - `File` -[:DEFINES]-> `Class`
 - `File` -[:DEFINES]-> `Function`
