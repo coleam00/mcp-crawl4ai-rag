@@ -28,6 +28,7 @@ from crawl4ai import (
 )
 from dotenv import load_dotenv
 from mcp.server.fastmcp import Context, FastMCP
+
 try:
     from sentence_transformers import CrossEncoder
 except ImportError:
@@ -43,7 +44,9 @@ from utils import (
     extract_source_summary,
     generate_code_example_summary,
     get_supabase_client,
-    search_code_examples,
+)
+from utils import search_code_examples as search_code_examples_util  # Rename to avoid conflict
+from utils import (
     search_documents,
     update_source_info,
 )
@@ -64,7 +67,9 @@ class Crawl4AIContext:
     crawler: AsyncWebCrawler
     supabase_client: Client
     ai_provider: ProviderManager  # Changed to ProviderManager
-    reranking_model: Optional[CrossEncoder] = None
+    reranking_model: Optional["CrossEncoder"] = (
+        None  # Use string annotation to handle Optional import
+    )
 
 
 @asynccontextmanager
@@ -107,7 +112,9 @@ async def crawl4ai_lifespan(server: FastMCP) -> AsyncIterator[Crawl4AIContext]:
             print(f"Failed to load reranking model: {e}")
             reranking_model = None
     elif os.getenv("USE_RERANKING", "false") == "true":
-        print("Reranking requested but sentence_transformers not installed. Install with: pip install sentence-transformers")
+        print(
+            "Reranking requested but sentence_transformers not installed. Install with: pip install sentence-transformers"
+        )
 
     try:
         yield Crawl4AIContext(
@@ -132,7 +139,10 @@ mcp = FastMCP(
 
 
 def rerank_results(
-    model: CrossEncoder, query: str, results: List[Dict[str, Any]], content_key: str = "content"
+    model: Optional["CrossEncoder"],
+    query: str,
+    results: List[Dict[str, Any]],
+    content_key: str = "content",
 ) -> List[Dict[str, Any]]:
     """
     Rerank search results using a cross-encoder model.
@@ -214,7 +224,8 @@ def parse_sitemap(sitemap_url: str) -> List[str]:
     if resp.status_code == 200:
         try:
             tree = ElementTree.fromstring(resp.content)
-            urls = [loc.text for loc in tree.findall(".//{*}loc")]
+            # Filter out None values from the list comprehension
+            urls = [loc.text for loc in tree.findall(".//{*}loc") if loc.text is not None]
         except Exception as e:
             print(f"Error parsing sitemap XML: {e}")
 
@@ -349,7 +360,16 @@ async def crawl_single_page(ctx: Context, url: str) -> str:
                 meta["chunk_index"] = i
                 meta["url"] = url
                 meta["source"] = source_id
-                meta["crawl_time"] = str(asyncio.current_task().get_coro().__name__)
+                # Safe handling of asyncio.current_task() which can return None
+                current_task = asyncio.current_task()
+                if current_task and hasattr(current_task, "get_coro"):
+                    coro = current_task.get_coro()
+                    if coro and hasattr(coro, "__name__"):
+                        meta["crawl_time"] = str(coro.__name__)
+                    else:
+                        meta["crawl_time"] = "unknown_task"
+                else:
+                    meta["crawl_time"] = "unknown_task"
                 metadatas.append(meta)
 
                 # Accumulate word count
@@ -535,7 +555,16 @@ async def smart_crawl_url(
                 meta["url"] = source_url
                 meta["source"] = source_id
                 meta["crawl_type"] = crawl_type
-                meta["crawl_time"] = str(asyncio.current_task().get_coro().__name__)
+                # Safe handling of asyncio.current_task() which can return None
+                current_task = asyncio.current_task()
+                if current_task and hasattr(current_task, "get_coro"):
+                    coro = current_task.get_coro()
+                    if coro and hasattr(coro, "__name__"):
+                        meta["crawl_time"] = str(coro.__name__)
+                    else:
+                        meta["crawl_time"] = "unknown_task"
+                else:
+                    meta["crawl_time"] = "unknown_task"
                 metadatas.append(meta)
 
                 # Accumulate word count
@@ -700,7 +729,7 @@ async def get_available_sources(ctx: Context) -> str:
 
 @mcp.tool()
 async def perform_rag_query(
-    ctx: Context, query: str, source: str = None, match_count: int = 5
+    ctx: Context, query: str, source: Optional[str] = None, match_count: int = 5
 ) -> str:
     """
     Perform a RAG (Retrieval Augmented Generation) query on the stored content.
@@ -855,7 +884,7 @@ async def perform_rag_query(
 
 @mcp.tool()
 async def search_code_examples(
-    ctx: Context, query: str, source_id: str = None, match_count: int = 5
+    ctx: Context, query: str, source_id: Optional[str] = None, match_count: int = 5
 ) -> str:
     """
     Search for code examples relevant to the query.

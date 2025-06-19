@@ -76,6 +76,11 @@ class OpenAIProvider(BaseProvider):
                     )
                     return EmbeddingResponse(embeddings=embeddings, model=embedding_model)
 
+        # This should never be reached due to the logic above, but added for completeness
+        return EmbeddingResponse(
+            embeddings=[[0.0] * self.embedding_dimension] * len(texts), model=embedding_model
+        )
+
     async def create_completion(
         self,
         messages: List[Dict[str, str]],
