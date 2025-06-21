@@ -8,7 +8,7 @@ A powerful implementation of the [Model Context Protocol (MCP)](https://modelcon
 
 With this MCP server, you can <b>scrape anything</b> and then <b>use that knowledge anywhere</b> for RAG.
 
-The primary goal is to bring this MCP server into [Archon](https://github.com/coleam00/Archon) as I evolve it to be more of a knowledge engine for AI coding assistants to build AI agents. This first version of the Crawl4AI/RAG MCP server will be improved upon greatly soon, especially making it more configurable so you can use different embedding models and run everything locally with Ollama.
+This server now supports local Ollama integration with **Qwen3-Embedding models** for enhanced privacy and cost efficiency. The latest version features native 1024-dimensional embeddings, Docker Hub deployment, and comprehensive troubleshooting for production use.
 
 Consider this GitHub repository a testbed, hence why I haven't been super actively address issues and pull requests yet. I certainly will though as I bring this into Archon V2!
 
@@ -31,7 +31,7 @@ The Crawl4AI RAG MCP server is just the beginning. Here's where we're headed:
 
 1. **Integration with Archon**: Building this system directly into [Archon](https://github.com/coleam00/Archon) to create a comprehensive knowledge engine for AI coding assistants to build better AI agents.
 
-2. **Multiple Embedding Models**: Expanding beyond OpenAI to support a variety of embedding models, including the ability to run everything locally with Ollama for complete control and privacy.
+2. **Multiple Embedding Models**: ✅ **Implemented** - Now supports local Ollama with Qwen3-Embedding models for complete control and privacy, alongside OpenAI and other cloud providers.
 
 3. **Advanced RAG Strategies**: Implementing sophisticated retrieval techniques like contextual retrieval, late chunking, and others to move beyond basic "naive lookups" and significantly enhance the power and precision of the RAG system, especially as it integrates with Archon.
 
@@ -74,25 +74,51 @@ The server provides essential web crawling and search tools:
 - [Docker/Docker Desktop](https://www.docker.com/products/docker-desktop/) if running the MCP server as a container (recommended)
 - [Python 3.12+](https://www.python.org/downloads/) if running the MCP server directly through uv
 - [Supabase](https://supabase.com/) (database for RAG)
-- [OpenAI API keys](https://platform.openai.com/api-keys) (for chat and embedding models)
+- **API Keys** (choose one):
+  - [OpenAI API keys](https://platform.openai.com/api-keys) for cloud-based models
+  - **Local Ollama** with Qwen3-Embedding for privacy and cost efficiency (recommended)
 - [Neo4j](https://neo4j.com/) (optional, for knowledge graph functionality) - see [Knowledge Graph Setup](#knowledge-graph-setup) section
 
 ## Installation
 
 ### Using Docker (Recommended)
 
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/coleam00/mcp-crawl4ai-rag.git
-   cd mcp-crawl4ai-rag
-   ```
+**Option 1: Use Published Image (Fastest)**
+```bash
+# Clone repository for configuration files
+git clone https://github.com/coleam00/mcp-crawl4ai-rag.git
+cd mcp-crawl4ai-rag
 
-2. Build the Docker image:
-   ```bash
-   docker build -t mcp/crawl4ai-rag --build-arg PORT=8051 .
-   ```
+# Create .env file (see configuration section)
+cp .env.example .env
+# Edit .env with your settings
 
-3. Create a `.env` file based on the configuration section below
+# Start services with published image
+docker-compose -f docker-compose.published.yml up -d
+```
+
+**Option 2: Build Locally**
+```bash
+# Clone repository
+git clone https://github.com/coleam00/mcp-crawl4ai-rag.git
+cd mcp-crawl4ai-rag
+
+# Create .env file
+cp .env.example .env
+# Edit .env with your settings
+
+# Build and start services
+docker-compose up -d
+```
+
+**Option 3: Manual Build**
+```bash
+# Build the Docker image
+docker build -t mcp/crawl4ai-rag --build-arg PORT=8051 .
+
+# Run with environment file
+docker run --env-file .env -p 8051:8051 mcp/crawl4ai-rag
+```
 
 ### Using uv directly (no Docker)
 
@@ -131,6 +157,11 @@ Before running the server, you need to set up the database with the pgvector ext
 2. Create a new query and paste the contents of `crawled_pages.sql`
 
 3. Run the query to create the necessary tables and functions
+
+**Database Schema Notes:**
+- Tables use `vector(1024)` for optimal compatibility with Qwen3-Embedding-0.6B
+- HNSW indexes configured for 1024-dimensional vectors
+- PostgreSQL supports up to 2000 dimensions, so 1024D is well within limits
 
 ## Knowledge Graph Setup (Optional)
 
@@ -194,11 +225,23 @@ CHAT_MODEL=gpt-4.1-mini
 CHAT_MODEL_API_KEY=your_chat_model_api_key
 CHAT_MODEL_API_BASE= # Optional: e.g., http://localhost:11434/v1 for Ollama
 
-# Embedding Model
-EMBEDDING_MODEL="text-embedding-3-small"
-EMBEDDING_MODEL_API_KEY=your_embedding_model_api_key
-EMBEDDING_DIMENSIONS=1536
-EMBEDDING_MODEL_API_BASE= # Optional: e.g., http://localhost:11434/v1 for Ollama
+# Embedding Model - Choose one configuration:
+
+# Option 1: Local Ollama with Qwen3-Embedding (Recommended)
+EMBEDDING_MODEL=dengcao/Qwen3-Embedding-0.6B:Q8_0  # Compact & efficient (639MB)
+EMBEDDING_MODEL_API_KEY=ollama  # Required but ignored by Ollama
+EMBEDDING_MODEL_API_BASE=http://localhost:11434/v1  # Use http://ollama:11434/v1 in Docker
+EMBEDDING_DIMENSIONS=1024  # Native dimensions for 0.6B model (no truncation)
+
+# Option 2: OpenAI Cloud Models
+# EMBEDDING_MODEL="text-embedding-3-small"
+# EMBEDDING_MODEL_API_KEY=your_openai_api_key
+# EMBEDDING_MODEL_API_BASE=  # Leave empty for OpenAI
+# EMBEDDING_DIMENSIONS=1536
+
+# Option 3: Alternative Qwen3-Embedding model (higher capacity)
+# EMBEDDING_MODEL=dengcao/Qwen3-Embedding-8B:Q4_K_M  # High-capacity (4.7GB)
+# EMBEDDING_DIMENSIONS=1024  # Recommended for best compatibility
 
 # --- RAG Strategy Flags ---
 # Set to "true" or "false", all default to "false"
@@ -231,14 +274,14 @@ CHUNK_SIZE=5000
 # Search parameters
 DEFAULT_MATCH_COUNT=5
 
-# Concurrency settings for background tasks
-MAX_WORKERS_SUMMARY=10
-MAX_WORKERS_CONTEXT=10
-MAX_WORKERS_SOURCE_SUMMARY=5
+# Concurrency settings for background tasks (optimized to prevent 503 errors)
+MAX_WORKERS_SUMMARY=1        # Prevents API overload
+MAX_WORKERS_CONTEXT=1        # Reduces 503 errors  
+MAX_WORKERS_SOURCE_SUMMARY=1 # Conservative setting
 
 # Content processing settings
 MIN_CODE_BLOCK_LENGTH=1000
-SUPABASE_BATCH_SIZE=20
+SUPABASE_BATCH_SIZE=2        # Smaller batches for stability
 ```
 
 ### RAG Strategy Options
@@ -336,7 +379,24 @@ USE_KNOWLEDGE_GRAPH=false
 
 ### Using Docker
 
+**Published Image (Recommended):**
 ```bash
+# Pull latest image
+docker pull drnit29/mcp-crawl4ai-rag:latest
+
+# Run with docker-compose (includes Ollama)
+docker-compose -f docker-compose.published.yml up -d
+
+# Or run manually
+docker run --env-file .env -p 8051:8051 drnit29/mcp-crawl4ai-rag:latest
+```
+
+**Local Build:**
+```bash
+# Build and run locally
+docker-compose up -d
+
+# Or build manually
 docker run --env-file .env -p 8051:8051 mcp/crawl4ai-rag
 ```
 
@@ -347,6 +407,89 @@ uv run src/crawl4ai_mcp.py
 ```
 
 The server will start and listen on the configured host and port.
+
+**Health Check:**
+```bash
+curl http://localhost:8051/health
+```
+
+## Troubleshooting
+
+### HTTP 503 Service Unavailable Errors
+
+If you see repeated 503 errors in logs like:
+```
+HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+```
+
+**Solutions:**
+
+1. **Reduce Concurrency** (in `.env`):
+   ```bash
+   MAX_WORKERS_SUMMARY=1
+   MAX_WORKERS_CONTEXT=1  
+   MAX_WORKERS_SOURCE_SUMMARY=1
+   SUPABASE_BATCH_SIZE=2
+   ```
+
+2. **Disable Resource-Intensive Features**:
+   ```bash
+   USE_CONTEXTUAL_EMBEDDINGS=false
+   USE_AGENTIC_RAG=false
+   ```
+
+3. **Use Local Chat Model**:
+   ```bash
+   CHAT_MODEL_API_BASE=http://ollama:11434/v1
+   CHAT_MODEL=qwen3:latest
+   ```
+
+### Common Issues
+
+**Embedding Dimension Mismatch:**
+- Use `EMBEDDING_DIMENSIONS=1024` for Qwen3-Embedding-0.6B
+- Use `EMBEDDING_DIMENSIONS=1024` for Qwen3-Embedding-8B (recommended)
+- Database schema supports up to 2000 dimensions
+
+**Memory Issues:**
+- Qwen3-Embedding-0.6B: ~2GB RAM required
+- Qwen3-Embedding-8B: ~8GB RAM required
+- Use 0.6B model for development and resource-constrained environments
+
+**Docker Network Issues:**
+- In Docker: Use `http://ollama:11434/v1` for API base
+- Locally: Use `http://localhost:11434/v1` for API base
+- Ensure services are on the same Docker network
+
+**Git Not Found in Container:**
+- Fixed in latest Docker image (includes git and curl)
+- For knowledge graph functionality, ensure container has git access
+
+**SSL/Certificate Errors:**
+- Common with custom API endpoints
+- Check firewall and network connectivity
+- Verify API endpoint URLs and authentication
+
+### Performance Optimization
+
+**For Development:**
+```bash
+EMBEDDING_MODEL=dengcao/Qwen3-Embedding-0.6B:Q8_0
+EMBEDDING_DIMENSIONS=1024
+MAX_WORKERS_SUMMARY=1
+USE_CONTEXTUAL_EMBEDDINGS=false
+USE_AGENTIC_RAG=false
+```
+
+**For Production:**
+```bash
+EMBEDDING_MODEL=dengcao/Qwen3-Embedding-0.6B:Q8_0  # or 8B for higher accuracy
+EMBEDDING_DIMENSIONS=1024
+MAX_WORKERS_SUMMARY=2
+USE_CONTEXTUAL_EMBEDDINGS=true
+USE_AGENTIC_RAG=true
+USE_RERANKING=true
+```
 
 ## Integration with MCP Clients
 
