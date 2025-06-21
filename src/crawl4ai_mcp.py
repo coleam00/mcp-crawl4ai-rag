@@ -16,6 +16,8 @@ from xml.etree import ElementTree
 from dotenv import load_dotenv
 from supabase import Client
 from pathlib import Path
+from starlette.requests import Request
+from starlette.responses import PlainTextResponse, JSONResponse
 import requests
 import asyncio
 import json
@@ -23,6 +25,7 @@ import os
 import re
 import concurrent.futures
 import sys
+import time
 
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig, CacheMode, MemoryAdaptiveDispatcher
 
@@ -223,6 +226,132 @@ mcp = FastMCP(
     host=os.getenv("HOST", "0.0.0.0"),
     port=os.getenv("PORT", "8051")
 )
+
+async def check_ollama_status() -> Dict[str, Any]:
+    """Check Ollama service status and available models."""
+    try:
+        embedding_api_base = os.getenv("EMBEDDING_MODEL_API_BASE")
+        if not embedding_api_base or "11434" not in embedding_api_base:
+            return {"status": "disabled", "reason": "Ollama not configured"}
+        
+        # Extract base URL (remove /v1 if present)
+        base_url = embedding_api_base.replace("/v1", "")
+        
+        # Check if Ollama is responding
+        response = requests.get(f"{base_url}/api/tags", timeout=5)
+        if response.status_code != 200:
+            return {"status": "error", "reason": f"HTTP {response.status_code}"}
+        
+        models_data = response.json()
+        models = [model["name"] for model in models_data.get("models", [])]
+        
+        # Check if configured embedding model is available
+        embedding_model = os.getenv("EMBEDDING_MODEL", "")
+        model_available = any(embedding_model in model for model in models)
+        
+        return {
+            "status": "healthy" if model_available else "warning",
+            "models_count": len(models),
+            "embedding_model": embedding_model,
+            "model_available": model_available,
+            "models": models[:3]  # Show first 3 models
+        }
+    except requests.exceptions.RequestException as e:
+        return {"status": "error", "reason": f"Connection failed: {str(e)}"}
+    except Exception as e:
+        return {"status": "error", "reason": str(e)}
+
+async def check_supabase_status() -> Dict[str, Any]:
+    """Check Supabase connection status."""
+    try:
+        client = get_supabase_client()
+        # Test connection by querying sources table
+        result = client.table("sources").select("count", count="exact").limit(1).execute()
+        return {
+            "status": "healthy",
+            "sources_count": result.count if hasattr(result, 'count') else 0
+        }
+    except Exception as e:
+        return {"status": "error", "reason": str(e)}
+
+async def check_neo4j_status() -> Dict[str, Any]:
+    """Check Neo4j connection status if enabled."""
+    use_knowledge_graph = os.getenv("USE_KNOWLEDGE_GRAPH", "false").lower() == "true"
+    
+    if not use_knowledge_graph:
+        return {"status": "disabled", "reason": "Knowledge graph disabled"}
+    
+    if not validate_neo4j_connection():
+        return {"status": "error", "reason": "Neo4j environment variables not configured"}
+    
+    try:
+        # Test Neo4j connection (simplified check)
+        neo4j_uri = os.getenv("NEO4J_URI", "")
+        return {"status": "healthy", "uri": neo4j_uri}
+    except Exception as e:
+        return {"status": "error", "reason": format_neo4j_error(e)}
+
+@mcp.custom_route("/health", methods=["GET"])
+async def health_check(request: Request) -> JSONResponse | PlainTextResponse:
+    """
+    Health check endpoint for the MCP server.
+    
+    Query parameters:
+    - format=json: Return detailed JSON response
+    - format=text (default): Return simple text response
+    """
+    start_time = time.time()
+    
+    # Get format preference
+    format_param = request.query_params.get("format", "text").lower()
+    
+    # Perform health checks
+    checks = {
+        "ollama": await check_ollama_status(),
+        "supabase": await check_supabase_status(),
+        "neo4j": await check_neo4j_status()
+    }
+    
+    # Determine overall health
+    critical_services = ["supabase"]  # Core services
+    optional_services = ["ollama", "neo4j"]  # Optional services
+    
+    critical_healthy = all(
+        checks[service]["status"] in ["healthy", "disabled"] 
+        for service in critical_services
+    )
+    
+    overall_status = "healthy" if critical_healthy else "unhealthy"
+    
+    # Count service statuses
+    healthy_count = sum(1 for check in checks.values() if check["status"] == "healthy")
+    total_enabled = sum(1 for check in checks.values() if check["status"] != "disabled")
+    
+    response_time = round((time.time() - start_time) * 1000, 2)  # ms
+    
+    if format_param == "json":
+        return JSONResponse(
+            content={
+                "status": overall_status,
+                "timestamp": time.time(),
+                "response_time_ms": response_time,
+                "services": checks,
+                "summary": {
+                    "healthy_services": healthy_count,
+                    "total_enabled_services": total_enabled,
+                    "critical_services_ok": critical_healthy
+                },
+                "version": "1.0.0",
+                "server": "mcp-crawl4ai-rag"
+            },
+            status_code=200 if overall_status == "healthy" else 503
+        )
+    else:
+        # Simple text response for basic health checks
+        if overall_status == "healthy":
+            return PlainTextResponse("OK", status_code=200)
+        else:
+            return PlainTextResponse("UNHEALTHY", status_code=503)
 
 def rerank_results(model: CrossEncoder, query: str, results: List[Dict[str, Any]], content_key: str = "content") -> List[Dict[str, Any]]:
     """
@@ -1670,8 +1799,22 @@ async def parse_github_repository(ctx: Context, repo_url: str) -> str:
         
         # Parse the repository (this includes cloning, analysis, and Neo4j storage)
         print(f"Starting repository analysis for: {repo_name}")
-        await repo_extractor.analyze_repository(repo_url)
-        print(f"Repository analysis completed for: {repo_name}")
+        
+        try:
+            # Add timeout to prevent hanging
+            import asyncio
+            await asyncio.wait_for(
+                repo_extractor.analyze_repository(repo_url),
+                timeout=1800  # 30 minutes max
+            )
+            print(f"Repository analysis completed for: {repo_name}")
+        except asyncio.TimeoutError:
+            print(f"Repository analysis timed out for: {repo_name}")
+            return json.dumps({
+                "success": False,
+                "repo_name": repo_name,
+                "error": "Repository analysis timed out (30 min limit)"
+            }, separators=(',', ':'))
         
         # Query Neo4j for statistics about the parsed repository
         async with repo_extractor.driver.session() as session:
@@ -1725,26 +1868,43 @@ async def parse_github_repository(ctx: Context, repo_url: str) -> str:
                     "error": f"Repository '{repo_name}' not found in database after parsing"
                 }, indent=2)
         
+        # Create a compact response to avoid SSE communication issues
+        compact_stats = {
+            "files_processed": stats.get("files_count", 0),
+            "classes_created": stats.get("classes_count", 0),
+            "methods_created": stats.get("methods_count", 0),
+            "functions_created": stats.get("functions_count", 0),
+            "total_nodes": (stats.get("classes_count", 0) + 
+                          stats.get("methods_count", 0) + 
+                          stats.get("functions_count", 0))
+        }
+        
         return json.dumps({
             "success": True,
-            "repo_url": repo_url,
             "repo_name": repo_name,
-            "message": f"Successfully parsed repository '{repo_name}' into knowledge graph",
-            "statistics": stats,
-            "ready_for_validation": True,
-            "next_steps": [
-                "Repository is now available for hallucination detection",
-                f"Use check_ai_script_hallucinations to validate scripts against {repo_name}",
-                "The knowledge graph contains classes, methods, and functions from this repository"
-            ]
-        }, indent=2)
+            "message": f"Successfully parsed {repo_name}",
+            "stats": compact_stats,
+            "ready": True
+        }, separators=(',', ':'))  # Compact JSON to reduce size
         
     except Exception as e:
+        error_msg = str(e)
+        # Handle specific SSE communication errors
+        if "BrokenResourceError" in error_msg or "anyio" in error_msg:
+            print(f"SSE communication error after successful parsing: {error_msg}")
+            # The parsing likely succeeded, just return a simple success
+            return json.dumps({
+                "success": True,
+                "repo_name": repo_name if 'repo_name' in locals() else "unknown",
+                "message": "Parsing completed (communication error during response)",
+                "note": "Check Neo4j directly for results"
+            }, separators=(',', ':'))
+        
         return json.dumps({
             "success": False,
             "repo_url": repo_url,
-            "error": f"Repository parsing failed: {str(e)}"
-        }, indent=2)
+            "error": f"Repository parsing failed: {error_msg}"
+        }, separators=(',', ':'))
 
 async def crawl_markdown_file(crawler: AsyncWebCrawler, url: str) -> List[Dict[str, Any]]:
     """

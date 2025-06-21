@@ -1,4 +1,78 @@
-crawl4ai_mcp.egg-info
-__pycache__
-.venv
-.env
+# Git and version control
+.git
+.gitignore
+
+# Python cache and virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+.pytest_cache/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+
+# Batch crawler working files
+batch_crawler/crawler_*.log
+batch_crawler/results.json
+batch_crawler/crawl_results.json
+
+# Knowledge graphs repos (these are temporary)
+knowledge_graphs/repos/
+
+# Docker files (not needed in image)
+docker-compose*.yml
+Dockerfile
+.dockerignore
+*.bat
+*.md
+README.md
+
+# Environment files with secrets
+.env.example
+.env.local
+.env.production
+
+# Test files
+test-*.py
+test-*.bat
+
+# Documentation
+docs/
+screenshots/
+
+# Large data files
+*.csv
+*.json.bz2
+*.sql.gz

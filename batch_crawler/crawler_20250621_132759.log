@@ -1,0 +1,88 @@
+2025-06-21 13:27:59,680 - INFO - Script do servidor encontrado: C:\Users\Diogo\Dev\mcp-crawl4ai-rag\batch_crawler\..\src\crawl4ai_mcp.py
+2025-06-21 13:27:59,681 - INFO - Lendo URLs de: sitemap_urls.txt
+2025-06-21 13:27:59,729 - INFO - Total de URLs válidas carregadas: 132
+2025-06-21 13:27:59,730 - INFO - Iniciando processamento de 132 URLs via stdio
+2025-06-21 13:27:59,730 - INFO - Processando 1/132: https://aider.chat/2023/05/25/ctags.html
+2025-06-21 13:27:59,730 - INFO - Iniciando crawl via stdio: https://aider.chat/2023/05/25/ctags.html
+2025-06-21 13:27:59,811 - ERROR - Servidor retornou erro para https://aider.chat/2023/05/25/ctags.html: Traceback (most recent call last):
+  File "C:\Users\Diogo\Dev\mcp-crawl4ai-rag\src\crawl4ai_mcp.py", line 8, in <module>
+    from mcp.server.fastmcp import FastMCP, Context
+ModuleNotFoundError: No module named 'mcp'
+
+2025-06-21 13:28:00,815 - INFO - Processando 2/132: https://aider.chat/2023/07/02/benchmarks.html
+2025-06-21 13:28:00,815 - INFO - Iniciando crawl via stdio: https://aider.chat/2023/07/02/benchmarks.html
+2025-06-21 13:28:00,897 - ERROR - Servidor retornou erro para https://aider.chat/2023/07/02/benchmarks.html: Traceback (most recent call last):
+  File "C:\Users\Diogo\Dev\mcp-crawl4ai-rag\src\crawl4ai_mcp.py", line 8, in <module>
+    from mcp.server.fastmcp import FastMCP, Context
+ModuleNotFoundError: No module named 'mcp'
+
+2025-06-21 13:28:01,903 - INFO - Processando 3/132: https://aider.chat/2023/10/22/repomap.html
+2025-06-21 13:28:01,904 - INFO - Iniciando crawl via stdio: https://aider.chat/2023/10/22/repomap.html
+2025-06-21 13:28:01,988 - ERROR - Servidor retornou erro para https://aider.chat/2023/10/22/repomap.html: Traceback (most recent call last):
+  File "C:\Users\Diogo\Dev\mcp-crawl4ai-rag\src\crawl4ai_mcp.py", line 8, in <module>
+    from mcp.server.fastmcp import FastMCP, Context
+ModuleNotFoundError: No module named 'mcp'
+
+2025-06-21 13:28:03,002 - INFO - Processando 4/132: https://aider.chat/2023/11/06/benchmarks-1106.html
+2025-06-21 13:28:03,002 - INFO - Iniciando crawl via stdio: https://aider.chat/2023/11/06/benchmarks-1106.html
+2025-06-21 13:28:03,089 - ERROR - Servidor retornou erro para https://aider.chat/2023/11/06/benchmarks-1106.html: Traceback (most recent call last):
+  File "C:\Users\Diogo\Dev\mcp-crawl4ai-rag\src\crawl4ai_mcp.py", line 8, in <module>
+    from mcp.server.fastmcp import FastMCP, Context
+ModuleNotFoundError: No module named 'mcp'
+
+2025-06-21 13:28:04,104 - INFO - Processando 5/132: https://aider.chat/2023/11/06/benchmarks-speed-1106.html
+2025-06-21 13:28:04,104 - INFO - Iniciando crawl via stdio: https://aider.chat/2023/11/06/benchmarks-speed-1106.html
+2025-06-21 13:28:04,185 - ERROR - Servidor retornou erro para https://aider.chat/2023/11/06/benchmarks-speed-1106.html: Traceback (most recent call last):
+  File "C:\Users\Diogo\Dev\mcp-crawl4ai-rag\src\crawl4ai_mcp.py", line 8, in <module>
+    from mcp.server.fastmcp import FastMCP, Context
+ModuleNotFoundError: No module named 'mcp'
+
+2025-06-21 13:28:05,197 - INFO - Processando 6/132: https://aider.chat/2023/12/21/unified-diffs.html
+2025-06-21 13:28:05,197 - INFO - Iniciando crawl via stdio: https://aider.chat/2023/12/21/unified-diffs.html
+2025-06-21 13:28:05,277 - ERROR - Servidor retornou erro para https://aider.chat/2023/12/21/unified-diffs.html: Traceback (most recent call last):
+  File "C:\Users\Diogo\Dev\mcp-crawl4ai-rag\src\crawl4ai_mcp.py", line 8, in <module>
+    from mcp.server.fastmcp import FastMCP, Context
+ModuleNotFoundError: No module named 'mcp'
+
+2025-06-21 13:28:06,281 - INFO - Processando 7/132: https://aider.chat/2024/01/25/benchmarks-0125.html
+2025-06-21 13:28:06,282 - INFO - Iniciando crawl via stdio: https://aider.chat/2024/01/25/benchmarks-0125.html
+2025-06-21 13:28:06,364 - ERROR - Servidor retornou erro para https://aider.chat/2024/01/25/benchmarks-0125.html: Traceback (most recent call last):
+  File "C:\Users\Diogo\Dev\mcp-crawl4ai-rag\src\crawl4ai_mcp.py", line 8, in <module>
+    from mcp.server.fastmcp import FastMCP, Context
+ModuleNotFoundError: No module named 'mcp'
+
+2025-06-21 13:28:07,370 - INFO - Processando 8/132: https://aider.chat/2024/03/08/claude-3.html
+2025-06-21 13:28:07,370 - INFO - Iniciando crawl via stdio: https://aider.chat/2024/03/08/claude-3.html
+2025-06-21 13:28:07,452 - ERROR - Servidor retornou erro para https://aider.chat/2024/03/08/claude-3.html: Traceback (most recent call last):
+  File "C:\Users\Diogo\Dev\mcp-crawl4ai-rag\src\crawl4ai_mcp.py", line 8, in <module>
+    from mcp.server.fastmcp import FastMCP, Context
+ModuleNotFoundError: No module named 'mcp'
+
+2025-06-21 13:28:08,457 - INFO - Processando 9/132: https://aider.chat/2024/04/09/gpt-4-turbo.html
+2025-06-21 13:28:08,458 - INFO - Iniciando crawl via stdio: https://aider.chat/2024/04/09/gpt-4-turbo.html
+2025-06-21 13:28:08,536 - ERROR - Servidor retornou erro para https://aider.chat/2024/04/09/gpt-4-turbo.html: Traceback (most recent call last):
+  File "C:\Users\Diogo\Dev\mcp-crawl4ai-rag\src\crawl4ai_mcp.py", line 8, in <module>
+    from mcp.server.fastmcp import FastMCP, Context
+ModuleNotFoundError: No module named 'mcp'
+
+2025-06-21 13:28:09,544 - INFO - Processando 10/132: https://aider.chat/2024/05/02/browser.html
+2025-06-21 13:28:09,544 - INFO - Iniciando crawl via stdio: https://aider.chat/2024/05/02/browser.html
+2025-06-21 13:28:09,628 - ERROR - Servidor retornou erro para https://aider.chat/2024/05/02/browser.html: Traceback (most recent call last):
+  File "C:\Users\Diogo\Dev\mcp-crawl4ai-rag\src\crawl4ai_mcp.py", line 8, in <module>
+    from mcp.server.fastmcp import FastMCP, Context
+ModuleNotFoundError: No module named 'mcp'
+
+2025-06-21 13:28:10,644 - INFO - Processando 11/132: https://aider.chat/2024/05/13/models-over-time.html
+2025-06-21 13:28:10,645 - INFO - Iniciando crawl via stdio: https://aider.chat/2024/05/13/models-over-time.html
+2025-06-21 13:28:10,720 - ERROR - Servidor retornou erro para https://aider.chat/2024/05/13/models-over-time.html: Traceback (most recent call last):
+  File "C:\Users\Diogo\Dev\mcp-crawl4ai-rag\src\crawl4ai_mcp.py", line 8, in <module>
+    from mcp.server.fastmcp import FastMCP, Context
+ModuleNotFoundError: No module named 'mcp'
+
+2025-06-21 13:28:11,726 - INFO - Processando 12/132: https://aider.chat/2024/05/22/draft.html
+2025-06-21 13:28:11,726 - INFO - Iniciando crawl via stdio: https://aider.chat/2024/05/22/draft.html
+2025-06-21 13:28:11,801 - ERROR - Servidor retornou erro para https://aider.chat/2024/05/22/draft.html: Traceback (most recent call last):
+  File "C:\Users\Diogo\Dev\mcp-crawl4ai-rag\src\crawl4ai_mcp.py", line 8, in <module>
+    from mcp.server.fastmcp import FastMCP, Context
+ModuleNotFoundError: No module named 'mcp'
+

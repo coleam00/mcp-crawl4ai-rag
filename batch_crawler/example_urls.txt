@@ -1,0 +1,15 @@
+# Arquivo de exemplo com URLs para teste do batch_crawler.py
+# Linhas começadas com # são ignoradas como comentários
+# Uma URL por linha
+
+# URLs de documentação
+https://docs.anthropic.com/en/docs/claude-code/overview
+https://docs.anthropic.com/en/docs/claude-code/quickstart
+https://docs.anthropic.com/en/docs/claude-code/cli-reference
+
+# URLs de páginas simples para teste
+https://httpbin.org/html
+https://httpbin.org/robots.txt
+
+# Exemplo de página com conteúdo markdown
+https://raw.githubusercontent.com/anthropics/anthropic-cookbook/main/README.md

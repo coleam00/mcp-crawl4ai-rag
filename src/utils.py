@@ -50,6 +50,17 @@ def create_embeddings_batch(texts: List[str]) -> List[List[float]]:
     if embedding_api_base:
         client_args["base_url"] = embedding_api_base
     
+    # Check if using Ollama and log model information
+    is_ollama = embedding_api_base and "11434" in embedding_api_base
+    if is_ollama:
+        print(f"Using Ollama embedding model: {embedding_model} with {embedding_dims} dimensions")
+        # For Qwen3-Embedding models, validate dimensions
+        if "qwen3-embedding" in embedding_model.lower():
+            if "0.6b" in embedding_model.lower() and embedding_dims > 1024:
+                print(f"Warning: Qwen3-Embedding-0.6B optimal dimensions are ≤1024, but configured for {embedding_dims}")
+            elif "8b" in embedding_model.lower() and embedding_dims > 4096:
+                print(f"Warning: Qwen3-Embedding-8B supports up to 4096 dimensions, but configured for {embedding_dims}")
+    
     try:
         client = openai.OpenAI(**client_args)
     except Exception as e:
@@ -61,11 +72,24 @@ def create_embeddings_batch(texts: List[str]) -> List[List[float]]:
     
     for retry in range(max_retries):
         try:
+            # For Qwen3-Embedding models, append the required endoftext token
+            processed_texts = texts
+            if is_ollama and "qwen3-embedding" in embedding_model.lower():
+                processed_texts = [text + "<|endoftext|>" for text in texts]
+                print(f"Added <|endoftext|> token to {len(texts)} texts for Qwen3-Embedding compatibility")
+            
             response = client.embeddings.create(
                 model=embedding_model,
-                input=texts
+                input=processed_texts
             )
-            return [item.embedding for item in response.data]
+            
+            # Truncate embeddings to configured dimensions if necessary
+            embeddings = [item.embedding for item in response.data]
+            if embeddings and len(embeddings[0]) > embedding_dims:
+                print(f"Truncating embeddings from {len(embeddings[0])} to {embedding_dims} dimensions")
+                embeddings = [embedding[:embedding_dims] for embedding in embeddings]
+            
+            return embeddings
         except Exception as e:
             if retry < max_retries - 1:
                 print(f"Error creating batch embeddings (attempt {retry + 1}/{max_retries}): {e}")
@@ -81,11 +105,22 @@ def create_embeddings_batch(texts: List[str]) -> List[List[float]]:
                 
                 for i, text in enumerate(texts):
                     try:
+                        # Apply same preprocessing for individual texts
+                        processed_text = text
+                        if is_ollama and "qwen3-embedding" in embedding_model.lower():
+                            processed_text = text + "<|endoftext|>"
+                        
                         individual_response = client.embeddings.create(
                             model=embedding_model,
-                            input=[text]
+                            input=[processed_text]
                         )
-                        embeddings.append(individual_response.data[0].embedding)
+                        
+                        embedding = individual_response.data[0].embedding
+                        # Truncate if necessary
+                        if len(embedding) > embedding_dims:
+                            embedding = embedding[:embedding_dims]
+                        
+                        embeddings.append(embedding)
                         successful_count += 1
                     except Exception as individual_error:
                         print(f"Failed to create embedding for text {i}: {individual_error}")

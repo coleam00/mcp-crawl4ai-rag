@@ -1,0 +1,4 @@
+2025-06-21 09:41:19,282 - INFO - Testando conexão com servidor: http://localhost:8051
+2025-06-21 09:41:19,553 - INFO - HTTP Request: GET http://localhost:8051/health "HTTP/1.1 404 Not Found"
+2025-06-21 09:41:19,554 - WARNING - Servidor respondeu com status: 404
+2025-06-21 09:41:19,554 - ERROR - Não foi possível conectar ao servidor MCP. Verifique se está rodando.

@@ -1,0 +1,62 @@
+services:
+  # Ollama Service for Local Embeddings with GPU Support (Standalone)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama-standalone
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_standalone_data:/root/.ollama
+    environment:
+      - OLLAMA_ORIGINS=*
+      - OLLAMA_HOST=0.0.0.0
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    networks:
+      - ollama-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Model Initialization Service (Standalone)
+  ollama-init:
+    image: alpine/curl:latest
+    container_name: ollama-init-standalone
+    depends_on:
+      ollama:
+        condition: service_healthy
+    networks:
+      - ollama-network
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    command: >
+      sh -c "
+        echo 'Pulling Qwen3-Embedding models...' &&
+        echo 'Pulling Qwen3-Embedding-0.6B (Q8_0 - 639MB)...' &&
+        curl -X POST http://ollama:11434/api/pull -d '{\"name\":\"dengcao/Qwen3-Embedding-0.6B:Q8_0\"}' &&
+        echo 'Qwen3-Embedding-0.6B pulled successfully!' &&
+        echo 'Pulling Qwen3-Embedding-8B (Q4_K_M - 4.7GB)...' &&
+        curl -X POST http://ollama:11434/api/pull -d '{\"name\":\"dengcao/Qwen3-Embedding-8B:Q4_K_M\"}' &&
+        echo 'Qwen3-Embedding-8B pulled successfully!' &&
+        echo 'All models pulled successfully!'
+      "
+    restart: "no"
+
+volumes:
+  ollama_standalone_data:
+    driver: local
+
+networks:
+  ollama-network:
+    driver: bridge

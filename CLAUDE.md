@@ -20,6 +20,18 @@ docker build -t mcp/crawl4ai-rag --build-arg PORT=8051 .
 docker run --env-file .env -p 8051:8051 mcp/crawl4ai-rag
 ```
 
+**Using Docker Compose (with Ollama for Local Embeddings):**
+```bash
+# Start all services including Ollama
+docker-compose up -d
+
+# Check logs
+docker-compose logs -f
+
+# Stop all services
+docker-compose down
+```
+
 ### Environment Setup
 
 **With uv:**
@@ -34,6 +46,21 @@ crawl4ai-setup
 - Copy `.env.example` to `.env` and configure required variables
 - Required: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `CHAT_MODEL_API_KEY`, `EMBEDDING_MODEL_API_KEY`
 - Optional: Neo4j variables for knowledge graph functionality
+
+**Local Ollama Configuration:**
+For running with local Qwen3-Embedding models via Ollama:
+```bash
+# Required environment variables for Ollama
+EMBEDDING_MODEL_API_BASE=http://localhost:11434/v1  # Use http://host.docker.internal:11434/v1 in Docker
+EMBEDDING_MODEL_API_KEY=ollama  # Required but ignored
+EMBEDDING_MODEL=dengcao/Qwen3-Embedding-8B  # or dengcao/Qwen3-Embedding-0.6B
+EMBEDDING_DIMENSIONS=1024  # Up to 4096 for 8B model
+
+# Optional: Local chat model
+CHAT_MODEL_API_BASE=http://localhost:11434/v1
+CHAT_MODEL_API_KEY=ollama
+CHAT_MODEL=qwen3:latest
+```
 
 ### Database Setup
 
@@ -115,6 +142,52 @@ Supports both SSE and stdio transports via `TRANSPORT` environment variable, ena
 - **`.env`** - Environment variables for API keys, database URLs, and feature flags
 - **`crawled_pages.sql`** - Supabase database schema and functions
 - **`Dockerfile`** - Container configuration for deployment
+- **`docker-compose.yml`** - Multi-service orchestration including Ollama for local embeddings
+
+## Local Embedding Models (Ollama)
+
+The project supports running locally with Qwen3-Embedding models via Ollama for enhanced privacy and cost efficiency:
+
+### Available Models
+- **`dengcao/Qwen3-Embedding-0.6B`** - Compact model (0.6B parameters) for efficient embedding generation
+- **`dengcao/Qwen3-Embedding-8B`** - High-performance model (8B parameters) ranking #1 on MTEB multilingual leaderboard
+
+### Features
+- **Multi-language Support**: 100+ languages including programming languages
+- **Large Context**: 32k token context length
+- **Flexible Dimensions**: Up to 4096 embedding dimensions (configurable)
+- **Local Processing**: No API costs, enhanced privacy
+- **OpenAI Compatibility**: Drop-in replacement using OpenAI client libraries
+
+### Setup with Docker Compose
+```bash
+# Start Ollama and MCP server
+docker-compose up -d
+
+# Models are automatically pulled on first startup
+# Or manually pull models:
+docker-compose exec ollama ollama pull dengcao/Qwen3-Embedding-8B
+docker-compose exec ollama ollama pull dengcao/Qwen3-Embedding-0.6B
+```
+
+### Manual Ollama Setup
+```bash
+# Install and start Ollama
+curl -fsSL https://ollama.com/install.sh | sh
+ollama serve
+
+# Pull embedding models
+ollama pull dengcao/Qwen3-Embedding-8B
+ollama pull dengcao/Qwen3-Embedding-0.6B
+
+# Optional: Pull chat models
+ollama pull qwen3:latest
+```
+
+### Performance Recommendations
+- **For Development**: Use `Qwen3-Embedding-0.6B` with `EMBEDDING_DIMENSIONS=1024`
+- **For Production**: Use `Qwen3-Embedding-8B` with `EMBEDDING_DIMENSIONS=1024-4096`
+- **Memory Requirements**: 0.6B model ~2GB RAM, 8B model ~8GB RAM
 
 ## Testing
 

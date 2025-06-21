@@ -1,0 +1,88 @@
+# Docker Compose file using published image from Docker Hub
+# This file demonstrates how others can use your published image
+
+services:
+  # MCP Crawl4AI RAG Server - Using Published Image
+  mcp-server:
+    image: drnit29/mcp-crawl4ai-rag:latest  # Using published image instead of build
+    ports:
+      - "8051:8051"
+    env_file:
+      - .env
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8051
+      - TRANSPORT=sse
+      - EMBEDDING_MODEL_API_BASE=http://ollama:11434/v1
+    depends_on:
+      ollama:
+        condition: service_healthy
+    networks:
+      - mcp-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8051/health", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Ollama Service for Local Embeddings with GPU Support
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_ORIGINS=*
+      - OLLAMA_HOST=0.0.0.0
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    networks:
+      - mcp-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Model Initialization Service
+  ollama-init:
+    image: alpine/curl:latest
+    depends_on:
+      ollama:
+        condition: service_healthy
+    networks:
+      - mcp-network
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    command: >
+      sh -c "
+        echo 'Pulling Qwen3-Embedding models...' &&
+        echo 'Pulling Qwen3-Embedding-0.6B (Q8_0 - 639MB)...' &&
+        curl -X POST http://ollama:11434/api/pull -d '{\"name\":\"dengcao/Qwen3-Embedding-0.6B:Q8_0\"}' &&
+        echo 'Qwen3-Embedding-0.6B pulled successfully!' &&
+        echo 'Pulling Qwen3-Embedding-8B (Q4_K_M - 4.7GB)...' &&
+        curl -X POST http://ollama:11434/api/pull -d '{\"name\":\"dengcao/Qwen3-Embedding-8B:Q4_K_M\"}' &&
+        echo 'Qwen3-Embedding-8B pulled successfully!' &&
+        echo 'All models pulled successfully!'
+      "
+    restart: "no"
+
+volumes:
+  ollama_data:
+    driver: local
+
+networks:
+  mcp-network:
+    driver: bridge
