@@ -69,13 +69,13 @@ services:
     command: >
       sh -c "
         echo 'Pulling Qwen3-Embedding models...' &&
-        echo 'Pulling Qwen3-Embedding-0.6B (Q8_0 - 639MB)...' &&
+        echo 'Pulling Qwen3-Embedding-0.6B (Q8_0 - 639MB) - Primary model...' &&
         curl -X POST http://ollama:11434/api/pull -d '{\"name\":\"dengcao/Qwen3-Embedding-0.6B:Q8_0\"}' &&
         echo 'Qwen3-Embedding-0.6B pulled successfully!' &&
-        echo 'Pulling Qwen3-Embedding-8B (Q4_K_M - 4.7GB)...' &&
+        echo 'Optionally pulling Qwen3-Embedding-8B (Q4_K_M - 4.7GB) as backup...' &&
         curl -X POST http://ollama:11434/api/pull -d '{\"name\":\"dengcao/Qwen3-Embedding-8B:Q4_K_M\"}' &&
         echo 'Qwen3-Embedding-8B pulled successfully!' &&
-        echo 'All models pulled successfully!'
+        echo 'All models pulled successfully! Using 0.6B as primary model.'
       "
     restart: "no"
 

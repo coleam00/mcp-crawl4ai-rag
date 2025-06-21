@@ -35,30 +35,54 @@ if %ERRORLEVEL% NEQ 0 (
 echo Image verification successful!
 echo.
 
-echo [4/8] Testing built image locally...
-echo Starting temporary container for testing...
-docker run -d --name mcp-test-container -p 8052:8051 drnit29/mcp-crawl4ai-rag:latest
+echo [4/8] Starting container with built image for testing...
+echo Stopping any existing containers first...
+docker-compose down >nul 2>&1
+docker-compose -f docker-compose.published.yml down >nul 2>&1
+
+echo.
+echo Starting services using new built image...
+docker-compose -f docker-compose.published.yml up -d
 if %ERRORLEVEL% NEQ 0 (
-    echo Error: Failed to start test container
+    echo Error: Failed to start services with built image
+    echo.
+    echo Troubleshooting:
+    echo 1. Check if image was built: docker images | findstr drnit29/mcp-crawl4ai-rag
+    echo 2. Verify network connectivity: docker network ls
+    echo 3. Check logs: docker-compose -f docker-compose.published.yml logs
+    echo.
     pause
     exit /b 1
 )
 
-echo Waiting for container to start...
-timeout /t 10 /nobreak >nul
+echo Waiting for services to initialize...
+timeout /t 20 /nobreak >nul
 
-echo Testing container health...
-curl -f http://localhost:8052/health >nul 2>&1
-if %ERRORLEVEL% NEQ 0 (
-    echo Warning: Test container not responding (may need more time)
-    echo Continuing with push...
+echo Testing service health...
+timeout /t 5 /nobreak >nul
+curl -f http://localhost:8051/health >nul 2>&1
+if %ERRORLEVEL% EQU 0 (
+    echo ✅ MCP Server is healthy and responding!
+    echo ✅ Built image is working correctly
+    echo.
 ) else (
-    echo Test container is healthy!
+    echo ⚠️  MCP Server is still starting up
+    echo Waiting a bit more...
+    timeout /t 10 /nobreak >nul
+    curl -f http://localhost:8051/health >nul 2>&1
+    if %ERRORLEVEL% EQU 0 (
+        echo ✅ MCP Server is now healthy!
+    ) else (
+        echo ❌ MCP Server health check failed
+        echo Container logs:
+        docker-compose -f docker-compose.published.yml logs --tail=20 mcp-server
+        pause
+        exit /b 1
+    )
 )
 
-echo Stopping test container...
-docker stop mcp-test-container >nul 2>&1
-docker rm mcp-test-container >nul 2>&1
+echo Services Status:
+docker-compose -f docker-compose.published.yml ps
 echo.
 
 echo [5/8] Docker Hub login...
@@ -103,29 +127,9 @@ if %ERRORLEVEL% NEQ 0 (
 )
 echo.
 
-echo [8/8] Starting services with published image...
-echo Stopping any existing containers first...
-docker-compose down >nul 2>&1
-docker-compose -f docker-compose.published.yml down >nul 2>&1
-
-echo.
-echo Starting services using published image configuration...
-docker-compose -f docker-compose.published.yml up -d
-if %ERRORLEVEL% NEQ 0 (
-    echo Error: Failed to start services with published image
-    echo.
-    echo Troubleshooting:
-    echo 1. Check if published image is available: docker images | findstr drnit29/mcp-crawl4ai-rag
-    echo 2. Verify network connectivity: docker network ls
-    echo 3. Check logs: docker-compose -f docker-compose.published.yml logs
-    echo.
-    pause
-    exit /b 1
-)
-echo.
-
-echo Waiting for services to initialize...
-timeout /t 15 /nobreak >nul
+echo [8/8] Finalizing deployment...
+echo Services are already running with the newly built and pushed image.
+echo Verifying final status...
 echo.
 
 echo ===============================================
@@ -138,21 +142,20 @@ echo - drnit29/mcp-crawl4ai-rag:latest
 echo - drnit29/mcp-crawl4ai-rag:v1.0
 echo.
 
-echo Services Status (using published image):
+echo Final Services Status:
 docker-compose -f docker-compose.published.yml ps
 echo.
 
-echo Testing service health...
-timeout /t 5 /nobreak >nul
+echo Final health verification...
 curl -f http://localhost:8051/health >nul 2>&1
 if %ERRORLEVEL% EQU 0 (
-    echo ✅ MCP Server is healthy and responding!
+    echo ✅ MCP Server is healthy and ready for use!
+    echo ✅ Image successfully built, tested, pushed, and deployed!
     curl -f http://localhost:8051/health?format=json 2>nul
     echo.
 ) else (
-    echo ⚠️  MCP Server is still starting up or having issues
-    echo    Check status in a few moments: curl http://localhost:8051/health
-    echo    View logs: docker-compose -f docker-compose.published.yml logs -f mcp-server
+    echo ⚠️  Note: Service may still be initializing
+    echo    Status check: curl http://localhost:8051/health
 )
 echo.
 

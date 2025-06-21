@@ -56,10 +56,16 @@ def create_embeddings_batch(texts: List[str]) -> List[List[float]]:
         print(f"Using Ollama embedding model: {embedding_model} with {embedding_dims} dimensions")
         # For Qwen3-Embedding models, validate dimensions
         if "qwen3-embedding" in embedding_model.lower():
-            if "0.6b" in embedding_model.lower() and embedding_dims > 1024:
-                print(f"Warning: Qwen3-Embedding-0.6B optimal dimensions are ≤1024, but configured for {embedding_dims}")
-            elif "8b" in embedding_model.lower() and embedding_dims > 4096:
-                print(f"Warning: Qwen3-Embedding-8B supports up to 4096 dimensions, but configured for {embedding_dims}")
+            if "0.6b" in embedding_model.lower():
+                if embedding_dims <= 1024:
+                    print(f"✅ Qwen3-Embedding-0.6B: Using native {embedding_dims}D embeddings (optimal)")
+                else:
+                    print(f"Warning: Qwen3-Embedding-0.6B optimal dimensions are ≤1024, but configured for {embedding_dims}")
+            elif "8b" in embedding_model.lower():
+                if embedding_dims > 4096:
+                    print(f"Warning: Qwen3-Embedding-8B supports up to 4096 dimensions, but configured for {embedding_dims}")
+                else:
+                    print(f"Qwen3-Embedding-8B: Using {embedding_dims}D embeddings")
     
     try:
         # Add timeout for local Ollama connections
@@ -86,17 +92,23 @@ def create_embeddings_batch(texts: List[str]) -> List[List[float]]:
                 "input": processed_texts
             }
             
-            # For Qwen3-Embedding models with MRL support, specify exact dimensions
+            # Note: Ollama currently doesn't support the dimensions parameter for MRL
+            # The truncation approach is actually efficient for the first N dimensions
             if is_ollama and "qwen3-embedding" in embedding_model.lower():
-                embedding_params["dimensions"] = embedding_dims
-                print(f"Requesting {embedding_dims} dimensions directly from Qwen3-Embedding model")
+                if "0.6b" in embedding_model.lower() and embedding_dims <= 1024:
+                    print(f"Qwen3-Embedding-0.6B: Generating native {embedding_dims}D embeddings (no truncation needed)")
+                else:
+                    print(f"Qwen3-Embedding will generate 4096D → truncate to {embedding_dims}D (first dimensions contain most information)")
             
             response = client.embeddings.create(**embedding_params)
             
             # Truncate embeddings to configured dimensions if necessary
             embeddings = [item.embedding for item in response.data]
             if embeddings and len(embeddings[0]) > embedding_dims:
-                print(f"Truncating embeddings from {len(embeddings[0])} to {embedding_dims} dimensions")
+                if is_ollama and "qwen3-embedding-0.6b" in embedding_model.lower() and embedding_dims <= 1024:
+                    print(f"Note: Qwen3-Embedding-0.6B generated {len(embeddings[0])}D but expected {embedding_dims}D")
+                else:
+                    print(f"Optimizing embeddings: {len(embeddings[0])}D → {embedding_dims}D (using most informative dimensions)")
                 embeddings = [embedding[:embedding_dims] for embedding in embeddings]
             
             return embeddings
@@ -126,9 +138,7 @@ def create_embeddings_batch(texts: List[str]) -> List[List[float]]:
                             "input": [processed_text]
                         }
                         
-                        # For Qwen3-Embedding models with MRL support, specify exact dimensions
-                        if is_ollama and "qwen3-embedding" in embedding_model.lower():
-                            individual_params["dimensions"] = embedding_dims
+                        # Note: Ollama doesn't support dimensions parameter yet
                         
                         individual_response = client.embeddings.create(**individual_params)
                         
