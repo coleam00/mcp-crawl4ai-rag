@@ -25,10 +25,15 @@ class GraphitiDependencies:
 # ========== Helper function to get model configuration ==========
 def get_model():
     """Configure and return the LLM model to use."""
-    model_choice = os.getenv('MODEL_CHOICE', 'gpt-4.1-mini')
-    api_key = os.getenv('OPENAI_API_KEY', 'no-api-key-provided')
+    chat_model = os.getenv('CHAT_MODEL', 'gpt-4.1-mini')
+    api_key = os.getenv('CHAT_MODEL_API_KEY') or os.getenv('OPENAI_API_KEY', 'no-api-key-provided')
+    base_url = os.getenv('CHAT_MODEL_API_BASE')
 
-    return OpenAIModel(model_choice, provider=OpenAIProvider(api_key=api_key))
+    provider_kwargs = {'api_key': api_key}
+    if base_url:
+        provider_kwargs['base_url'] = base_url
+
+    return OpenAIModel(chat_model, provider=OpenAIProvider(**provider_kwargs))
 
 # ========== Create the Graphiti agent ==========
 graphiti_agent = Agent(

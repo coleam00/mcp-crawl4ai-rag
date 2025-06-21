@@ -74,7 +74,7 @@ The server provides essential web crawling and search tools:
 - [Docker/Docker Desktop](https://www.docker.com/products/docker-desktop/) if running the MCP server as a container (recommended)
 - [Python 3.12+](https://www.python.org/downloads/) if running the MCP server directly through uv
 - [Supabase](https://supabase.com/) (database for RAG)
-- [OpenAI API key](https://platform.openai.com/api-keys) (for generating embeddings)
+- [OpenAI API keys](https://platform.openai.com/api-keys) (for chat and embedding models)
 - [Neo4j](https://neo4j.com/) (optional, for knowledge graph functionality) - see [Knowledge Graph Setup](#knowledge-graph-setup) section
 
 ## Installation
@@ -179,26 +179,37 @@ Alternatively, install Neo4j directly:
 
 Create a `.env` file in the project root with the following variables:
 
-```
+```dotenv
 # MCP Server Configuration
-HOST=0.0.0.0
-PORT=8051
-TRANSPORT=sse
+HOST=0.0.0.0 # Host for the server
+PORT=8051 # Port for the server
+TRANSPORT=sse # Transport protocol (sse or stdio)
 
-# OpenAI API Configuration
-OPENAI_API_KEY=your_openai_api_key
+# --- Model Configuration ---
+# OpenAI API Configuration (DEPRECATED - use model-specific keys below)
+# OPENAI_API_KEY=your_openai_api_key
 
-# LLM for summaries and contextual embeddings
-MODEL_CHOICE=gpt-4.1-nano
+# Chat Model (for summaries, contextual embeddings, etc.)
+CHAT_MODEL=gpt-4.1-mini
+CHAT_MODEL_API_KEY=your_chat_model_api_key
+CHAT_MODEL_API_BASE= # Optional: e.g., http://localhost:11434/v1 for Ollama
 
-# RAG Strategies (set to "true" or "false", default to "false")
+# Embedding Model
+EMBEDDING_MODEL="text-embedding-3-small"
+EMBEDDING_MODEL_API_KEY=your_embedding_model_api_key
+EMBEDDING_DIMENSIONS=1536
+EMBEDDING_MODEL_API_BASE= # Optional: e.g., http://localhost:11434/v1 for Ollama
+
+# --- RAG Strategy Flags ---
+# Set to "true" or "false", all default to "false"
 USE_CONTEXTUAL_EMBEDDINGS=false
 USE_HYBRID_SEARCH=false
 USE_AGENTIC_RAG=false
 USE_RERANKING=false
 USE_KNOWLEDGE_GRAPH=false
 
-# Supabase Configuration
+# --- Database Configuration ---
+# Vector Database (for RAG)
 SUPABASE_URL=your_supabase_project_url
 SUPABASE_SERVICE_KEY=your_supabase_service_key
 
@@ -206,6 +217,28 @@ SUPABASE_SERVICE_KEY=your_supabase_service_key
 NEO4J_URI=bolt://localhost:7687
 NEO4J_USER=neo4j
 NEO4J_PASSWORD=your_neo4j_password
+
+# --- Fine-Tuning Parameters ---
+
+# Reranking model name from sentence-transformers
+RERANKING_MODEL="cross-encoder/ms-marco-MiniLM-L-6-v2"
+
+# Crawling parameters
+MAX_CRAWL_DEPTH=3
+MAX_CONCURRENT_CRAWLS=10
+CHUNK_SIZE=5000
+
+# Search parameters
+DEFAULT_MATCH_COUNT=5
+
+# Concurrency settings for background tasks
+MAX_WORKERS_SUMMARY=10
+MAX_WORKERS_CONTEXT=10
+MAX_WORKERS_SOURCE_SUMMARY=5
+
+# Content processing settings
+MIN_CODE_BLOCK_LENGTH=1000
+SUPABASE_BATCH_SIZE=20
 ```
 
 ### RAG Strategy Options
@@ -213,7 +246,7 @@ NEO4J_PASSWORD=your_neo4j_password
 The Crawl4AI RAG MCP server supports four powerful RAG strategies that can be enabled independently:
 
 #### 1. **USE_CONTEXTUAL_EMBEDDINGS**
-When enabled, this strategy enhances each chunk's embedding with additional context from the entire document. The system passes both the full document and the specific chunk to an LLM (configured via `MODEL_CHOICE`) to generate enriched context that gets embedded alongside the chunk content.
+When enabled, this strategy enhances each chunk's embedding with additional context from the entire document. The system passes both the full document and the specific chunk to an LLM (configured via `CHAT_MODEL`) to generate enriched context that gets embedded alongside the chunk content.
 
 - **When to use**: Enable this when you need high-precision retrieval where context matters, such as technical documentation where terms might have different meanings in different sections.
 - **Trade-offs**: Slower indexing due to LLM calls for each chunk, but significantly better retrieval accuracy.
@@ -363,7 +396,8 @@ Add this server to your MCP configuration for Claude Desktop, Windsurf, or any o
       "args": ["path/to/crawl4ai-mcp/src/crawl4ai_mcp.py"],
       "env": {
         "TRANSPORT": "stdio",
-        "OPENAI_API_KEY": "your_openai_api_key",
+        "CHAT_MODEL_API_KEY": "your_chat_model_api_key",
+        "EMBEDDING_MODEL_API_KEY": "your_embedding_model_api_key",
         "SUPABASE_URL": "your_supabase_url",
         "SUPABASE_SERVICE_KEY": "your_supabase_service_key",
         "USE_KNOWLEDGE_GRAPH": "false",
@@ -384,8 +418,9 @@ Add this server to your MCP configuration for Claude Desktop, Windsurf, or any o
     "crawl4ai-rag": {
       "command": "docker",
       "args": ["run", "--rm", "-i", 
-               "-e", "TRANSPORT", 
-               "-e", "OPENAI_API_KEY", 
+               "-e", "TRANSPORT",
+               "-e", "CHAT_MODEL_API_KEY",
+               "-e", "EMBEDDING_MODEL_API_KEY",
                "-e", "SUPABASE_URL", 
                "-e", "SUPABASE_SERVICE_KEY",
                "-e", "USE_KNOWLEDGE_GRAPH",
@@ -395,7 +430,8 @@ Add this server to your MCP configuration for Claude Desktop, Windsurf, or any o
                "mcp/crawl4ai"],
       "env": {
         "TRANSPORT": "stdio",
-        "OPENAI_API_KEY": "your_openai_api_key",
+        "CHAT_MODEL_API_KEY": "your_chat_model_api_key",
+        "EMBEDDING_MODEL_API_KEY": "your_embedding_model_api_key",
         "SUPABASE_URL": "your_supabase_url",
         "SUPABASE_SERVICE_KEY": "your_supabase_service_key",
         "USE_KNOWLEDGE_GRAPH": "false",

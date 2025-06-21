@@ -11,9 +11,6 @@ import openai
 import re
 import time
 
-# Load OpenAI API key for embeddings
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
 def get_supabase_client() -> Client:
     """
     Get a Supabase client with the URL and key from environment variables.
@@ -42,13 +39,30 @@ def create_embeddings_batch(texts: List[str]) -> List[List[float]]:
     if not texts:
         return []
     
+    embedding_model = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
+    embedding_dims = int(os.getenv("EMBEDDING_DIMENSIONS", "1536"))
+    
+    embedding_api_base = os.getenv("EMBEDDING_MODEL_API_BASE")
+    api_key = os.getenv("EMBEDDING_MODEL_API_KEY") or os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise ValueError("EMBEDDING_MODEL_API_KEY or OPENAI_API_KEY must be set")
+    client_args = {"api_key": api_key}
+    if embedding_api_base:
+        client_args["base_url"] = embedding_api_base
+    
+    try:
+        client = openai.OpenAI(**client_args)
+    except Exception as e:
+        print(f"Failed to create OpenAI client for embeddings: {e}")
+        return [[0.0] * embedding_dims] * len(texts)
+    
     max_retries = 3
     retry_delay = 1.0  # Start with 1 second delay
     
     for retry in range(max_retries):
         try:
-            response = openai.embeddings.create(
-                model="text-embedding-3-small", # Hardcoding embedding model for now, will change this later to be more dynamic
+            response = client.embeddings.create(
+                model=embedding_model,
                 input=texts
             )
             return [item.embedding for item in response.data]
@@ -67,8 +81,8 @@ def create_embeddings_batch(texts: List[str]) -> List[List[float]]:
                 
                 for i, text in enumerate(texts):
                     try:
-                        individual_response = openai.embeddings.create(
-                            model="text-embedding-3-small",
+                        individual_response = client.embeddings.create(
+                            model=embedding_model,
                             input=[text]
                         )
                         embeddings.append(individual_response.data[0].embedding)
@@ -76,7 +90,7 @@ def create_embeddings_batch(texts: List[str]) -> List[List[float]]:
                     except Exception as individual_error:
                         print(f"Failed to create embedding for text {i}: {individual_error}")
                         # Add zero embedding as fallback
-                        embeddings.append([0.0] * 1536)
+                        embeddings.append([0.0] * embedding_dims)
                 
                 print(f"Successfully created {successful_count}/{len(texts)} embeddings individually")
                 return embeddings
@@ -91,13 +105,14 @@ def create_embedding(text: str) -> List[float]:
     Returns:
         List of floats representing the embedding
     """
+    embedding_dims = int(os.getenv("EMBEDDING_DIMENSIONS", "1536"))
     try:
         embeddings = create_embeddings_batch([text])
-        return embeddings[0] if embeddings else [0.0] * 1536
+        return embeddings[0] if embeddings else [0.0] * embedding_dims
     except Exception as e:
         print(f"Error creating embedding: {e}")
         # Return empty embedding if there's an error
-        return [0.0] * 1536
+        return [0.0] * embedding_dims
 
 def generate_contextual_embedding(full_document: str, chunk: str) -> Tuple[str, bool]:
     """
@@ -112,28 +127,29 @@ def generate_contextual_embedding(full_document: str, chunk: str) -> Tuple[str, 
         - The contextual text that situates the chunk within the document
         - Boolean indicating if contextual embedding was performed
     """
-    model_choice = os.getenv("MODEL_CHOICE")
+    chat_model = os.getenv("CHAT_MODEL")
     
     try:
         # Create the prompt for generating contextual information
-        prompt = f"""<document> 
-{full_document[:25000]} 
-</document>
-Here is the chunk we want to situate within the whole document 
-<chunk> 
-{chunk}
-</chunk> 
-Please give a short succinct context to situate this chunk within the overall document for the purposes of improving search retrieval of the chunk. Answer only with the succinct context and nothing else."""
+        prompt = f"""<document>\n{full_document}\n</document>\n<chunk>\n{chunk}\n</chunk> \nPlease give a short succinct context to situate this chunk within the whole document for the purposes of improving search retrieval of the chunk. Answer only with the succinct context and nothing else."""
+
+        chat_api_base = os.getenv("CHAT_MODEL_API_BASE")
+        api_key = os.getenv("CHAT_MODEL_API_KEY") or os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("CHAT_MODEL_API_KEY or OPENAI_API_KEY must be set")
+        client_args = {"api_key": api_key}
+        if chat_api_base:
+            client_args["base_url"] = chat_api_base
+        
+        client = openai.OpenAI(**client_args)
 
         # Call the OpenAI API to generate contextual information
-        response = openai.chat.completions.create(
-            model=model_choice,
+        response = client.chat.completions.create(
+            model=chat_model,
             messages=[
                 {"role": "system", "content": "You are a helpful assistant that provides concise contextual information."},
                 {"role": "user", "content": prompt}
-            ],
-            temperature=0.3,
-            max_tokens=200
+            ]
         )
         
         # Extract the generated context
@@ -204,7 +220,7 @@ def add_documents_to_supabase(
                 print(f"Error deleting record for URL {url}: {inner_e}")
                 # Continue with the next URL even if one fails
     
-    # Check if MODEL_CHOICE is set for contextual embeddings
+    # Check if contextual embeddings are enabled
     use_contextual_embeddings = os.getenv("USE_CONTEXTUAL_EMBEDDINGS", "false") == "true"
     print(f"\n\nUse contextual embeddings: {use_contextual_embeddings}\n\n")
     
@@ -218,7 +234,7 @@ def add_documents_to_supabase(
         batch_contents = contents[i:batch_end]
         batch_metadatas = metadatas[i:batch_end]
         
-        # Apply contextual embedding to each chunk if MODEL_CHOICE is set
+        # Apply contextual embedding to each chunk if enabled
         if use_contextual_embeddings:
             # Prepare arguments for parallel processing
             process_args = []
@@ -355,17 +371,17 @@ def search_documents(
         return []
 
 
-def extract_code_blocks(markdown_content: str, min_length: int = 1000) -> List[Dict[str, Any]]:
+def extract_code_blocks(markdown_content: str) -> List[Dict[str, Any]]:
     """
     Extract code blocks from markdown content along with context.
     
     Args:
         markdown_content: The markdown content to extract code blocks from
-        min_length: Minimum length of code blocks to extract (default: 1000 characters)
         
     Returns:
         List of dictionaries containing code blocks and their context
     """
+    min_length = int(os.getenv("MIN_CODE_BLOCK_LENGTH", "1000"))
     code_blocks = []
     
     # Skip if content starts with triple backticks (edge case for files wrapped in backticks)
@@ -449,33 +465,28 @@ def generate_code_example_summary(code: str, context_before: str, context_after:
     Returns:
         A summary of what the code example demonstrates
     """
-    model_choice = os.getenv("MODEL_CHOICE")
+    chat_model = os.getenv("CHAT_MODEL")
     
     # Create the prompt
-    prompt = f"""<context_before>
-{context_before[-500:] if len(context_before) > 500 else context_before}
-</context_before>
-
-<code_example>
-{code[:1500] if len(code) > 1500 else code}
-</code_example>
-
-<context_after>
-{context_after[:500] if len(context_after) > 500 else context_after}
-</context_after>
-
-Based on the code example and its surrounding context, provide a concise summary (2-3 sentences) that describes what this code example demonstrates and its purpose. Focus on the practical application and key concepts illustrated.
-"""
+    prompt = f"""<context_before>\n{context_before}\n</context_before>\n<code_example>\n{code}\n</code_example>\n<context_after>\n{context_after}\n</context_after>\n\nPlease provide a concise summary of what this code example demonstrates.\n"""
     
     try:
-        response = openai.chat.completions.create(
-            model=model_choice,
+        chat_api_base = os.getenv("CHAT_MODEL_API_BASE")
+        api_key = os.getenv("CHAT_MODEL_API_KEY") or os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("CHAT_MODEL_API_KEY or OPENAI_API_KEY must be set")
+        client_args = {"api_key": api_key}
+        if chat_api_base:
+            client_args["base_url"] = chat_api_base
+        
+        client = openai.OpenAI(**client_args)
+
+        response = client.chat.completions.create(
+            model=chat_model,
             messages=[
                 {"role": "system", "content": "You are a helpful assistant that provides concise code example summaries."},
                 {"role": "user", "content": prompt}
-            ],
-            temperature=0.3,
-            max_tokens=100
+            ]
         )
         
         return response.choices[0].message.content.strip()
@@ -517,6 +528,7 @@ def add_code_examples_to_supabase(
         except Exception as e:
             print(f"Error deleting existing code examples for {url}: {e}")
     
+    batch_size = int(os.getenv("SUPABASE_BATCH_SIZE", "20"))
     # Process in batches
     total_items = len(urls)
     for i in range(0, total_items, batch_size):
@@ -648,29 +660,31 @@ def extract_source_summary(source_id: str, content: str, max_length: int = 500) 
         return default_summary
     
     # Get the model choice from environment variables
-    model_choice = os.getenv("MODEL_CHOICE")
+    chat_model = os.getenv("CHAT_MODEL")
     
     # Limit content length to avoid token limits
     truncated_content = content[:25000] if len(content) > 25000 else content
     
-    # Create the prompt for generating the summary
-    prompt = f"""<source_content>
-{truncated_content}
-</source_content>
-
-The above content is from the documentation for '{source_id}'. Please provide a concise summary (3-5 sentences) that describes what this library/tool/framework is about. The summary should help understand what the library/tool/framework accomplishes and the purpose.
-"""
+    prompt = f"""<library_or_tool_content>\n{truncated_content}\n</library_or_tool_content>\n\nPlease provide a concise summary of the above library, tool, or framework.\n"""
     
     try:
+        chat_api_base = os.getenv("CHAT_MODEL_API_BASE")
+        api_key = os.getenv("CHAT_MODEL_API_KEY") or os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("CHAT_MODEL_API_KEY or OPENAI_API_KEY must be set")
+        client_args = {"api_key": api_key}
+        if chat_api_base:
+            client_args["base_url"] = chat_api_base
+        
+        client = openai.OpenAI(**client_args)
+
         # Call the OpenAI API to generate the summary
-        response = openai.chat.completions.create(
-            model=model_choice,
+        response = client.chat.completions.create(
+            model=chat_model,
             messages=[
                 {"role": "system", "content": "You are a helpful assistant that provides concise library/tool/framework summaries."},
                 {"role": "user", "content": prompt}
-            ],
-            temperature=0.3,
-            max_tokens=150
+            ]
         )
         
         # Extract the generated summary

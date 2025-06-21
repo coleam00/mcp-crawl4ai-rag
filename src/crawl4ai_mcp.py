@@ -150,7 +150,8 @@ async def crawl4ai_lifespan(server: FastMCP) -> AsyncIterator[Crawl4AIContext]:
     reranking_model = None
     if os.getenv("USE_RERANKING", "false") == "true":
         try:
-            reranking_model = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
+            reranking_model_name = os.getenv("RERANKING_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2")
+            reranking_model = CrossEncoder(reranking_model_name)
         except Exception as e:
             print(f"Failed to load reranking model: {e}")
             reranking_model = None
@@ -464,7 +465,8 @@ async def crawl_single_page(ctx: Context, url: str) -> str:
                     code_metadatas = []
                     
                     # Process code examples in parallel
-                    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+                    max_workers = int(os.getenv("MAX_WORKERS_SUMMARY", "10"))
+                    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
                         # Prepare arguments for parallel processing
                         summary_args = [(block['code'], block['context_before'], block['context_after']) 
                                         for block in code_blocks]
@@ -490,14 +492,7 @@ async def crawl_single_page(ctx: Context, url: str) -> str:
                         code_metadatas.append(code_meta)
                     
                     # Add code examples to Supabase
-                    add_code_examples_to_supabase(
-                        supabase_client, 
-                        code_urls, 
-                        code_chunk_numbers, 
-                        code_examples, 
-                        code_summaries, 
-                        code_metadatas
-                    )
+                    add_code_examples_to_supabase(supabase_client, code_urls, code_chunk_numbers, code_examples, code_summaries, code_metadatas)
             
             return json.dumps({
                 "success": True,
@@ -526,7 +521,7 @@ async def crawl_single_page(ctx: Context, url: str) -> str:
         }, indent=2)
 
 @mcp.tool()
-async def smart_crawl_url(ctx: Context, url: str, max_depth: int = 3, max_concurrent: int = 10, chunk_size: int = 5000) -> str:
+async def smart_crawl_url(ctx: Context, url: str, max_depth: Optional[int] = None, max_concurrent: Optional[int] = None, chunk_size: Optional[int] = None) -> str:
     """
     Intelligently crawl a URL based on its type and store content in Supabase.
     
@@ -551,6 +546,11 @@ async def smart_crawl_url(ctx: Context, url: str, max_depth: int = 3, max_concur
         # Get the crawler from the context
         crawler = ctx.request_context.lifespan_context.crawler
         supabase_client = ctx.request_context.lifespan_context.supabase_client
+        
+        # Set parameters from arguments or environment variables
+        max_depth = max_depth if max_depth is not None else int(os.getenv("MAX_CRAWL_DEPTH", 3))
+        max_concurrent = max_concurrent if max_concurrent is not None else int(os.getenv("MAX_CONCURRENT_CRAWLS", 10))
+        chunk_size = chunk_size if chunk_size is not None else int(os.getenv("CHUNK_SIZE", 5000))
         
         # Determine the crawl strategy
         crawl_results = []
@@ -634,7 +634,8 @@ async def smart_crawl_url(ctx: Context, url: str, max_depth: int = 3, max_concur
             url_to_full_document[doc['url']] = doc['markdown']
         
         # Update source information for each unique source FIRST (before inserting documents)
-        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        max_workers_source_summary = int(os.getenv("MAX_WORKERS_SOURCE_SUMMARY", "5"))
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers_source_summary) as executor:
             source_summary_args = [(source_id, content) for source_id, content in source_content_map.items()]
             source_summaries = list(executor.map(lambda args: extract_source_summary(args[0], args[1]), source_summary_args))
         
@@ -643,8 +644,7 @@ async def smart_crawl_url(ctx: Context, url: str, max_depth: int = 3, max_concur
             update_source_info(supabase_client, source_id, summary, word_count)
         
         # Add documentation chunks to Supabase (AFTER sources exist)
-        batch_size = 20
-        add_documents_to_supabase(supabase_client, urls, chunk_numbers, contents, metadatas, url_to_full_document, batch_size=batch_size)
+        add_documents_to_supabase(supabase_client, urls, chunk_numbers, contents, metadatas, url_to_full_document)
         
         # Extract and process code examples from all documents only if enabled
         extract_code_examples_enabled = os.getenv("USE_AGENTIC_RAG", "false") == "true"
@@ -664,7 +664,8 @@ async def smart_crawl_url(ctx: Context, url: str, max_depth: int = 3, max_concur
                 
                 if code_blocks:
                     # Process code examples in parallel
-                    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+                    max_workers_summary = int(os.getenv("MAX_WORKERS_SUMMARY", "10"))
+                    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers_summary) as executor:
                         # Prepare arguments for parallel processing
                         summary_args = [(block['code'], block['context_before'], block['context_after']) 
                                         for block in code_blocks]
@@ -693,16 +694,7 @@ async def smart_crawl_url(ctx: Context, url: str, max_depth: int = 3, max_concur
                         code_metadatas.append(code_meta)
             
             # Add all code examples to Supabase
-            if code_examples:
-                add_code_examples_to_supabase(
-                    supabase_client, 
-                    code_urls, 
-                    code_chunk_numbers, 
-                    code_examples, 
-                    code_summaries, 
-                    code_metadatas,
-                    batch_size=batch_size
-                )
+            add_code_examples_to_supabase(supabase_client, code_urls, code_chunk_numbers, code_examples, code_summaries, code_metadatas)
         
         return json.dumps({
             "success": True,
@@ -773,7 +765,7 @@ async def get_available_sources(ctx: Context) -> str:
         }, indent=2)
 
 @mcp.tool()
-async def perform_rag_query(ctx: Context, query: str, source: str = None, match_count: int = 5) -> str:
+async def perform_rag_query(ctx: Context, query: str, source: str = None, match_count: Optional[int] = None) -> str:
     """
     Perform a RAG (Retrieval Augmented Generation) query on the stored content.
     
@@ -793,6 +785,9 @@ async def perform_rag_query(ctx: Context, query: str, source: str = None, match_
     try:
         # Get the Supabase client from the context
         supabase_client = ctx.request_context.lifespan_context.supabase_client
+        
+        # Set match_count from argument or environment variable
+        match_count = match_count if match_count is not None else int(os.getenv("DEFAULT_MATCH_COUNT", 5))
         
         # Check if hybrid search is enabled
         use_hybrid_search = os.getenv("USE_HYBRID_SEARCH", "false") == "true"
@@ -912,7 +907,7 @@ async def perform_rag_query(ctx: Context, query: str, source: str = None, match_
         }, indent=2)
 
 @mcp.tool()
-async def search_code_examples(ctx: Context, query: str, source_id: str = None, match_count: int = 5) -> str:
+async def search_code_examples(ctx: Context, query: str, source_id: str = None, match_count: Optional[int] = None) -> str:
     """
     Search for code examples relevant to the query.
     
@@ -931,6 +926,9 @@ async def search_code_examples(ctx: Context, query: str, source_id: str = None, 
     Returns:
         JSON string with the search results
     """
+    # Set match_count from argument or environment variable
+    match_count = match_count if match_count is not None else int(os.getenv("DEFAULT_MATCH_COUNT", 5))
+
     # Check if code example extraction is enabled
     extract_code_examples_enabled = os.getenv("USE_AGENTIC_RAG", "false") == "true"
     if not extract_code_examples_enabled:
