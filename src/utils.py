@@ -62,6 +62,8 @@ def create_embeddings_batch(texts: List[str]) -> List[List[float]]:
                 print(f"Warning: Qwen3-Embedding-8B supports up to 4096 dimensions, but configured for {embedding_dims}")
     
     try:
+        # Add timeout for local Ollama connections
+        client_args["timeout"] = 120.0  # 2 minutes timeout for embeddings
         client = openai.OpenAI(**client_args)
     except Exception as e:
         print(f"Failed to create OpenAI client for embeddings: {e}")
@@ -78,10 +80,18 @@ def create_embeddings_batch(texts: List[str]) -> List[List[float]]:
                 processed_texts = [text + "<|endoftext|>" for text in texts]
                 print(f"Added <|endoftext|> token to {len(texts)} texts for Qwen3-Embedding compatibility")
             
-            response = client.embeddings.create(
-                model=embedding_model,
-                input=processed_texts
-            )
+            # Create embedding request with custom dimensions if supported by model
+            embedding_params = {
+                "model": embedding_model,
+                "input": processed_texts
+            }
+            
+            # For Qwen3-Embedding models with MRL support, specify exact dimensions
+            if is_ollama and "qwen3-embedding" in embedding_model.lower():
+                embedding_params["dimensions"] = embedding_dims
+                print(f"Requesting {embedding_dims} dimensions directly from Qwen3-Embedding model")
+            
+            response = client.embeddings.create(**embedding_params)
             
             # Truncate embeddings to configured dimensions if necessary
             embeddings = [item.embedding for item in response.data]
@@ -110,10 +120,17 @@ def create_embeddings_batch(texts: List[str]) -> List[List[float]]:
                         if is_ollama and "qwen3-embedding" in embedding_model.lower():
                             processed_text = text + "<|endoftext|>"
                         
-                        individual_response = client.embeddings.create(
-                            model=embedding_model,
-                            input=[processed_text]
-                        )
+                        # Create embedding request with custom dimensions for individual text
+                        individual_params = {
+                            "model": embedding_model,
+                            "input": [processed_text]
+                        }
+                        
+                        # For Qwen3-Embedding models with MRL support, specify exact dimensions
+                        if is_ollama and "qwen3-embedding" in embedding_model.lower():
+                            individual_params["dimensions"] = embedding_dims
+                        
+                        individual_response = client.embeddings.create(**individual_params)
                         
                         embedding = individual_response.data[0].embedding
                         # Truncate if necessary
