@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  qwen3-embedding:
+    build: .
+    container_name: qwen3-embedding-server
+    ports:
+      - "${HOST_PORT:-8000}:8000"
+    environment:
+      # Configurações do modelo
+      - MODEL_NAME=${MODEL_NAME:-Qwen/Qwen3-Embedding-0.6B}
+      - TASK=${TASK:-embed}
+      - MAX_MODEL_LEN=${MAX_MODEL_LEN:-8192}
+      - DEFAULT_DIMENSIONS=${DEFAULT_DIMENSIONS:-1024}
+      
+      # Configurações de GPU
+      - GPU_MEMORY_UTIL=${GPU_MEMORY_UTIL:-0.9}
+      - TENSOR_PARALLEL_SIZE=${TENSOR_PARALLEL_SIZE:-1}
+      
+      # Configurações de rede
+      - HOST=${HOST:-0.0.0.0}
+      - PORT=${PORT:-8000}
+      
+      # Tokens de autenticação
+      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-EMPTY}
+      
+      # Configurações de logging
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - DISABLE_LOG_REQUESTS=${DISABLE_LOG_REQUESTS:-false}
+      
+      # Configurações de otimização
+      - ENABLE_PREFIX_CACHING=${ENABLE_PREFIX_CACHING:-true}
+      - ENABLE_CHUNKED_PREFILL=${ENABLE_CHUNKED_PREFILL:-true}
+      
+    volumes:
+      # Cache de modelos
+      - ${MODELS_CACHE_DIR:-./models}:/app/models
+      - ${HF_CACHE_DIR:-~/.cache/huggingface}:/root/.cache/huggingface
+      
+      # Logs
+      - ./logs:/app/logs
+      
+      # Configurações customizadas
+      - ./config:/app/config
+      
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: ${GPU_COUNT:-all}
+              capabilities: [gpu]
+    
+    restart: unless-stopped
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Serviço opcional para monitoramento
+  monitoring:
+    image: nginx:alpine
+    container_name: qwen3-embedding-monitor
+    ports:
+      - "${MONITOR_PORT:-8080}:80"
+    volumes:
+      - ./monitoring/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./monitoring/html:/usr/share/nginx/html:ro
+    depends_on:
+      - qwen3-embedding
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+networks:
+  default:
+    name: qwen3-embedding-network 

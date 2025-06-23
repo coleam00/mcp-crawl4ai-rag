@@ -1,0 +1,88 @@
+# Configurações dos modelos Qwen3-Embedding
+# Este arquivo define as configurações específicas para cada modelo
+
+models:
+  qwen3-embedding-0.6b:
+    name: "Qwen/Qwen3-Embedding-0.6B"
+    max_dimensions: 1024
+    default_dimensions: 1024
+    max_seq_length: 32768
+    recommended_batch_size: 32
+    gpu_memory_required: "2GB"
+    description: "Modelo menor, ideal para desenvolvimento e testes"
+    
+  qwen3-embedding-4b:
+    name: "Qwen/Qwen3-Embedding-4B"
+    max_dimensions: 2560
+    default_dimensions: 2560
+    max_seq_length: 32768
+    recommended_batch_size: 16
+    gpu_memory_required: "8GB"
+    description: "Modelo médio, equilibrio entre performance e qualidade"
+    
+  qwen3-embedding-8b:
+    name: "Qwen/Qwen3-Embedding-8B"
+    max_dimensions: 4096
+    default_dimensions: 4096
+    max_seq_length: 32768
+    recommended_batch_size: 8
+    gpu_memory_required: "16GB"
+    description: "Modelo maior, máxima qualidade"
+
+# Configurações de quantização
+quantization:
+  awq:
+    models:
+      - "Qwen/Qwen3-Embedding-0.6B-AWQ"
+      - "Qwen/Qwen3-Embedding-4B-AWQ"
+      - "Qwen/Qwen3-Embedding-8B-AWQ"
+    memory_reduction: "50%"
+    quality_loss: "minimal"
+    
+  fp8:
+    models:
+      - "Qwen/Qwen3-Embedding-0.6B-FP8"
+      - "Qwen/Qwen3-Embedding-4B-FP8"
+      - "Qwen/Qwen3-Embedding-8B-FP8"
+    memory_reduction: "30%"
+    quality_loss: "very_low"
+
+# Configurações de performance por hardware
+hardware_profiles:
+  development:
+    gpu_memory: "4GB"
+    recommended_model: "qwen3-embedding-0.6b"
+    batch_size: 16
+    tensor_parallel: 1
+    
+  production_small:
+    gpu_memory: "8GB"
+    recommended_model: "qwen3-embedding-4b"
+    batch_size: 32
+    tensor_parallel: 1
+    
+  production_large:
+    gpu_memory: "16GB+"
+    recommended_model: "qwen3-embedding-8b"
+    batch_size: 64
+    tensor_parallel: 2
+
+# Configurações de API
+api:
+  default_model: "Qwen/Qwen3-Embedding-0.6B"
+  max_batch_size: 100
+  timeout_seconds: 300
+  enable_streaming: false
+  
+# Configurações de cache
+cache:
+  model_cache_dir: "/app/models"
+  enable_model_cache: true
+  cache_size_gb: 10
+  
+# Configurações de logging
+logging:
+  level: "INFO"
+  format: "json"
+  enable_request_logging: true
+  log_embeddings: false  # Por segurança/privacidade 
