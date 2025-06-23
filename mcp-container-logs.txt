@@ -1,0 +1,1432 @@
+INFO:     Started server process [1]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8051 (Press CTRL+C to quit)
+2025-06-23 03:07:49 - httpx - INFO - HTTP Request: GET https://supabase.quantmind.com.br/rest/v1/sources?select=count&limit=1 "HTTP/2 200 OK"
+INFO:     172.18.0.1:48758 - "GET /health HTTP/1.1" 200 OK
+2025-06-23 03:07:56 - httpx - INFO - HTTP Request: GET https://supabase.quantmind.com.br/rest/v1/sources?select=count&limit=1 "HTTP/2 200 OK"
+INFO:     127.0.0.1:46668 - "GET /health HTTP/1.1" 200 OK
+2025-06-23 03:08:04 - httpx - INFO - HTTP Request: GET https://supabase.quantmind.com.br/rest/v1/sources?select=count&limit=1 "HTTP/2 200 OK"
+INFO:     127.0.0.1:48858 - "GET /health HTTP/1.1" 200 OK
+2025-06-23 03:08:12 - httpx - INFO - HTTP Request: GET https://supabase.quantmind.com.br/rest/v1/sources?select=count&limit=1 "HTTP/2 200 OK"
+INFO:     127.0.0.1:58442 - "GET /health HTTP/1.1" 200 OK
+2025-06-23 03:08:20 - httpx - INFO - HTTP Request: GET https://supabase.quantmind.com.br/rest/v1/sources?select=count&limit=1 "HTTP/2 200 OK"
+INFO:     127.0.0.1:58456 - "GET /health HTTP/1.1" 200 OK
+2025-06-23 03:08:30 - httpx - INFO - HTTP Request: GET https://supabase.quantmind.com.br/rest/v1/sources?select=count&limit=1 "HTTP/2 200 OK"
+INFO:     127.0.0.1:36192 - "GET /health HTTP/1.1" 200 OK
+INFO:     172.18.0.1:43622 - "POST /sse HTTP/1.1" 405 Method Not Allowed
+INFO:     172.18.0.1:43634 - "GET /sse HTTP/1.1" 200 OK
+INFO:     172.18.0.1:43640 - "POST /messages/?session_id=dcba33c9c1804c53bfcc4fa8bc59070c HTTP/1.1" 202 Accepted
+2025-06-23 03:09:01 - sentence_transformers.cross_encoder.CrossEncoder - INFO - Use pytorch device: cpu
+Initializing knowledge graph components...
+✓ Knowledge graph validator initialized
+2025-06-23 03:09:02 - knowledge_graph_validator - INFO - Knowledge graph validator initialized
+2025-06-23 03:09:02 - parse_repo_into_neo4j - INFO - Initializing Neo4j connection...
+2025-06-23 03:09:02 - parse_repo_into_neo4j - INFO - Creating constraints and indexes...
+2025-06-23 03:09:03 - neo4j.notifications - INFO - Received notification from DBMS server: {severity: INFORMATION} {code: Neo.ClientNotification.Schema.IndexOrConstraintAlreadyExists} {category: SCHEMA} {title: `CREATE CONSTRAINT IF NOT EXISTS FOR (e:File) REQUIRE (e.path) IS UNIQUE` has no effect.} {description: `CONSTRAINT constraint_c4752a78 FOR (e:File) REQUIRE (e.path) IS UNIQUE` already exists.} {position: None} for query: 'CREATE CONSTRAINT IF NOT EXISTS FOR (f:File) REQUIRE f.path IS UNIQUE'
+2025-06-23 03:09:04 - neo4j.notifications - INFO - Received notification from DBMS server: {severity: INFORMATION} {code: Neo.ClientNotification.Schema.IndexOrConstraintAlreadyExists} {category: SCHEMA} {title: `CREATE CONSTRAINT IF NOT EXISTS FOR (e:Class) REQUIRE (e.full_name) IS UNIQUE` has no effect.} {description: `CONSTRAINT constraint_cee67bcb FOR (e:Class) REQUIRE (e.full_name) IS UNIQUE` already exists.} {position: None} for query: 'CREATE CONSTRAINT IF NOT EXISTS FOR (c:Class) REQUIRE c.full_name IS UNIQUE'
+2025-06-23 03:09:04 - neo4j.notifications - INFO - Received notification from DBMS server: {severity: INFORMATION} {code: Neo.ClientNotification.Schema.IndexOrConstraintAlreadyExists} {category: SCHEMA} {title: `CREATE RANGE INDEX IF NOT EXISTS FOR (e:File) ON (e.name)` has no effect.} {description: `RANGE INDEX index_b8a552b8 FOR (e:File) ON (e.name)` already exists.} {position: None} for query: 'CREATE INDEX IF NOT EXISTS FOR (f:File) ON (f.name)'
+2025-06-23 03:09:04 - neo4j.notifications - INFO - Received notification from DBMS server: {severity: INFORMATION} {code: Neo.ClientNotification.Schema.IndexOrConstraintAlreadyExists} {category: SCHEMA} {title: `CREATE RANGE INDEX IF NOT EXISTS FOR (e:Class) ON (e.name)` has no effect.} {description: `RANGE INDEX index_60312ca3 FOR (e:Class) ON (e.name)` already exists.} {position: None} for query: 'CREATE INDEX IF NOT EXISTS FOR (c:Class) ON (c.name)'
+✓ Repository extractor initialized
+2025-06-23 03:09:04 - neo4j.notifications - INFO - Received notification from DBMS server: {severity: INFORMATION} {code: Neo.ClientNotification.Schema.IndexOrConstraintAlreadyExists} {category: SCHEMA} {title: `CREATE RANGE INDEX IF NOT EXISTS FOR (e:Method) ON (e.name)` has no effect.} {description: `RANGE INDEX index_aff03bbc FOR (e:Method) ON (e.name)` already exists.} {position: None} for query: 'CREATE INDEX IF NOT EXISTS FOR (m:Method) ON (m.name)'
+2025-06-23 03:09:04 - parse_repo_into_neo4j - INFO - Neo4j initialized successfully
+INFO:     172.18.0.1:51030 - "POST /messages/?session_id=dcba33c9c1804c53bfcc4fa8bc59070c HTTP/1.1" 202 Accepted
+INFO:     172.18.0.1:51040 - "POST /messages/?session_id=dcba33c9c1804c53bfcc4fa8bc59070c HTTP/1.1" 202 Accepted
+2025-06-23 03:09:04 - mcp.server.lowlevel.server - INFO - Processing request of type ListToolsRequest
+2025-06-23 03:09:05 - httpx - INFO - HTTP Request: GET https://supabase.quantmind.com.br/rest/v1/sources?select=count&limit=1 "HTTP/2 200 OK"
+INFO:     127.0.0.1:47656 - "GET /health HTTP/1.1" 200 OK
+INFO:     172.18.0.1:51050 - "POST /messages/?session_id=dcba33c9c1804c53bfcc4fa8bc59070c HTTP/1.1" 202 Accepted
+2025-06-23 03:09:11 - mcp.server.lowlevel.server - INFO - Processing request of type CallToolRequest
+[FETCH]... ↓ https://aider.chat/2023/05/25/ctags.html                                                             | ✓ | ⏱: 0.70s
+[SCRAPE].. ◆ https://aider.chat/2023/05/25/ctags.html                                                             | ✓ | ⏱: 0.07s
+[COMPLETE] ● https://aider.chat/2023/05/25/ctags.html                                                             | ✓ | ⏱: 0.77s
+[FETCH]... ↓ https://aider.chat/2023/07/02/benchmarks.html                                                        | ✓ | ⏱: 0.67s
+[SCRAPE].. ◆ https://aider.chat/2023/07/02/benchmarks.html                                                        | ✓ | ⏱: 0.08s
+[COMPLETE] ● https://aider.chat/2023/07/02/benchmarks.html                                                        | ✓ | ⏱: 0.75s
+[FETCH]... ↓ https://aider.chat/                                                                                  | ✓ | ⏱: 1.14s
+[SCRAPE].. ◆ https://aider.chat/                                                                                  | ✓ | ⏱: 0.03s
+[COMPLETE] ● https://aider.chat/                                                                                  | ✓ | ⏱: 1.17s
+[FETCH]... ↓ https://aider.chat/2023/10/22/repomap.html                                                           | ✓ | ⏱: 1.14s
+[SCRAPE].. ◆ https://aider.chat/2023/10/22/repomap.html                                                           | ✓ | ⏱: 0.08s
+[COMPLETE] ● https://aider.chat/2023/10/22/repomap.html                                                           | ✓ | ⏱: 1.22s
+[FETCH]... ↓ https://aider.chat/2023/11/06/benchmarks-1106.html                                                   | ✓ | ⏱: 1.32s
+[SCRAPE].. ◆ https://aider.chat/2023/11/06/benchmarks-1106.html                                                   | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/2023/11/06/benchmarks-1106.html                                                   | ✓ | ⏱: 1.37s
+[FETCH]... ↓ https://aider.chat/2023/11/06/benchmarks-speed-1106.html                                             | ✓ | ⏱: 1.28s
+[SCRAPE].. ◆ https://aider.chat/2023/11/06/benchmarks-speed-1106.html                                             | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/2023/11/06/benchmarks-speed-1106.html                                             | ✓ | ⏱: 1.33s
+[FETCH]... ↓ https://aider.chat/2024/01/25/benchmarks-0125.html                                                   | ✓ | ⏱: 1.16s
+[SCRAPE].. ◆ https://aider.chat/2024/01/25/benchmarks-0125.html                                                   | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/2024/01/25/benchmarks-0125.html                                                   | ✓ | ⏱: 1.21s
+[FETCH]... ↓ https://aider.chat/2023/12/21/unified-diffs.html                                                     | ✓ | ⏱: 1.32s
+[SCRAPE].. ◆ https://aider.chat/2023/12/21/unified-diffs.html                                                     | ✓ | ⏱: 0.07s
+[COMPLETE] ● https://aider.chat/2023/12/21/unified-diffs.html                                                     | ✓ | ⏱: 1.39s
+[FETCH]... ↓ https://aider.chat/2024/03/08/claude-3.html                                                          | ✓ | ⏱: 1.29s
+[SCRAPE].. ◆ https://aider.chat/2024/03/08/claude-3.html                                                          | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/2024/03/08/claude-3.html                                                          | ✓ | ⏱: 1.34s
+[FETCH]... ↓ https://aider.chat/2024/04/09/gpt-4-turbo.html                                                       | ✓ | ⏱: 1.30s
+[SCRAPE].. ◆ https://aider.chat/2024/04/09/gpt-4-turbo.html                                                       | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/2024/04/09/gpt-4-turbo.html                                                       | ✓ | ⏱: 1.36s
+[FETCH]... ↓ https://aider.chat/2024/05/02/browser.html                                                           | ✓ | ⏱: 1.27s
+[SCRAPE].. ◆ https://aider.chat/2024/05/02/browser.html                                                           | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/2024/05/02/browser.html                                                           | ✓ | ⏱: 1.33s
+[FETCH]... ↓ https://aider.chat/2024/05/13/models-over-time.html                                                  | ✓ | ⏱: 1.22s
+[SCRAPE].. ◆ https://aider.chat/2024/05/13/models-over-time.html                                                  | ✓ | ⏱: 0.14s
+[COMPLETE] ● https://aider.chat/2024/05/13/models-over-time.html                                                  | ✓ | ⏱: 1.35s
+[FETCH]... ↓ https://aider.chat/2024/05/22/draft.html                                                             | ✓ | ⏱: 1.26s
+[SCRAPE].. ◆ https://aider.chat/2024/05/22/draft.html                                                             | ✓ | ⏱: 0.08s
+[COMPLETE] ● https://aider.chat/2024/05/22/draft.html                                                             | ✓ | ⏱: 1.35s
+[FETCH]... ↓ https://aider.chat/2024/05/22/linting.html                                                           | ✓ | ⏱: 1.29s
+[SCRAPE].. ◆ https://aider.chat/2024/05/22/linting.html                                                           | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/2024/05/22/linting.html                                                           | ✓ | ⏱: 1.36s
+[FETCH]... ↓ https://aider.chat/2024/05/22/swe-bench-lite.html                                                    | ✓ | ⏱: 1.11s
+[SCRAPE].. ◆ https://aider.chat/2024/05/22/swe-bench-lite.html                                                    | ✓ | ⏱: 0.09s
+[COMPLETE] ● https://aider.chat/2024/05/22/swe-bench-lite.html                                                    | ✓ | ⏱: 1.20s
+[FETCH]... ↓ https://aider.chat/2024/05/24/self-assembly.html                                                     | ✓ | ⏱: 1.18s
+[SCRAPE].. ◆ https://aider.chat/2024/05/24/self-assembly.html                                                     | ✓ | ⏱: 0.08s
+[COMPLETE] ● https://aider.chat/2024/05/24/self-assembly.html                                                     | ✓ | ⏱: 1.26s
+[FETCH]... ↓ https://aider.chat/2024/06/02/main-swe-bench.html                                                    | ✓ | ⏱: 1.18s
+[SCRAPE].. ◆ https://aider.chat/2024/06/02/main-swe-bench.html                                                    | ✓ | ⏱: 0.08s
+[COMPLETE] ● https://aider.chat/2024/06/02/main-swe-bench.html                                                    | ✓ | ⏱: 1.26s
+[FETCH]... ↓ https://aider.chat/2024/07/01/sonnet-not-lazy.html                                                   | ✓ | ⏱: 1.19s
+[SCRAPE].. ◆ https://aider.chat/2024/07/01/sonnet-not-lazy.html                                                   | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/2024/07/01/sonnet-not-lazy.html                                                   | ✓ | ⏱: 1.25s
+[FETCH]... ↓ https://aider.chat/2024/07/25/new-models.html                                                        | ✓ | ⏱: 1.22s
+[SCRAPE].. ◆ https://aider.chat/2024/07/25/new-models.html                                                        | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/2024/07/25/new-models.html                                                        | ✓ | ⏱: 1.28s
+[FETCH]... ↓ https://aider.chat/2024/08/26/sonnet-seems-fine.html                                                 | ✓ | ⏱: 1.30s
+[SCRAPE].. ◆ https://aider.chat/2024/08/26/sonnet-seems-fine.html                                                 | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/2024/08/26/sonnet-seems-fine.html                                                 | ✓ | ⏱: 1.35s
+[FETCH]... ↓ https://aider.chat/2024/09/12/o1.html                                                                | ✓ | ⏱: 1.21s
+[SCRAPE].. ◆ https://aider.chat/2024/09/12/o1.html                                                                | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/2024/09/12/o1.html                                                                | ✓ | ⏱: 1.27s
+[FETCH]... ↓ https://aider.chat/2024/08/14/code-in-json.html                                                      | ✓ | ⏱: 1.49s
+[SCRAPE].. ◆ https://aider.chat/2024/08/14/code-in-json.html                                                      | ✓ | ⏱: 0.07s
+[COMPLETE] ● https://aider.chat/2024/08/14/code-in-json.html                                                      | ✓ | ⏱: 1.56s
+[FETCH]... ↓ https://aider.chat/2024/09/26/architect.html                                                         | ✓ | ⏱: 1.26s
+[SCRAPE].. ◆ https://aider.chat/2024/09/26/architect.html                                                         | ✓ | ⏱: 0.07s
+[COMPLETE] ● https://aider.chat/2024/09/26/architect.html                                                         | ✓ | ⏱: 1.34s
+[FETCH]... ↓ https://aider.chat/2024/11/21/quantization.html                                                      | ✓ | ⏱: 1.23s
+[SCRAPE].. ◆ https://aider.chat/2024/11/21/quantization.html                                                      | ✓ | ⏱: 0.07s
+[COMPLETE] ● https://aider.chat/2024/11/21/quantization.html                                                      | ✓ | ⏱: 1.30s
+[FETCH]... ↓ https://aider.chat/2025/01/15/uv.html                                                                | ✓ | ⏱: 1.04s
+[SCRAPE].. ◆ https://aider.chat/2025/01/15/uv.html                                                                | ✓ | ⏱: 0.07s
+[COMPLETE] ● https://aider.chat/2025/01/15/uv.html                                                                | ✓ | ⏱: 1.11s
+[FETCH]... ↓ https://aider.chat/2024/12/03/qwq.html                                                               | ✓ | ⏱: 1.32s
+[SCRAPE].. ◆ https://aider.chat/2024/12/03/qwq.html                                                               | ✓ | ⏱: 0.09s
+[COMPLETE] ● https://aider.chat/2024/12/03/qwq.html                                                               | ✓ | ⏱: 1.41s
+[FETCH]... ↓ https://aider.chat/2025/05/07/gemini-cost.html                                                       | ✓ | ⏱: 0.93s
+[SCRAPE].. ◆ https://aider.chat/2025/05/07/gemini-cost.html                                                       | ✓ | ⏱: 0.09s
+[COMPLETE] ● https://aider.chat/2025/05/07/gemini-cost.html                                                       | ✓ | ⏱: 1.02s
+[FETCH]... ↓ https://aider.chat/2025/05/08/qwen3.html                                                             | ✓ | ⏱: 1.16s
+[SCRAPE].. ◆ https://aider.chat/2025/05/08/qwen3.html                                                             | ✓ | ⏱: 0.19s
+[COMPLETE] ● https://aider.chat/2025/05/08/qwen3.html                                                             | ✓ | ⏱: 1.35s
+[FETCH]... ↓ https://aider.chat/blog/                                                                             | ✓ | ⏱: 1.21s
+[SCRAPE].. ◆ https://aider.chat/blog/                                                                             | ✓ | ⏱: 0.13s
+[COMPLETE] ● https://aider.chat/blog/                                                                             | ✓ | ⏱: 1.34s
+[FETCH]... ↓ https://aider.chat/2024/12/21/polyglot.html                                                          | ✓ | ⏱: 2.29s
+[SCRAPE].. ◆ https://aider.chat/2024/12/21/polyglot.html                                                          | ✓ | ⏱: 0.10s
+[COMPLETE] ● https://aider.chat/2024/12/21/polyglot.html                                                          | ✓ | ⏱: 2.39s
+[FETCH]... ↓ https://aider.chat/2025/01/28/deepseek-down.html                                                     | ✓ | ⏱: 2.00s
+[SCRAPE].. ◆ https://aider.chat/2025/01/28/deepseek-down.html                                                     | ✓ | ⏱: 0.09s
+[COMPLETE] ● https://aider.chat/2025/01/28/deepseek-down.html                                                     | ✓ | ⏱: 2.09s
+[FETCH]... ↓ https://aider.chat/2025/01/24/r1-sonnet.html                                                         | ✓ | ⏱: 2.33s
+[SCRAPE].. ◆ https://aider.chat/2025/01/24/r1-sonnet.html                                                         | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/2025/01/24/r1-sonnet.html                                                         | ✓ | ⏱: 2.39s
+[FETCH]... ↓ https://aider.chat/docs/                                                                             | ✓ | ⏱: 1.59s
+[SCRAPE].. ◆ https://aider.chat/docs/                                                                             | ✓ | ⏱: 0.08s
+[COMPLETE] ● https://aider.chat/docs/                                                                             | ✓ | ⏱: 1.67s
+[FETCH]... ↓ https://aider.chat/docs/benchmarks-0125.html                                                         | ✓ | ⏱: 1.58s
+[SCRAPE].. ◆ https://aider.chat/docs/benchmarks-0125.html                                                         | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/docs/benchmarks-0125.html                                                         | ✓ | ⏱: 1.64s
+[FETCH]... ↓ https://aider.chat/HISTORY.html                                                                      | ✓ | ⏱: 2.06s
+[SCRAPE].. ◆ https://aider.chat/HISTORY.html                                                                      | ✓ | ⏱: 0.38s
+[COMPLETE] ● https://aider.chat/HISTORY.html                                                                      | ✓ | ⏱: 2.44s
+[FETCH]... ↓ https://aider.chat/docs/benchmarks-1106.html                                                         | ✓ | ⏱: 1.96s
+[SCRAPE].. ◆ https://aider.chat/docs/benchmarks-1106.html                                                         | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/docs/benchmarks-1106.html                                                         | ✓ | ⏱: 2.02s
+[FETCH]... ↓ https://aider.chat/docs/benchmarks-speed-1106.html                                                   | ✓ | ⏱: 1.66s
+[SCRAPE].. ◆ https://aider.chat/docs/benchmarks-speed-1106.html                                                   | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/docs/benchmarks-speed-1106.html                                                   | ✓ | ⏱: 1.71s
+[FETCH]... ↓ https://aider.chat/docs/benchmarks.html                                                              | ✓ | ⏱: 1.45s
+[SCRAPE].. ◆ https://aider.chat/docs/benchmarks.html                                                              | ✓ | ⏱: 0.07s
+[COMPLETE] ● https://aider.chat/docs/benchmarks.html                                                              | ✓ | ⏱: 1.52s
+[FETCH]... ↓ https://aider.chat/docs/config.html                                                                  | ✓ | ⏱: 1.40s
+[SCRAPE].. ◆ https://aider.chat/docs/config.html                                                                  | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/docs/config.html                                                                  | ✓ | ⏱: 1.46s
+[FETCH]... ↓ https://aider.chat/docs/config/api-keys.html                                                         | ✓ | ⏱: 1.14s
+[SCRAPE].. ◆ https://aider.chat/docs/config/api-keys.html                                                         | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/docs/config/api-keys.html                                                         | ✓ | ⏱: 1.20s
+[FETCH]... ↓ https://aider.chat/docs/config/aider_conf.html                                                       | ✓ | ⏱: 1.27s
+[SCRAPE].. ◆ https://aider.chat/docs/config/aider_conf.html                                                       | ✓ | ⏱: 0.07s
+[COMPLETE] ● https://aider.chat/docs/config/aider_conf.html                                                       | ✓ | ⏱: 1.35s
+[FETCH]... ↓ https://aider.chat/docs/config/adv-model-settings.html                                               | ✓ | ⏱: 1.45s
+[SCRAPE].. ◆ https://aider.chat/docs/config/adv-model-settings.html                                               | ✓ | ⏱: 0.83s
+[COMPLETE] ● https://aider.chat/docs/config/adv-model-settings.html                                               | ✓ | ⏱: 2.28s
+[FETCH]... ↓ https://aider.chat/docs/config/editor.html                                                           | ✓ | ⏱: 2.04s
+[SCRAPE].. ◆ https://aider.chat/docs/config/editor.html                                                           | ✓ | ⏱: 0.08s
+[COMPLETE] ● https://aider.chat/docs/config/editor.html                                                           | ✓ | ⏱: 2.13s
+[FETCH]... ↓ https://aider.chat/docs/config/model-aliases.html                                                    | ✓ | ⏱: 1.75s
+[SCRAPE].. ◆ https://aider.chat/docs/config/model-aliases.html                                                    | ✓ | ⏱: 0.07s
+[COMPLETE] ● https://aider.chat/docs/config/model-aliases.html                                                    | ✓ | ⏱: 1.82s
+[FETCH]... ↓ https://aider.chat/docs/config/dotenv.html                                                           | ✓ | ⏱: 2.28s
+[SCRAPE].. ◆ https://aider.chat/docs/config/dotenv.html                                                           | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/docs/config/dotenv.html                                                           | ✓ | ⏱: 2.33s
+[FETCH]... ↓ https://aider.chat/docs/config/reasoning.html                                                        | ✓ | ⏱: 1.78s
+[SCRAPE].. ◆ https://aider.chat/docs/config/reasoning.html                                                        | ✓ | ⏱: 0.12s
+[COMPLETE] ● https://aider.chat/docs/config/reasoning.html                                                        | ✓ | ⏱: 1.90s
+[FETCH]... ↓ https://aider.chat/docs/config/options.html                                                          | ✓ | ⏱: 1.96s
+[SCRAPE].. ◆ https://aider.chat/docs/config/options.html                                                          | ✓ | ⏱: 0.27s
+[COMPLETE] ● https://aider.chat/docs/config/options.html                                                          | ✓ | ⏱: 2.23s
+[FETCH]... ↓ https://aider.chat/docs/faq.html                                                                     | ✓ | ⏱: 2.07s
+[SCRAPE].. ◆ https://aider.chat/docs/faq.html                                                                     | ✓ | ⏱: 0.10s
+[COMPLETE] ● https://aider.chat/docs/faq.html                                                                     | ✓ | ⏱: 2.18s
+[FETCH]... ↓ https://aider.chat/docs/ctags.html                                                                   | ✓ | ⏱: 2.28s
+[SCRAPE].. ◆ https://aider.chat/docs/ctags.html                                                                   | ✓ | ⏱: 0.07s
+[COMPLETE] ● https://aider.chat/docs/ctags.html                                                                   | ✓ | ⏱: 2.35s
+[FETCH]... ↓ https://aider.chat/docs/install.html                                                                 | ✓ | ⏱: 2.11s
+[SCRAPE].. ◆ https://aider.chat/docs/install.html                                                                 | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/docs/install.html                                                                 | ✓ | ⏱: 2.18s
+[FETCH]... ↓ https://aider.chat/docs/git.html                                                                     | ✓ | ⏱: 2.26s
+[SCRAPE].. ◆ https://aider.chat/docs/git.html                                                                     | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/docs/git.html                                                                     | ✓ | ⏱: 2.32s
+[FETCH]... ↓ https://aider.chat/docs/install/codespaces.html                                                      | ✓ | ⏱: 1.40s
+[SCRAPE].. ◆ https://aider.chat/docs/install/codespaces.html                                                      | ✓ | ⏱: 0.04s
+[COMPLETE] ● https://aider.chat/docs/install/codespaces.html                                                      | ✓ | ⏱: 1.44s
+[FETCH]... ↓ https://aider.chat/docs/install/docker.html                                                          | ✓ | ⏱: 1.33s
+[SCRAPE].. ◆ https://aider.chat/docs/install/docker.html                                                          | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/docs/install/docker.html                                                          | ✓ | ⏱: 1.38s
+[FETCH]... ↓ https://aider.chat/docs/install/optional.html                                                        | ✓ | ⏱: 1.32s
+[SCRAPE].. ◆ https://aider.chat/docs/install/optional.html                                                        | ✓ | ⏱: 0.07s
+[COMPLETE] ● https://aider.chat/docs/install/optional.html                                                        | ✓ | ⏱: 1.39s
+[FETCH]... ↓ https://aider.chat/docs/install/replit.html                                                          | ✓ | ⏱: 1.38s
+[SCRAPE].. ◆ https://aider.chat/docs/install/replit.html                                                          | ✓ | ⏱: 0.04s
+[COMPLETE] ● https://aider.chat/docs/install/replit.html                                                          | ✓ | ⏱: 1.42s
+[FETCH]... ↓ https://aider.chat/docs/languages.html                                                               | ✓ | ⏱: 1.26s
+[SCRAPE].. ◆ https://aider.chat/docs/languages.html                                                               | ✓ | ⏱: 0.26s
+[COMPLETE] ● https://aider.chat/docs/languages.html                                                               | ✓ | ⏱: 1.52s
+[FETCH]... ↓ https://aider.chat/docs/leaderboards/                                                                | ✓ | ⏱: 1.46s
+[SCRAPE].. ◆ https://aider.chat/docs/leaderboards/                                                                | ✓ | ⏱: 0.74s
+[COMPLETE] ● https://aider.chat/docs/leaderboards/                                                                | ✓ | ⏱: 2.20s
+[FETCH]... ↓ https://aider.chat/docs/leaderboards/notes.html                                                      | ✓ | ⏱: 1.70s
+[SCRAPE].. ◆ https://aider.chat/docs/leaderboards/notes.html                                                      | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/docs/leaderboards/notes.html                                                      | ✓ | ⏱: 1.77s
+[FETCH]... ↓ https://aider.chat/docs/leaderboards/by-release-date.html                                            | ✓ | ⏱: 1.97s
+[SCRAPE].. ◆ https://aider.chat/docs/leaderboards/by-release-date.html                                            | ✓ | ⏱: 0.04s
+[COMPLETE] ● https://aider.chat/docs/leaderboards/by-release-date.html                                            | ✓ | ⏱: 2.02s
+[FETCH]... ↓ https://aider.chat/docs/leaderboards/contrib.html                                                    | ✓ | ⏱: 1.95s
+[SCRAPE].. ◆ https://aider.chat/docs/leaderboards/contrib.html                                                    | ✓ | ⏱: 0.34s
+[COMPLETE] ● https://aider.chat/docs/leaderboards/contrib.html                                                    | ✓ | ⏱: 2.29s
+[FETCH]... ↓ https://aider.chat/docs/leaderboards/refactor.html                                                   | ✓ | ⏱: 2.28s
+[SCRAPE].. ◆ https://aider.chat/docs/leaderboards/refactor.html                                                   | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/docs/leaderboards/refactor.html                                                   | ✓ | ⏱: 2.35s
+[FETCH]... ↓ https://aider.chat/docs/legal/contributor-agreement.html                                             | ✓ | ⏱: 2.12s
+[SCRAPE].. ◆ https://aider.chat/docs/legal/contributor-agreement.html                                             | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/docs/legal/contributor-agreement.html                                             | ✓ | ⏱: 2.18s
+[FETCH]... ↓ https://aider.chat/docs/leaderboards/edit.html                                                       | ✓ | ⏱: 2.53s
+[SCRAPE].. ◆ https://aider.chat/docs/leaderboards/edit.html                                                       | ✓ | ⏱: 0.17s
+[COMPLETE] ● https://aider.chat/docs/leaderboards/edit.html                                                       | ✓ | ⏱: 2.70s
+[FETCH]... ↓ https://aider.chat/docs/legal/privacy.html                                                           | ✓ | ⏱: 2.30s
+[SCRAPE].. ◆ https://aider.chat/docs/legal/privacy.html                                                           | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/docs/legal/privacy.html                                                           | ✓ | ⏱: 2.36s
+[FETCH]... ↓ https://aider.chat/docs/llms.html                                                                    | ✓ | ⏱: 2.29s
+[SCRAPE].. ◆ https://aider.chat/docs/llms.html                                                                    | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/docs/llms.html                                                                    | ✓ | ⏱: 2.34s
+[FETCH]... ↓ https://aider.chat/docs/llms/anthropic.html                                                          | ✓ | ⏱: 2.09s
+[SCRAPE].. ◆ https://aider.chat/docs/llms/anthropic.html                                                          | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/docs/llms/anthropic.html                                                          | ✓ | ⏱: 2.15s
+[FETCH]... ↓ https://aider.chat/docs/llms/azure.html                                                              | ✓ | ⏱: 1.43s
+[SCRAPE].. ◆ https://aider.chat/docs/llms/azure.html                                                              | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/docs/llms/azure.html                                                              | ✓ | ⏱: 1.50s
+[FETCH]... ↓ https://aider.chat/docs/llms/cohere.html                                                             | ✓ | ⏱: 1.36s
+[SCRAPE].. ◆ https://aider.chat/docs/llms/cohere.html                                                             | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/docs/llms/cohere.html                                                             | ✓ | ⏱: 1.41s
+[FETCH]... ↓ https://aider.chat/docs/llms/bedrock.html                                                            | ✓ | ⏱: 1.47s
+[SCRAPE].. ◆ https://aider.chat/docs/llms/bedrock.html                                                            | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/docs/llms/bedrock.html                                                            | ✓ | ⏱: 1.53s
+[FETCH]... ↓ https://aider.chat/docs/llms/deepseek.html                                                           | ✓ | ⏱: 1.13s
+[SCRAPE].. ◆ https://aider.chat/docs/llms/deepseek.html                                                           | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/docs/llms/deepseek.html                                                           | ✓ | ⏱: 1.18s
+[FETCH]... ↓ https://aider.chat/docs/llms/gemini.html                                                             | ✓ | ⏱: 1.14s
+[SCRAPE].. ◆ https://aider.chat/docs/llms/gemini.html                                                             | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/docs/llms/gemini.html                                                             | ✓ | ⏱: 1.19s
+[FETCH]... ↓ https://aider.chat/docs/llms/github.html                                                             | ✓ | ⏱: 1.17s
+[SCRAPE].. ◆ https://aider.chat/docs/llms/github.html                                                             | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/docs/llms/github.html                                                             | ✓ | ⏱: 1.23s
+[FETCH]... ↓ https://aider.chat/docs/llms/groq.html                                                               | ✓ | ⏱: 1.26s
+[SCRAPE].. ◆ https://aider.chat/docs/llms/groq.html                                                               | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/docs/llms/groq.html                                                               | ✓ | ⏱: 1.32s
+[FETCH]... ↓ https://aider.chat/docs/llms/lm-studio.html                                                          | ✓ | ⏱: 1.23s
+[SCRAPE].. ◆ https://aider.chat/docs/llms/lm-studio.html                                                          | ✓ | ⏱: 0.08s
+[COMPLETE] ● https://aider.chat/docs/llms/lm-studio.html                                                          | ✓ | ⏱: 1.32s
+[FETCH]... ↓ https://aider.chat/docs/llms/openai-compat.html                                                      | ✓ | ⏱: 1.19s
+[SCRAPE].. ◆ https://aider.chat/docs/llms/openai-compat.html                                                      | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/docs/llms/openai-compat.html                                                      | ✓ | ⏱: 1.25s
+[FETCH]... ↓ https://aider.chat/docs/llms/ollama.html                                                             | ✓ | ⏱: 1.32s
+[SCRAPE].. ◆ https://aider.chat/docs/llms/ollama.html                                                             | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/docs/llms/ollama.html                                                             | ✓ | ⏱: 1.37s
+[FETCH]... ↓ https://aider.chat/docs/llms/openai.html                                                             | ✓ | ⏱: 1.21s
+[SCRAPE].. ◆ https://aider.chat/docs/llms/openai.html                                                             | ✓ | ⏱: 0.07s
+[COMPLETE] ● https://aider.chat/docs/llms/openai.html                                                             | ✓ | ⏱: 1.27s
+[FETCH]... ↓ https://aider.chat/docs/llms/other.html                                                              | ✓ | ⏱: 1.15s
+[SCRAPE].. ◆ https://aider.chat/docs/llms/other.html                                                              | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/docs/llms/other.html                                                              | ✓ | ⏱: 1.21s
+[FETCH]... ↓ https://aider.chat/docs/llms/openrouter.html                                                         | ✓ | ⏱: 1.28s
+[SCRAPE].. ◆ https://aider.chat/docs/llms/openrouter.html                                                         | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/docs/llms/openrouter.html                                                         | ✓ | ⏱: 1.34s
+[FETCH]... ↓ https://aider.chat/docs/llms/vertex.html                                                             | ✓ | ⏱: 1.22s
+[SCRAPE].. ◆ https://aider.chat/docs/llms/vertex.html                                                             | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/docs/llms/vertex.html                                                             | ✓ | ⏱: 1.26s
+[FETCH]... ↓ https://aider.chat/docs/llms/warnings.html                                                           | ✓ | ⏱: 1.22s
+[SCRAPE].. ◆ https://aider.chat/docs/llms/warnings.html                                                           | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/docs/llms/warnings.html                                                           | ✓ | ⏱: 1.27s
+[FETCH]... ↓ https://aider.chat/docs/llms/xai.html                                                                | ✓ | ⏱: 1.18s
+[SCRAPE].. ◆ https://aider.chat/docs/llms/xai.html                                                                | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/docs/llms/xai.html                                                                | ✓ | ⏱: 1.24s
+[FETCH]... ↓ https://aider.chat/docs/more-info.html                                                               | ✓ | ⏱: 1.17s
+[SCRAPE].. ◆ https://aider.chat/docs/more-info.html                                                               | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/docs/more-info.html                                                               | ✓ | ⏱: 1.23s
+[FETCH]... ↓ https://aider.chat/docs/more/analytics.html                                                          | ✓ | ⏱: 1.14s
+[SCRAPE].. ◆ https://aider.chat/docs/more/analytics.html                                                          | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/docs/more/analytics.html                                                          | ✓ | ⏱: 1.20s
+[FETCH]... ↓ https://aider.chat/docs/more/edit-formats.html                                                       | ✓ | ⏱: 1.15s
+[SCRAPE].. ◆ https://aider.chat/docs/more/edit-formats.html                                                       | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/docs/more/edit-formats.html                                                       | ✓ | ⏱: 1.20s
+[FETCH]... ↓ https://aider.chat/docs/more/infinite-output.html                                                    | ✓ | ⏱: 1.15s
+[SCRAPE].. ◆ https://aider.chat/docs/more/infinite-output.html                                                    | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/docs/more/infinite-output.html                                                    | ✓ | ⏱: 1.21s
+[FETCH]... ↓ https://aider.chat/docs/recordings/auto-accept-architect.html                                        | ✓ | ⏱: 0.90s
+[SCRAPE].. ◆ https://aider.chat/docs/recordings/auto-accept-architect.html                                        | ✓ | ⏱: 0.02s
+[COMPLETE] ● https://aider.chat/docs/recordings/auto-accept-architect.html                                        | ✓ | ⏱: 0.93s
+[FETCH]... ↓ https://aider.chat/docs/recordings/dont-drop-original-read-files.html                                | ✓ | ⏱: 0.87s
+[SCRAPE].. ◆ https://aider.chat/docs/recordings/dont-drop-original-read-files.html                                | ✓ | ⏱: 0.02s
+[COMPLETE] ● https://aider.chat/docs/recordings/dont-drop-original-read-files.html                                | ✓ | ⏱: 0.89s
+[FETCH]... ↓ https://aider.chat/docs/recordings/model-accepts-settings.html                                       | ✓ | ⏱: 0.84s
+[SCRAPE].. ◆ https://aider.chat/docs/recordings/model-accepts-settings.html                                       | ✓ | ⏱: 0.03s
+[COMPLETE] ● https://aider.chat/docs/recordings/model-accepts-settings.html                                       | ✓ | ⏱: 0.87s
+[FETCH]... ↓ https://aider.chat/docs/recordings/                                                                  | ✓ | ⏱: 1.23s
+[SCRAPE].. ◆ https://aider.chat/docs/recordings/                                                                  | ✓ | ⏱: 0.07s
+[COMPLETE] ● https://aider.chat/docs/recordings/                                                                  | ✓ | ⏱: 1.30s
+[FETCH]... ↓ https://aider.chat/docs/recordings/tree-sitter-language-pack.html                                    | ✓ | ⏱: 0.94s
+[SCRAPE].. ◆ https://aider.chat/docs/recordings/tree-sitter-language-pack.html                                    | ✓ | ⏱: 0.04s
+[COMPLETE] ● https://aider.chat/docs/recordings/tree-sitter-language-pack.html                                    | ✓ | ⏱: 0.99s
+[FETCH]... ↓ https://aider.chat/docs/repomap.html                                                                 | ✓ | ⏱: 1.06s
+[SCRAPE].. ◆ https://aider.chat/docs/repomap.html                                                                 | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/docs/repomap.html                                                                 | ✓ | ⏱: 1.11s
+[FETCH]... ↓ https://aider.chat/docs/troubleshooting.html                                                         | ✓ | ⏱: 1.04s
+[SCRAPE].. ◆ https://aider.chat/docs/troubleshooting.html                                                         | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/docs/troubleshooting.html                                                         | ✓ | ⏱: 1.09s
+[FETCH]... ↓ https://aider.chat/docs/scripting.html                                                               | ✓ | ⏱: 1.20s
+[SCRAPE].. ◆ https://aider.chat/docs/scripting.html                                                               | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/docs/scripting.html                                                               | ✓ | ⏱: 1.26s
+[FETCH]... ↓ https://aider.chat/docs/troubleshooting/aider-not-found.html                                         | ✓ | ⏱: 1.15s
+[SCRAPE].. ◆ https://aider.chat/docs/troubleshooting/aider-not-found.html                                         | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/docs/troubleshooting/aider-not-found.html                                         | ✓ | ⏱: 1.20s
+[FETCH]... ↓ https://aider.chat/docs/troubleshooting/models-and-keys.html                                         | ✓ | ⏱: 1.10s
+[SCRAPE].. ◆ https://aider.chat/docs/troubleshooting/models-and-keys.html                                         | ✓ | ⏱: 0.04s
+[COMPLETE] ● https://aider.chat/docs/troubleshooting/models-and-keys.html                                         | ✓ | ⏱: 1.14s
+[FETCH]... ↓ https://aider.chat/docs/troubleshooting/edit-errors.html                                             | ✓ | ⏱: 1.28s
+[SCRAPE].. ◆ https://aider.chat/docs/troubleshooting/edit-errors.html                                             | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/docs/troubleshooting/edit-errors.html                                             | ✓ | ⏱: 1.34s
+[FETCH]... ↓ https://aider.chat/docs/troubleshooting/support.html                                                 | ✓ | ⏱: 1.25s
+[SCRAPE].. ◆ https://aider.chat/docs/troubleshooting/support.html                                                 | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/docs/troubleshooting/support.html                                                 | ✓ | ⏱: 1.30s
+[FETCH]... ↓ https://aider.chat/docs/troubleshooting/imports.html                                                 | ✓ | ⏱: 1.37s
+[SCRAPE].. ◆ https://aider.chat/docs/troubleshooting/imports.html                                                 | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/docs/troubleshooting/imports.html                                                 | ✓ | ⏱: 1.42s
+[FETCH]... ↓ https://aider.chat/docs/troubleshooting/token-limits.html                                            | ✓ | ⏱: 1.17s
+[SCRAPE].. ◆ https://aider.chat/docs/troubleshooting/token-limits.html                                            | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/docs/troubleshooting/token-limits.html                                            | ✓ | ⏱: 1.22s
+[FETCH]... ↓ https://aider.chat/docs/troubleshooting/warnings.html                                                | ✓ | ⏱: 1.11s
+[SCRAPE].. ◆ https://aider.chat/docs/troubleshooting/warnings.html                                                | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/docs/troubleshooting/warnings.html                                                | ✓ | ⏱: 1.17s
+[FETCH]... ↓ https://aider.chat/docs/unified-diffs.html                                                           | ✓ | ⏱: 1.12s
+[SCRAPE].. ◆ https://aider.chat/docs/unified-diffs.html                                                           | ✓ | ⏱: 0.09s
+[COMPLETE] ● https://aider.chat/docs/unified-diffs.html                                                           | ✓ | ⏱: 1.22s
+[FETCH]... ↓ https://aider.chat/docs/usage.html                                                                   | ✓ | ⏱: 1.04s
+[SCRAPE].. ◆ https://aider.chat/docs/usage.html                                                                   | ✓ | ⏱: 0.10s
+[COMPLETE] ● https://aider.chat/docs/usage.html                                                                   | ✓ | ⏱: 1.14s
+[FETCH]... ↓ https://aider.chat/docs/usage/browser.html                                                           | ✓ | ⏱: 1.09s
+[SCRAPE].. ◆ https://aider.chat/docs/usage/browser.html                                                           | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/docs/usage/browser.html                                                           | ✓ | ⏱: 1.14s
+[FETCH]... ↓ https://aider.chat/docs/usage/caching.html                                                           | ✓ | ⏱: 1.08s
+[SCRAPE].. ◆ https://aider.chat/docs/usage/caching.html                                                           | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/docs/usage/caching.html                                                           | ✓ | ⏱: 1.13s
+[FETCH]... ↓ https://aider.chat/docs/usage/commands.html                                                          | ✓ | ⏱: 1.17s
+[SCRAPE].. ◆ https://aider.chat/docs/usage/commands.html                                                          | ✓ | ⏱: 0.09s
+[COMPLETE] ● https://aider.chat/docs/usage/commands.html                                                          | ✓ | ⏱: 1.26s
+[FETCH]... ↓ https://aider.chat/docs/usage/conventions.html                                                       | ✓ | ⏱: 1.22s
+[SCRAPE].. ◆ https://aider.chat/docs/usage/conventions.html                                                       | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/docs/usage/conventions.html                                                       | ✓ | ⏱: 1.28s
+[FETCH]... ↓ https://aider.chat/docs/usage/copypaste.html                                                         | ✓ | ⏱: 1.24s
+[SCRAPE].. ◆ https://aider.chat/docs/usage/copypaste.html                                                         | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/docs/usage/copypaste.html                                                         | ✓ | ⏱: 1.29s
+[FETCH]... ↓ https://aider.chat/docs/usage/lint-test.html                                                         | ✓ | ⏱: 1.17s
+[SCRAPE].. ◆ https://aider.chat/docs/usage/lint-test.html                                                         | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/docs/usage/lint-test.html                                                         | ✓ | ⏱: 1.22s
+[FETCH]... ↓ https://aider.chat/docs/usage/images-urls.html                                                       | ✓ | ⏱: 1.34s
+[SCRAPE].. ◆ https://aider.chat/docs/usage/images-urls.html                                                       | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/docs/usage/images-urls.html                                                       | ✓ | ⏱: 1.39s
+[FETCH]... ↓ https://aider.chat/docs/usage/modes.html                                                             | ✓ | ⏱: 1.22s
+[SCRAPE].. ◆ https://aider.chat/docs/usage/modes.html                                                             | ✓ | ⏱: 0.08s
+[COMPLETE] ● https://aider.chat/docs/usage/modes.html                                                             | ✓ | ⏱: 1.31s
+[FETCH]... ↓ https://aider.chat/docs/usage/not-code.html                                                          | ✓ | ⏱: 1.23s
+[SCRAPE].. ◆ https://aider.chat/docs/usage/not-code.html                                                          | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/docs/usage/not-code.html                                                          | ✓ | ⏱: 1.30s
+[FETCH]... ↓ https://aider.chat/docs/usage/notifications.html                                                     | ✓ | ⏱: 1.09s
+[SCRAPE].. ◆ https://aider.chat/docs/usage/notifications.html                                                     | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/docs/usage/notifications.html                                                     | ✓ | ⏱: 1.16s
+[FETCH]... ↓ https://aider.chat/docs/usage/tips.html                                                              | ✓ | ⏱: 1.07s
+[SCRAPE].. ◆ https://aider.chat/docs/usage/tips.html                                                              | ✓ | ⏱: 0.08s
+[COMPLETE] ● https://aider.chat/docs/usage/tips.html                                                              | ✓ | ⏱: 1.15s
+[FETCH]... ↓ https://aider.chat/docs/usage/tutorials.html                                                         | ✓ | ⏱: 1.10s
+[SCRAPE].. ◆ https://aider.chat/docs/usage/tutorials.html                                                         | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/docs/usage/tutorials.html                                                         | ✓ | ⏱: 1.16s
+[FETCH]... ↓ https://aider.chat/docs/usage/voice.html                                                             | ✓ | ⏱: 1.12s
+[SCRAPE].. ◆ https://aider.chat/docs/usage/voice.html                                                             | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/docs/usage/voice.html                                                             | ✓ | ⏱: 1.18s
+[FETCH]... ↓ https://aider.chat/examples/2048-game.html                                                           | ✓ | ⏱: 1.00s
+[SCRAPE].. ◆ https://aider.chat/examples/2048-game.html                                                           | ✓ | ⏱: 0.09s
+[COMPLETE] ● https://aider.chat/examples/2048-game.html                                                           | ✓ | ⏱: 1.10s
+[FETCH]... ↓ https://aider.chat/docs/usage/watch.html                                                             | ✓ | ⏱: 1.20s
+[SCRAPE].. ◆ https://aider.chat/docs/usage/watch.html                                                             | ✓ | ⏱: 0.11s
+[COMPLETE] ● https://aider.chat/docs/usage/watch.html                                                             | ✓ | ⏱: 1.31s
+[FETCH]... ↓ https://aider.chat/examples/README.html                                                              | ✓ | ⏱: 1.30s
+[SCRAPE].. ◆ https://aider.chat/examples/README.html                                                              | ✓ | ⏱: 0.07s
+[COMPLETE] ● https://aider.chat/examples/README.html                                                              | ✓ | ⏱: 1.38s
+[FETCH]... ↓ https://aider.chat/examples/add-test.html                                                            | ✓ | ⏱: 1.33s
+[SCRAPE].. ◆ https://aider.chat/examples/add-test.html                                                            | ✓ | ⏱: 0.08s
+[COMPLETE] ● https://aider.chat/examples/add-test.html                                                            | ✓ | ⏱: 1.40s
+[FETCH]... ↓ https://aider.chat/examples/asciinema.html                                                           | ✓ | ⏱: 1.32s
+[SCRAPE].. ◆ https://aider.chat/examples/asciinema.html                                                           | ✓ | ⏱: 0.06s
+[COMPLETE] ● https://aider.chat/examples/asciinema.html                                                           | ✓ | ⏱: 1.38s
+[FETCH]... ↓ https://aider.chat/examples/census.html                                                              | ✓ | ⏱: 1.36s
+[SCRAPE].. ◆ https://aider.chat/examples/census.html                                                              | ✓ | ⏱: 0.13s
+[COMPLETE] ● https://aider.chat/examples/census.html                                                              | ✓ | ⏱: 1.49s
+[FETCH]... ↓ https://aider.chat/examples/chat-transcript-css.html                                                 | ✓ | ⏱: 1.41s
+[SCRAPE].. ◆ https://aider.chat/examples/chat-transcript-css.html                                                 | ✓ | ⏱: 0.49s
+[COMPLETE] ● https://aider.chat/examples/chat-transcript-css.html                                                 | ✓ | ⏱: 1.89s
+[FETCH]... ↓ https://aider.chat/examples/complex-change.html                                                      | ✓ | ⏱: 1.81s
+[SCRAPE].. ◆ https://aider.chat/examples/complex-change.html                                                      | ✓ | ⏱: 0.16s
+[COMPLETE] ● https://aider.chat/examples/complex-change.html                                                      | ✓ | ⏱: 1.97s
+[FETCH]... ↓ https://aider.chat/examples/css-exercises.html                                                       | ✓ | ⏱: 1.90s
+[SCRAPE].. ◆ https://aider.chat/examples/css-exercises.html                                                       | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/examples/css-exercises.html                                                       | ✓ | ⏱: 1.96s
+[FETCH]... ↓ https://aider.chat/examples/hello-world-flask.html                                                   | ✓ | ⏱: 1.90s
+[SCRAPE].. ◆ https://aider.chat/examples/hello-world-flask.html                                                   | ✓ | ⏱: 0.09s
+[COMPLETE] ● https://aider.chat/examples/hello-world-flask.html                                                   | ✓ | ⏱: 1.98s
+[FETCH]... ↓ https://aider.chat/examples/hello.html                                                               | ✓ | ⏱: 1.87s
+[SCRAPE].. ◆ https://aider.chat/examples/hello.html                                                               | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/examples/hello.html                                                               | ✓ | ⏱: 1.92s
+[FETCH]... ↓ https://aider.chat/examples/no-color.html                                                            | ✓ | ⏱: 1.81s
+[SCRAPE].. ◆ https://aider.chat/examples/no-color.html                                                            | ✓ | ⏱: 0.09s
+[COMPLETE] ● https://aider.chat/examples/no-color.html                                                            | ✓ | ⏱: 1.91s
+[FETCH]... ↓ https://aider.chat/examples/semantic-search-replace.html                                             | ✓ | ⏱: 1.56s
+[SCRAPE].. ◆ https://aider.chat/examples/semantic-search-replace.html                                             | ✓ | ⏱: 0.07s
+[COMPLETE] ● https://aider.chat/examples/semantic-search-replace.html                                             | ✓ | ⏱: 1.63s
+[FETCH]... ↓ https://aider.chat/examples/update-docs.html                                                         | ✓ | ⏱: 1.57s
+[SCRAPE].. ◆ https://aider.chat/examples/update-docs.html                                                         | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/examples/update-docs.html                                                         | ✓ | ⏱: 1.62s
+[FETCH]... ↓ https://aider.chat/examples/pong.html                                                                | ✓ | ⏱: 1.77s
+[SCRAPE].. ◆ https://aider.chat/examples/pong.html                                                                | ✓ | ⏱: 0.17s
+[COMPLETE] ● https://aider.chat/examples/pong.html                                                                | ✓ | ⏱: 1.94s
+[FETCH]... ↓ https://aider.chat/share/                                                                            | ✓ | ⏱: 1.60s
+[SCRAPE].. ◆ https://aider.chat/share/                                                                            | ✓ | ⏱: 0.05s
+[COMPLETE] ● https://aider.chat/share/                                                                            | ✓ | ⏱: 1.65s
+Attempting to use primary chat model: gpt-4.1
+✅ Primary chat model gpt-4.1 client created successfully
+2025-06-23 03:09:39 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:09:39 - httpx - INFO - HTTP Request: PATCH https://supabase.quantmind.com.br/rest/v1/sources?source_id=eq.aider.chat "HTTP/2 200 OK"
+2025-06-23 03:09:39 - httpx - INFO - HTTP Request: POST https://supabase.quantmind.com.br/rest/v1/sources "HTTP/2 201 Created"
+Created new source: aider.chat
+2025-06-23 03:09:40 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=in.%28%22https%3A%2F%2Faider.chat%2F2025%2F01%2F28%2Fdeepseek-down.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fconfig%2Fdotenv.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Ftroubleshooting.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fbenchmarks-speed-1106.html%22%2C%22https%3A%2F%2Faider.chat%2F2024%2F09%2F12%2Fo1.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Fbedrock.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fusage%2Fbrowser.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Flegal%2Fprivacy.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Finstall.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Finstall%2Foptional.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fconfig.html%22%2C%22https%3A%2F%2Faider.chat%2Fexamples%2Fadd-test.html%22%2C%22https%3A%2F%2Faider.chat%2Fexamples%2Fchat-transcript-css.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2F%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Ftroubleshooting%2Ftoken-limits.html%22%2C%22https%3A%2F%2Faider.chat%2F2025%2F01%2F15%2Fuv.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fusage%2Fnot-code.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Fopenrouter.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Frecordings%2Fdont-drop-original-read-files.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fusage%2Fconventions.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Finstall%2Freplit.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Frecordings%2Ftree-sitter-language-pack.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Ftroubleshooting%2Faider-not-found.html%22%2C%22https%3A%2F%2Faider.chat%2F2024%2F11%2F21%2Fquantization.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Ftroubleshooting%2Fedit-errors.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fusage%2Fcommands.html%22%2C%22https%3A%2F%2Faider.chat%2Fexamples%2Fupdate-docs.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fbenchmarks-1106.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fleaderboards%2Fnotes.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Fazure.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Ftroubleshooting%2Fwarnings.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fbenchmarks.html%22%2C%22https%3A%2F%2Faider.chat%2F2024%2F12%2F03%2Fqwq.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fusage%2Fimages-urls.html%22%2C%22https%3A%2F%2Faider.chat%2Fexamples%2Fasciinema.html%22%2C%22https%3A%2F%2Faider.chat%2F2024%2F05%2F22%2Fdraft.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Finstall%2Fdocker.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Fcohere.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Ftroubleshooting%2Fimports.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Fanthropic.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fleaderboards%2Fedit.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Fother.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fconfig%2Fadv-model-settings.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fconfig%2Feditor.html%22%2C%22https%3A%2F%2Faider.chat%2F2024%2F05%2F22%2Fswe-bench-lite.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fusage%2Fmodes.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Finstall%2Fcodespaces.html%22%2C%22https%3A%2F%2Faider.chat%2Fexamples%2F2048-game.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Follama.html%22%2C%22https%3A%2F%2Faider.chat%2Fexamples%2Fcensus.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Flanguages.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fusage%2Flint-test.html%22%2C%22https%3A%2F%2Faider.chat%2F2024%2F04%2F09%2Fgpt-4-turbo.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fctags.html%22%2C%22https%3A%2F%2Faider.chat%2F%22%2C%22https%3A%2F%2Faider.chat%2F2024%2F08%2F14%2Fcode-in-json.html%22%2C%22https%3A%2F%2Faider.chat%2F2024%2F01%2F25%2Fbenchmarks-0125.html%22%2C%22https%3A%2F%2Faider.chat%2F2025%2F05%2F07%2Fgemini-cost.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fscripting.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Funified-diffs.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Fdeepseek.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Frecordings%2F%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Fvertex.html%22%2C%22https%3A%2F%2Faider.chat%2Fexamples%2Fpong.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fconfig%2Foptions.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Frepomap.html%22%2C%22https%3A%2F%2Faider.chat%2Fexamples%2Fcomplex-change.html%22%2C%22https%3A%2F%2Faider.chat%2F2024%2F12%2F21%2Fpolyglot.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fmore-info.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fusage%2Fnotifications.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Fgithub.html%22%2C%22https%3A%2F%2Faider.chat%2Fexamples%2FREADME.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Fopenai.html%22%2C%22https%3A%2F%2Faider.chat%2F2024%2F05%2F22%2Flinting.html%22%2C%22https%3A%2F%2Faider.chat%2F2024%2F05%2F24%2Fself-assembly.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Ftroubleshooting%2Fsupport.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fmore%2Finfinite-output.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Fgemini.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Fxai.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fusage%2Ftips.html%22%2C%22https%3A%2F%2Faider.chat%2F2024%2F07%2F25%2Fnew-models.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fleaderboards%2F%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fmore%2Fedit-formats.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Ftroubleshooting%2Fmodels-and-keys.html%22%2C%22https%3A%2F%2Faider.chat%2F2023%2F05%2F25%2Fctags.html%22%2C%22https%3A%2F%2Faider.chat%2Fexamples%2Fcss-exercises.html%22%2C%22https%3A%2F%2Faider.chat%2Fexamples%2Fsemantic-search-replace.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fgit.html%22%2C%22https%3A%2F%2Faider.chat%2FHISTORY.html%22%2C%22https%3A%2F%2Faider.chat%2Fexamples%2Fhello.html%22%2C%22https%3A%2F%2Faider.chat%2F2024%2F06%2F02%2Fmain-swe-bench.html%22%2C%22https%3A%2F%2Faider.chat%2F2023%2F10%2F22%2Frepomap.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fusage%2Fvoice.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fconfig%2Freasoning.html%22%2C%22https%3A%2F%2Faider.chat%2Fexamples%2Fhello-world-flask.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fusage%2Fcaching.html%22%2C%22https%3A%2F%2Faider.chat%2F2025%2F01%2F24%2Fr1-sonnet.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fmore%2Fanalytics.html%22%2C%22https%3A%2F%2Faider.chat%2Fblog%2F%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fconfig%2Faider_conf.html%22%2C%22https%3A%2F%2Faider.chat%2F2025%2F05%2F08%2Fqwen3.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fleaderboards%2Frefactor.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Flm-studio.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fusage%2Fcopypaste.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Fwarnings.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fusage%2Ftutorials.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Flegal%2Fcontributor-agreement.html%22%2C%22https%3A%2F%2Faider.chat%2Fexamples%2Fno-color.html%22%2C%22https%3A%2F%2Faider.chat%2F2023%2F12%2F21%2Funified-diffs.html%22%2C%22https%3A%2F%2Faider.chat%2F2024%2F08%2F26%2Fsonnet-seems-fine.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fllms.html%22%2C%22https%3A%2F%2Faider.chat%2F2023%2F07%2F02%2Fbenchmarks.html%22%2C%22https%3A%2F%2Faider.chat%2F2024%2F05%2F02%2Fbrowser.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Frecordings%2Fmodel-accepts-settings.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Frecordings%2Fauto-accept-architect.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fconfig%2Fmodel-aliases.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fusage.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fbenchmarks-0125.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Fgroq.html%22%2C%22https%3A%2F%2Faider.chat%2F2024%2F07%2F01%2Fsonnet-not-lazy.html%22%2C%22https%3A%2F%2Faider.chat%2F2024%2F09%2F26%2Farchitect.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fleaderboards%2Fcontrib.html%22%2C%22https%3A%2F%2Faider.chat%2Fshare%2F%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Ffaq.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Fopenai-compat.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fusage%2Fwatch.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fconfig%2Fapi-keys.html%22%2C%22https%3A%2F%2Faider.chat%2F2023%2F11%2F06%2Fbenchmarks-speed-1106.html%22%2C%22https%3A%2F%2Faider.chat%2F2024%2F05%2F13%2Fmodels-over-time.html%22%2C%22https%3A%2F%2Faider.chat%2F2023%2F11%2F06%2Fbenchmarks-1106.html%22%2C%22https%3A%2F%2Faider.chat%2F2024%2F03%2F08%2Fclaude-3.html%22%2C%22https%3A%2F%2Faider.chat%2Fdocs%2Fleaderboards%2Fby-release-date.html%22%29 "HTTP/2 414 Request-URI Too Long"
+Batch delete failed: {'message': 'JSON could not be generated', 'code': 414, 'hint': 'Refer to full message for details', 'details': "b'URI too long\\n'"}. Trying one-by-one deletion as fallback.
+2025-06-23 03:09:40 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F2025%2F01%2F28%2Fdeepseek-down.html "HTTP/2 200 OK"
+2025-06-23 03:09:40 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fconfig%2Fdotenv.html "HTTP/2 200 OK"
+2025-06-23 03:09:40 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Ftroubleshooting.html "HTTP/2 200 OK"
+2025-06-23 03:09:40 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fbenchmarks-speed-1106.html "HTTP/2 200 OK"
+2025-06-23 03:09:41 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F2024%2F09%2F12%2Fo1.html "HTTP/2 200 OK"
+2025-06-23 03:09:41 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Fbedrock.html "HTTP/2 200 OK"
+2025-06-23 03:09:41 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fusage%2Fbrowser.html "HTTP/2 200 OK"
+2025-06-23 03:09:41 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Flegal%2Fprivacy.html "HTTP/2 200 OK"
+2025-06-23 03:09:41 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Finstall.html "HTTP/2 200 OK"
+2025-06-23 03:09:42 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Finstall%2Foptional.html "HTTP/2 200 OK"
+2025-06-23 03:09:42 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fconfig.html "HTTP/2 200 OK"
+2025-06-23 03:09:42 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fexamples%2Fadd-test.html "HTTP/2 200 OK"
+2025-06-23 03:09:42 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fexamples%2Fchat-transcript-css.html "HTTP/2 200 OK"
+2025-06-23 03:09:42 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2F "HTTP/2 200 OK"
+2025-06-23 03:09:43 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Ftroubleshooting%2Ftoken-limits.html "HTTP/2 200 OK"
+2025-06-23 03:09:43 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F2025%2F01%2F15%2Fuv.html "HTTP/2 200 OK"
+2025-06-23 03:09:43 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fusage%2Fnot-code.html "HTTP/2 200 OK"
+2025-06-23 03:09:43 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Fopenrouter.html "HTTP/2 200 OK"
+2025-06-23 03:09:43 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Frecordings%2Fdont-drop-original-read-files.html "HTTP/2 200 OK"
+2025-06-23 03:09:44 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fusage%2Fconventions.html "HTTP/2 200 OK"
+2025-06-23 03:09:44 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Finstall%2Freplit.html "HTTP/2 200 OK"
+2025-06-23 03:09:44 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Frecordings%2Ftree-sitter-language-pack.html "HTTP/2 200 OK"
+2025-06-23 03:09:44 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Ftroubleshooting%2Faider-not-found.html "HTTP/2 200 OK"
+2025-06-23 03:09:44 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F2024%2F11%2F21%2Fquantization.html "HTTP/2 200 OK"
+2025-06-23 03:09:45 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Ftroubleshooting%2Fedit-errors.html "HTTP/2 200 OK"
+2025-06-23 03:09:45 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fusage%2Fcommands.html "HTTP/2 200 OK"
+2025-06-23 03:09:45 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fexamples%2Fupdate-docs.html "HTTP/2 200 OK"
+2025-06-23 03:09:45 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fbenchmarks-1106.html "HTTP/2 200 OK"
+2025-06-23 03:09:45 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fleaderboards%2Fnotes.html "HTTP/2 200 OK"
+2025-06-23 03:09:46 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Fazure.html "HTTP/2 200 OK"
+2025-06-23 03:09:46 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Ftroubleshooting%2Fwarnings.html "HTTP/2 200 OK"
+2025-06-23 03:09:46 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fbenchmarks.html "HTTP/2 200 OK"
+2025-06-23 03:09:46 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F2024%2F12%2F03%2Fqwq.html "HTTP/2 200 OK"
+2025-06-23 03:09:46 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fusage%2Fimages-urls.html "HTTP/2 200 OK"
+2025-06-23 03:09:47 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fexamples%2Fasciinema.html "HTTP/2 200 OK"
+2025-06-23 03:09:47 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F2024%2F05%2F22%2Fdraft.html "HTTP/2 200 OK"
+2025-06-23 03:09:47 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Finstall%2Fdocker.html "HTTP/2 200 OK"
+2025-06-23 03:09:47 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Fcohere.html "HTTP/2 200 OK"
+2025-06-23 03:09:47 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Ftroubleshooting%2Fimports.html "HTTP/2 200 OK"
+2025-06-23 03:09:48 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Fanthropic.html "HTTP/2 200 OK"
+2025-06-23 03:09:48 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fleaderboards%2Fedit.html "HTTP/2 200 OK"
+2025-06-23 03:09:48 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Fother.html "HTTP/2 200 OK"
+2025-06-23 03:09:48 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fconfig%2Fadv-model-settings.html "HTTP/2 200 OK"
+2025-06-23 03:09:48 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fconfig%2Feditor.html "HTTP/2 200 OK"
+2025-06-23 03:09:49 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F2024%2F05%2F22%2Fswe-bench-lite.html "HTTP/2 200 OK"
+2025-06-23 03:09:49 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fusage%2Fmodes.html "HTTP/2 200 OK"
+2025-06-23 03:09:49 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Finstall%2Fcodespaces.html "HTTP/2 200 OK"
+2025-06-23 03:09:49 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fexamples%2F2048-game.html "HTTP/2 200 OK"
+2025-06-23 03:09:49 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Follama.html "HTTP/2 200 OK"
+2025-06-23 03:09:49 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fexamples%2Fcensus.html "HTTP/2 200 OK"
+2025-06-23 03:09:50 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Flanguages.html "HTTP/2 200 OK"
+2025-06-23 03:09:50 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fusage%2Flint-test.html "HTTP/2 200 OK"
+2025-06-23 03:09:50 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F2024%2F04%2F09%2Fgpt-4-turbo.html "HTTP/2 200 OK"
+2025-06-23 03:09:50 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fctags.html "HTTP/2 200 OK"
+2025-06-23 03:09:50 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F "HTTP/2 200 OK"
+2025-06-23 03:09:51 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F2024%2F08%2F14%2Fcode-in-json.html "HTTP/2 200 OK"
+2025-06-23 03:09:51 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F2024%2F01%2F25%2Fbenchmarks-0125.html "HTTP/2 200 OK"
+2025-06-23 03:09:51 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F2025%2F05%2F07%2Fgemini-cost.html "HTTP/2 200 OK"
+2025-06-23 03:09:51 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fscripting.html "HTTP/2 200 OK"
+2025-06-23 03:09:51 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Funified-diffs.html "HTTP/2 200 OK"
+2025-06-23 03:09:52 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Fdeepseek.html "HTTP/2 200 OK"
+2025-06-23 03:09:52 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Frecordings%2F "HTTP/2 200 OK"
+2025-06-23 03:09:52 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Fvertex.html "HTTP/2 200 OK"
+2025-06-23 03:09:52 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fexamples%2Fpong.html "HTTP/2 200 OK"
+2025-06-23 03:09:52 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fconfig%2Foptions.html "HTTP/2 200 OK"
+2025-06-23 03:09:53 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Frepomap.html "HTTP/2 200 OK"
+2025-06-23 03:09:53 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fexamples%2Fcomplex-change.html "HTTP/2 200 OK"
+2025-06-23 03:09:53 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F2024%2F12%2F21%2Fpolyglot.html "HTTP/2 200 OK"
+2025-06-23 03:09:53 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fmore-info.html "HTTP/2 200 OK"
+2025-06-23 03:09:53 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fusage%2Fnotifications.html "HTTP/2 200 OK"
+2025-06-23 03:09:53 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Fgithub.html "HTTP/2 200 OK"
+2025-06-23 03:09:54 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fexamples%2FREADME.html "HTTP/2 200 OK"
+2025-06-23 03:09:54 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Fopenai.html "HTTP/2 200 OK"
+2025-06-23 03:09:54 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F2024%2F05%2F22%2Flinting.html "HTTP/2 200 OK"
+2025-06-23 03:09:54 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F2024%2F05%2F24%2Fself-assembly.html "HTTP/2 200 OK"
+2025-06-23 03:09:54 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Ftroubleshooting%2Fsupport.html "HTTP/2 200 OK"
+2025-06-23 03:09:55 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fmore%2Finfinite-output.html "HTTP/2 200 OK"
+2025-06-23 03:09:55 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Fgemini.html "HTTP/2 200 OK"
+2025-06-23 03:09:55 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Fxai.html "HTTP/2 200 OK"
+2025-06-23 03:09:55 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fusage%2Ftips.html "HTTP/2 200 OK"
+2025-06-23 03:09:55 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F2024%2F07%2F25%2Fnew-models.html "HTTP/2 200 OK"
+2025-06-23 03:09:56 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fleaderboards%2F "HTTP/2 200 OK"
+2025-06-23 03:09:56 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fmore%2Fedit-formats.html "HTTP/2 200 OK"
+2025-06-23 03:09:56 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Ftroubleshooting%2Fmodels-and-keys.html "HTTP/2 200 OK"
+2025-06-23 03:09:56 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F2023%2F05%2F25%2Fctags.html "HTTP/2 200 OK"
+2025-06-23 03:09:56 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fexamples%2Fcss-exercises.html "HTTP/2 200 OK"
+2025-06-23 03:09:57 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fexamples%2Fsemantic-search-replace.html "HTTP/2 200 OK"
+2025-06-23 03:09:57 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fgit.html "HTTP/2 200 OK"
+2025-06-23 03:09:57 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2FHISTORY.html "HTTP/2 200 OK"
+2025-06-23 03:09:57 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fexamples%2Fhello.html "HTTP/2 200 OK"
+2025-06-23 03:09:57 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F2024%2F06%2F02%2Fmain-swe-bench.html "HTTP/2 200 OK"
+2025-06-23 03:09:58 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F2023%2F10%2F22%2Frepomap.html "HTTP/2 200 OK"
+2025-06-23 03:09:58 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fusage%2Fvoice.html "HTTP/2 200 OK"
+2025-06-23 03:09:58 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fconfig%2Freasoning.html "HTTP/2 200 OK"
+2025-06-23 03:09:58 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fexamples%2Fhello-world-flask.html "HTTP/2 200 OK"
+2025-06-23 03:09:58 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fusage%2Fcaching.html "HTTP/2 200 OK"
+2025-06-23 03:09:59 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F2025%2F01%2F24%2Fr1-sonnet.html "HTTP/2 200 OK"
+2025-06-23 03:09:59 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fmore%2Fanalytics.html "HTTP/2 200 OK"
+2025-06-23 03:09:59 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fblog%2F "HTTP/2 200 OK"
+2025-06-23 03:09:59 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fconfig%2Faider_conf.html "HTTP/2 200 OK"
+2025-06-23 03:09:59 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F2025%2F05%2F08%2Fqwen3.html "HTTP/2 200 OK"
+2025-06-23 03:10:00 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fleaderboards%2Frefactor.html "HTTP/2 200 OK"
+2025-06-23 03:10:00 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Flm-studio.html "HTTP/2 200 OK"
+2025-06-23 03:10:01 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fusage%2Fcopypaste.html "HTTP/2 200 OK"
+2025-06-23 03:10:02 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Fwarnings.html "HTTP/2 200 OK"
+2025-06-23 03:10:02 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fusage%2Ftutorials.html "HTTP/2 200 OK"
+2025-06-23 03:10:02 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Flegal%2Fcontributor-agreement.html "HTTP/2 200 OK"
+2025-06-23 03:10:02 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fexamples%2Fno-color.html "HTTP/2 200 OK"
+2025-06-23 03:10:03 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F2023%2F12%2F21%2Funified-diffs.html "HTTP/2 200 OK"
+2025-06-23 03:10:03 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F2024%2F08%2F26%2Fsonnet-seems-fine.html "HTTP/2 200 OK"
+2025-06-23 03:10:03 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fllms.html "HTTP/2 200 OK"
+2025-06-23 03:10:03 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F2023%2F07%2F02%2Fbenchmarks.html "HTTP/2 200 OK"
+2025-06-23 03:10:03 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F2024%2F05%2F02%2Fbrowser.html "HTTP/2 200 OK"
+2025-06-23 03:10:04 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Frecordings%2Fmodel-accepts-settings.html "HTTP/2 200 OK"
+2025-06-23 03:10:04 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Frecordings%2Fauto-accept-architect.html "HTTP/2 200 OK"
+2025-06-23 03:10:04 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fconfig%2Fmodel-aliases.html "HTTP/2 200 OK"
+2025-06-23 03:10:04 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fusage.html "HTTP/2 200 OK"
+2025-06-23 03:10:04 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fbenchmarks-0125.html "HTTP/2 200 OK"
+2025-06-23 03:10:05 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Fgroq.html "HTTP/2 200 OK"
+2025-06-23 03:10:05 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F2024%2F07%2F01%2Fsonnet-not-lazy.html "HTTP/2 200 OK"
+2025-06-23 03:10:05 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F2024%2F09%2F26%2Farchitect.html "HTTP/2 200 OK"
+2025-06-23 03:10:05 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fleaderboards%2Fcontrib.html "HTTP/2 200 OK"
+2025-06-23 03:10:06 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fshare%2F "HTTP/2 200 OK"
+2025-06-23 03:10:06 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Ffaq.html "HTTP/2 200 OK"
+2025-06-23 03:10:06 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fllms%2Fopenai-compat.html "HTTP/2 200 OK"
+2025-06-23 03:10:06 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fusage%2Fwatch.html "HTTP/2 200 OK"
+2025-06-23 03:10:06 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fconfig%2Fapi-keys.html "HTTP/2 200 OK"
+2025-06-23 03:10:07 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F2023%2F11%2F06%2Fbenchmarks-speed-1106.html "HTTP/2 200 OK"
+2025-06-23 03:10:07 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F2024%2F05%2F13%2Fmodels-over-time.html "HTTP/2 200 OK"
+2025-06-23 03:10:07 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F2023%2F11%2F06%2Fbenchmarks-1106.html "HTTP/2 200 OK"
+2025-06-23 03:10:07 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2F2024%2F03%2F08%2Fclaude-3.html "HTTP/2 200 OK"
+2025-06-23 03:10:07 - httpx - INFO - HTTP Request: DELETE https://supabase.quantmind.com.br/rest/v1/crawled_pages?url=eq.https%3A%2F%2Faider.chat%2Fdocs%2Fleaderboards%2Fby-release-date.html "HTTP/2 200 OK"
+
+
+Use contextual embeddings: True
+
+
+Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1
+
+Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1
+
+
+Attempting to use primary chat model: gpt-4.1
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully
+
+✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully
+
+
+2025-06-23 03:10:34 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+2025-06-23 03:10:34 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+2025-06-23 03:10:34 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:10:34 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1
+
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully
+
+2025-06-23 03:10:45 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+2025-06-23 03:10:45 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+2025-06-23 03:10:45 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+2025-06-23 03:10:45 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully
+
+2025-06-23 03:10:57 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+2025-06-23 03:10:57 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:10:57 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+2025-06-23 03:11:11 - openai._base_client - INFO - Retrying request to /chat/completions in 0.436745 seconds
+2025-06-23 03:11:15 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:11:15 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:11:15 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:11:15 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:11:25 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:11:25 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:11:27 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:11:29 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:11:31 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary embedding model: dengcao/Qwen3-Embedding-0.6B:Q8_0
+✅ Primary embedding model dengcao/Qwen3-Embedding-0.6B:Q8_0 client created successfully
+Added <|endoftext|> token to 20 texts for Qwen3-Embedding compatibility
+2025-06-23 03:11:37 - httpx - INFO - HTTP Request: POST http://ollama:11434/v1/embeddings "HTTP/1.1 200 OK"
+2025-06-23 03:11:39 - httpx - INFO - HTTP Request: POST https://supabase.quantmind.com.br/rest/v1/crawled_pages?columns=%22source_id%22%2C%22url%22%2C%22metadata%22%2C%22chunk_number%22%2C%22content%22%2C%22embedding%22 "HTTP/2 201 Created"
+Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1
+
+
+
+Attempting to use primary chat model: gpt-4.1
+
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+
+
+2025-06-23 03:12:17 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+2025-06-23 03:12:17 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+2025-06-23 03:12:17 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+2025-06-23 03:12:17 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+2025-06-23 03:12:17 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:12:17 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:12:17 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:12:17 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1
+
+Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1
+
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully
+
+
+2025-06-23 03:12:18 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:18 - openai._base_client - INFO - Retrying request to /chat/completions in 0.440710 seconds
+2025-06-23 03:12:18 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:18 - openai._base_client - INFO - Retrying request to /chat/completions in 0.493339 seconds
+2025-06-23 03:12:18 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:18 - openai._base_client - INFO - Retrying request to /chat/completions in 0.383685 seconds
+2025-06-23 03:12:18 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:18 - openai._base_client - INFO - Retrying request to /chat/completions in 0.420573 seconds
+2025-06-23 03:12:18 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:18 - openai._base_client - INFO - Retrying request to /chat/completions in 0.382879 seconds
+2025-06-23 03:12:18 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:18 - openai._base_client - INFO - Retrying request to /chat/completions in 0.456102 seconds
+2025-06-23 03:12:18 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:18 - openai._base_client - INFO - Retrying request to /chat/completions in 0.406750 seconds
+2025-06-23 03:12:18 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:18 - openai._base_client - INFO - Retrying request to /chat/completions in 0.463674 seconds
+2025-06-23 03:12:19 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:19 - openai._base_client - INFO - Retrying request to /chat/completions in 0.917416 seconds
+2025-06-23 03:12:19 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:19 - openai._base_client - INFO - Retrying request to /chat/completions in 0.912863 seconds
+2025-06-23 03:12:19 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:19 - openai._base_client - INFO - Retrying request to /chat/completions in 0.937484 seconds
+2025-06-23 03:12:19 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:19 - openai._base_client - INFO - Retrying request to /chat/completions in 0.848127 seconds
+2025-06-23 03:12:19 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:19 - openai._base_client - INFO - Retrying request to /chat/completions in 0.769920 seconds
+2025-06-23 03:12:19 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:19 - openai._base_client - INFO - Retrying request to /chat/completions in 0.922375 seconds
+2025-06-23 03:12:19 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:19 - openai._base_client - INFO - Retrying request to /chat/completions in 0.798704 seconds
+2025-06-23 03:12:19 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:19 - openai._base_client - INFO - Retrying request to /chat/completions in 0.955020 seconds
+2025-06-23 03:12:20 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 1/3): no available server
+🔄 Retrying in 1.4s...
+2025-06-23 03:12:20 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 1/3): no available server
+🔄 Retrying in 1.6s...
+2025-06-23 03:12:20 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 1/3): no available server
+🔄 Retrying in 1.4s...
+2025-06-23 03:12:20 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 1/3): no available server
+🔄 Retrying in 1.3s...
+2025-06-23 03:12:20 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+2025-06-23 03:12:20 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 1/3): no available server
+🔄 Retrying in 1.3s...
+✅ Primary chat model gpt-4.1 client created successfully
+2025-06-23 03:12:20 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 1/3): no available server
+🔄 Retrying in 1.3s...
+2025-06-23 03:12:20 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 1/3): no available server
+🔄 Retrying in 1.2s...
+2025-06-23 03:12:20 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 1/3): no available server
+🔄 Retrying in 1.5s...
+2025-06-23 03:12:21 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:21 - openai._base_client - INFO - Retrying request to /chat/completions in 0.406122 seconds
+2025-06-23 03:12:21 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:21 - openai._base_client - INFO - Retrying request to /chat/completions in 0.934027 seconds
+2025-06-23 03:12:21 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:21 - openai._base_client - INFO - Retrying request to /chat/completions in 0.419748 seconds
+2025-06-23 03:12:21 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+2025-06-23 03:12:21 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:21 - openai._base_client - INFO - Retrying request to /chat/completions in 0.416200 seconds
+2025-06-23 03:12:21 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:21 - openai._base_client - INFO - Retrying request to /chat/completions in 0.399362 seconds
+2025-06-23 03:12:21 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:21 - openai._base_client - INFO - Retrying request to /chat/completions in 0.499550 seconds
+2025-06-23 03:12:21 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:21 - openai._base_client - INFO - Retrying request to /chat/completions in 0.424842 seconds
+✅ Primary chat model gpt-4.1 client created successfully
+2025-06-23 03:12:21 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:21 - openai._base_client - INFO - Retrying request to /chat/completions in 0.486364 seconds
+2025-06-23 03:12:22 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:22 - openai._base_client - INFO - Retrying request to /chat/completions in 0.453562 seconds
+2025-06-23 03:12:22 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:22 - openai._base_client - INFO - Retrying request to /chat/completions in 0.942543 seconds
+2025-06-23 03:12:22 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:22 - openai._base_client - INFO - Retrying request to /chat/completions in 0.965919 seconds
+2025-06-23 03:12:22 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:22 - openai._base_client - INFO - Retrying request to /chat/completions in 0.757459 seconds
+2025-06-23 03:12:22 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:22 - openai._base_client - INFO - Retrying request to /chat/completions in 0.498340 seconds
+2025-06-23 03:12:22 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:22 - openai._base_client - INFO - Retrying request to /chat/completions in 0.753245 seconds
+2025-06-23 03:12:22 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:22 - openai._base_client - INFO - Retrying request to /chat/completions in 0.990749 seconds
+2025-06-23 03:12:22 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:22 - openai._base_client - INFO - Retrying request to /chat/completions in 0.830036 seconds
+2025-06-23 03:12:22 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:22 - openai._base_client - INFO - Retrying request to /chat/completions in 0.995463 seconds
+2025-06-23 03:12:22 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:22 - openai._base_client - INFO - Retrying request to /chat/completions in 0.431119 seconds
+2025-06-23 03:12:22 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 1/3): no available server
+🔄 Retrying in 1.2s...
+2025-06-23 03:12:23 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:23 - openai._base_client - INFO - Retrying request to /chat/completions in 0.958852 seconds
+2025-06-23 03:12:23 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:23 - openai._base_client - INFO - Retrying request to /chat/completions in 0.846534 seconds
+2025-06-23 03:12:23 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 2/3): no available server
+🔄 Retrying in 2.7s...
+2025-06-23 03:12:23 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 2/3): no available server
+🔄 Retrying in 3.0s...
+2025-06-23 03:12:23 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 2/3): no available server
+🔄 Retrying in 2.3s...
+2025-06-23 03:12:23 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 2/3): no available server
+🔄 Retrying in 2.4s...
+2025-06-23 03:12:23 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 2/3): no available server
+🔄 Retrying in 2.6s...
+2025-06-23 03:12:23 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 2/3): no available server
+🔄 Retrying in 2.3s...
+2025-06-23 03:12:23 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 2/3): no available server
+🔄 Retrying in 2.2s...
+2025-06-23 03:12:24 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:24 - openai._base_client - INFO - Retrying request to /chat/completions in 0.382566 seconds
+2025-06-23 03:12:24 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 2/3): no available server
+🔄 Retrying in 2.4s...
+2025-06-23 03:12:24 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 1/3): no available server
+🔄 Retrying in 1.3s...
+2025-06-23 03:12:24 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:24 - openai._base_client - INFO - Retrying request to /chat/completions in 0.795589 seconds
+2025-06-23 03:12:25 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 2/3): no available server
+🔄 Retrying in 3.0s...
+2025-06-23 03:12:26 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:26 - openai._base_client - INFO - Retrying request to /chat/completions in 0.377854 seconds
+2025-06-23 03:12:26 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:26 - openai._base_client - INFO - Retrying request to /chat/completions in 0.426600 seconds
+2025-06-23 03:12:26 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:26 - openai._base_client - INFO - Retrying request to /chat/completions in 0.458773 seconds
+2025-06-23 03:12:26 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:26 - openai._base_client - INFO - Retrying request to /chat/completions in 0.491250 seconds
+2025-06-23 03:12:26 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:26 - openai._base_client - INFO - Retrying request to /chat/completions in 0.452565 seconds
+2025-06-23 03:12:26 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:26 - openai._base_client - INFO - Retrying request to /chat/completions in 0.421632 seconds
+2025-06-23 03:12:26 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:26 - openai._base_client - INFO - Retrying request to /chat/completions in 0.394153 seconds
+2025-06-23 03:12:26 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:26 - openai._base_client - INFO - Retrying request to /chat/completions in 0.770495 seconds
+2025-06-23 03:12:26 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:26 - openai._base_client - INFO - Retrying request to /chat/completions in 0.459952 seconds
+2025-06-23 03:12:26 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:26 - openai._base_client - INFO - Retrying request to /chat/completions in 0.838113 seconds
+2025-06-23 03:12:26 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:26 - openai._base_client - INFO - Retrying request to /chat/completions in 0.904272 seconds
+2025-06-23 03:12:27 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:27 - openai._base_client - INFO - Retrying request to /chat/completions in 0.928399 seconds
+2025-06-23 03:12:27 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:27 - openai._base_client - INFO - Retrying request to /chat/completions in 0.830766 seconds
+2025-06-23 03:12:27 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:27 - openai._base_client - INFO - Retrying request to /chat/completions in 0.886790 seconds
+2025-06-23 03:12:27 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:27 - openai._base_client - INFO - Retrying request to /chat/completions in 0.996876 seconds
+2025-06-23 03:12:27 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:27 - openai._base_client - INFO - Retrying request to /chat/completions in 0.459919 seconds
+2025-06-23 03:12:27 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:27 - openai._base_client - INFO - Retrying request to /chat/completions in 0.973735 seconds
+2025-06-23 03:12:27 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 2/3): no available server
+🔄 Retrying in 2.3s...
+2025-06-23 03:12:27 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:27 - openai._base_client - INFO - Retrying request to /chat/completions in 0.842801 seconds
+2025-06-23 03:12:27 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+❌ Primary model gpt-4.1 failed definitively: no available server
+🔄 Using fallback model: gpt-4.1-nano
+2025-06-23 03:12:28 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+❌ Primary model gpt-4.1 failed definitively: no available server
+🔄 Using fallback model: gpt-4.1-nano
+2025-06-23 03:12:28 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+❌ Primary model gpt-4.1 failed definitively: no available server
+🔄 Using fallback model: gpt-4.1-nano
+2025-06-23 03:12:28 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+❌ Primary model gpt-4.1 failed definitively: no available server
+🔄 Using fallback model: gpt-4.1-nano
+2025-06-23 03:12:28 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+❌ Primary model gpt-4.1 failed definitively: no available server
+🔄 Using fallback model: gpt-4.1-nano
+2025-06-23 03:12:28 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+❌ Primary model gpt-4.1 failed definitively: no available server
+🔄 Using fallback model: gpt-4.1-nano
+2025-06-23 03:12:28 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+❌ Primary model gpt-4.1 failed definitively: no available server
+🔄 Using fallback model: gpt-4.1-nano
+2025-06-23 03:12:28 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+✅ Fallback model gpt-4.1-nano succeeded
+2025-06-23 03:12:28 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+❌ Primary model gpt-4.1 failed definitively: no available server
+🔄 Using fallback model: gpt-4.1-nano
+2025-06-23 03:12:29 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:29 - openai._base_client - INFO - Retrying request to /chat/completions in 0.448779 seconds
+2025-06-23 03:12:29 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+✅ Fallback model gpt-4.1-nano succeeded
+2025-06-23 03:12:29 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+✅ Fallback model gpt-4.1-nano succeeded
+2025-06-23 03:12:29 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+✅ Fallback model gpt-4.1-nano succeeded
+2025-06-23 03:12:29 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+✅ Fallback model gpt-4.1-nano succeeded
+2025-06-23 03:12:29 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+✅ Fallback model gpt-4.1-nano succeeded
+2025-06-23 03:12:29 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+✅ Fallback model gpt-4.1-nano succeeded
+2025-06-23 03:12:29 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:29 - openai._base_client - INFO - Retrying request to /chat/completions in 0.919291 seconds
+2025-06-23 03:12:29 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+✅ Fallback model gpt-4.1-nano succeeded
+2025-06-23 03:12:30 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:30 - openai._base_client - INFO - Retrying request to /chat/completions in 0.439992 seconds
+2025-06-23 03:12:30 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:12:30 - openai._base_client - INFO - Retrying request to /chat/completions in 0.990713 seconds
+2025-06-23 03:12:30 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+❌ Primary model gpt-4.1 failed definitively: no available server
+🔄 Using fallback model: gpt-4.1-nano
+2025-06-23 03:12:31 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+✅ Fallback model gpt-4.1-nano succeeded
+2025-06-23 03:12:31 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+❌ Primary model gpt-4.1 failed definitively: no available server
+🔄 Using fallback model: gpt-4.1-nano
+2025-06-23 03:12:32 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+✅ Fallback model gpt-4.1-nano succeeded
+Attempting to use primary embedding model: dengcao/Qwen3-Embedding-0.6B:Q8_0
+✅ Primary embedding model dengcao/Qwen3-Embedding-0.6B:Q8_0 client created successfully
+Added <|endoftext|> token to 20 texts for Qwen3-Embedding compatibility
+2025-06-23 03:12:35 - httpx - INFO - HTTP Request: POST http://ollama:11434/v1/embeddings "HTTP/1.1 200 OK"
+2025-06-23 03:12:37 - httpx - INFO - HTTP Request: POST https://supabase.quantmind.com.br/rest/v1/crawled_pages?columns=%22source_id%22%2C%22url%22%2C%22metadata%22%2C%22chunk_number%22%2C%22content%22%2C%22embedding%22 "HTTP/2 201 Created"
+Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1
+
+
+Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1
+
+
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully
+
+✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully
+
+✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+
+
+2025-06-23 03:13:19 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:13:19 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:13:19 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:13:19 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:13:19 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:13:19 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+2025-06-23 03:13:19 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1
+
+Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1
+
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully
+
+
+
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+2025-06-23 03:13:23 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+2025-06-23 03:13:23 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully
+
+2025-06-23 03:13:43 - openai._base_client - INFO - Retrying request to /chat/completions in 0.375558 seconds
+2025-06-23 03:13:46 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+2025-06-23 03:13:46 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:13:46 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+✅ Primary chat model gpt-4.1 client created successfully
+2025-06-23 03:13:56 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:13:56 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:13:56 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:13:56 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:14:03 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:14:03 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:14:04 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:14:10 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary embedding model: dengcao/Qwen3-Embedding-0.6B:Q8_0
+✅ Primary embedding model dengcao/Qwen3-Embedding-0.6B:Q8_0 client created successfully
+Added <|endoftext|> token to 20 texts for Qwen3-Embedding compatibility
+2025-06-23 03:14:12 - httpx - INFO - HTTP Request: POST http://ollama:11434/v1/embeddings "HTTP/1.1 200 OK"
+2025-06-23 03:14:15 - httpx - INFO - HTTP Request: POST https://supabase.quantmind.com.br/rest/v1/crawled_pages?columns=%22source_id%22%2C%22url%22%2C%22metadata%22%2C%22chunk_number%22%2C%22content%22%2C%22embedding%22 "HTTP/2 201 Created"
+Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1
+
+Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1
+
+
+
+
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+
+✅ Primary chat model gpt-4.1 client created successfully
+
+
+2025-06-23 03:14:47 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:14:47 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:14:47 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:14:47 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+2025-06-23 03:14:47 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:14:47 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1
+2025-06-23 03:14:47 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+
+2025-06-23 03:14:47 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1
+
+
+Attempting to use primary chat model: gpt-4.1
+
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully
+
+✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully
+
+
+✅ Primary chat model gpt-4.1 client created successfully
+2025-06-23 03:14:48 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:48 - openai._base_client - INFO - Retrying request to /chat/completions in 0.499157 seconds
+2025-06-23 03:14:48 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:48 - openai._base_client - INFO - Retrying request to /chat/completions in 0.423015 seconds
+2025-06-23 03:14:48 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:48 - openai._base_client - INFO - Retrying request to /chat/completions in 0.422222 seconds
+2025-06-23 03:14:48 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:48 - openai._base_client - INFO - Retrying request to /chat/completions in 0.450959 seconds
+2025-06-23 03:14:48 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:48 - openai._base_client - INFO - Retrying request to /chat/completions in 0.431277 seconds
+2025-06-23 03:14:48 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:48 - openai._base_client - INFO - Retrying request to /chat/completions in 0.375816 seconds
+2025-06-23 03:14:48 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:48 - openai._base_client - INFO - Retrying request to /chat/completions in 0.443603 seconds
+2025-06-23 03:14:48 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:48 - openai._base_client - INFO - Retrying request to /chat/completions in 0.440644 seconds
+2025-06-23 03:14:48 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:48 - openai._base_client - INFO - Retrying request to /chat/completions in 0.962592 seconds
+2025-06-23 03:14:48 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:48 - openai._base_client - INFO - Retrying request to /chat/completions in 0.925856 seconds
+2025-06-23 03:14:49 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:49 - openai._base_client - INFO - Retrying request to /chat/completions in 0.870352 seconds
+2025-06-23 03:14:49 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:49 - openai._base_client - INFO - Retrying request to /chat/completions in 0.766033 seconds
+2025-06-23 03:14:49 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:49 - openai._base_client - INFO - Retrying request to /chat/completions in 0.938791 seconds
+2025-06-23 03:14:49 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:49 - openai._base_client - INFO - Retrying request to /chat/completions in 0.980214 seconds
+2025-06-23 03:14:49 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:49 - openai._base_client - INFO - Retrying request to /chat/completions in 0.944656 seconds
+2025-06-23 03:14:49 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:49 - openai._base_client - INFO - Retrying request to /chat/completions in 0.945812 seconds
+2025-06-23 03:14:49 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+✅ Primary chat model gpt-4.1 client created successfully
+2025-06-23 03:14:50 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 1/3): no available server
+🔄 Retrying in 1.3s...
+2025-06-23 03:14:50 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 1/3): no available server
+🔄 Retrying in 1.7s...
+2025-06-23 03:14:50 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 1/3): no available server
+🔄 Retrying in 1.9s...
+2025-06-23 03:14:50 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 1/3): no available server
+🔄 Retrying in 1.4s...
+2025-06-23 03:14:50 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 1/3): no available server
+🔄 Retrying in 1.9s...
+2025-06-23 03:14:50 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:50 - openai._base_client - INFO - Retrying request to /chat/completions in 0.483399 seconds
+2025-06-23 03:14:50 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 1/3): no available server
+🔄 Retrying in 1.2s...
+2025-06-23 03:14:50 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 1/3): no available server
+🔄 Retrying in 1.0s...
+2025-06-23 03:14:50 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 1/3): no available server
+🔄 Retrying in 1.7s...
+2025-06-23 03:14:50 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+✅ Primary chat model gpt-4.1 client created successfully
+2025-06-23 03:14:51 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:51 - openai._base_client - INFO - Retrying request to /chat/completions in 0.951301 seconds
+2025-06-23 03:14:51 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:51 - openai._base_client - INFO - Retrying request to /chat/completions in 0.389591 seconds
+2025-06-23 03:14:51 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:51 - openai._base_client - INFO - Retrying request to /chat/completions in 0.391716 seconds
+2025-06-23 03:14:51 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:51 - openai._base_client - INFO - Retrying request to /chat/completions in 0.432313 seconds
+2025-06-23 03:14:51 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:51 - openai._base_client - INFO - Retrying request to /chat/completions in 0.446766 seconds
+2025-06-23 03:14:51 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:51 - openai._base_client - INFO - Retrying request to /chat/completions in 0.413089 seconds
+2025-06-23 03:14:51 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:51 - openai._base_client - INFO - Retrying request to /chat/completions in 0.446988 seconds
+2025-06-23 03:14:52 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:52 - openai._base_client - INFO - Retrying request to /chat/completions in 0.756770 seconds
+2025-06-23 03:14:52 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:52 - openai._base_client - INFO - Retrying request to /chat/completions in 0.977027 seconds
+2025-06-23 03:14:52 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:52 - openai._base_client - INFO - Retrying request to /chat/completions in 0.396142 seconds
+2025-06-23 03:14:52 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 1/3): no available server
+🔄 Retrying in 1.8s...
+2025-06-23 03:14:52 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:52 - openai._base_client - INFO - Retrying request to /chat/completions in 0.990519 seconds
+2025-06-23 03:14:52 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:52 - openai._base_client - INFO - Retrying request to /chat/completions in 0.430597 seconds
+2025-06-23 03:14:52 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:52 - openai._base_client - INFO - Retrying request to /chat/completions in 0.886458 seconds
+2025-06-23 03:14:52 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:52 - openai._base_client - INFO - Retrying request to /chat/completions in 0.984350 seconds
+2025-06-23 03:14:52 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:52 - openai._base_client - INFO - Retrying request to /chat/completions in 0.403229 seconds
+2025-06-23 03:14:52 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:52 - openai._base_client - INFO - Retrying request to /chat/completions in 0.900590 seconds
+2025-06-23 03:14:52 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:52 - openai._base_client - INFO - Retrying request to /chat/completions in 0.890850 seconds
+2025-06-23 03:14:53 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:53 - openai._base_client - INFO - Retrying request to /chat/completions in 0.959533 seconds
+2025-06-23 03:14:53 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:53 - openai._base_client - INFO - Retrying request to /chat/completions in 0.929211 seconds
+2025-06-23 03:14:53 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 2/3): no available server
+🔄 Retrying in 2.4s...
+2025-06-23 03:14:53 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 1/3): no available server
+🔄 Retrying in 1.7s...
+2025-06-23 03:14:53 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 2/3): no available server
+🔄 Retrying in 2.4s...
+2025-06-23 03:14:53 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 2/3): no available server
+🔄 Retrying in 2.4s...
+2025-06-23 03:14:53 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 2/3): no available server
+🔄 Retrying in 2.0s...
+2025-06-23 03:14:53 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 2/3): no available server
+🔄 Retrying in 2.0s...
+2025-06-23 03:14:53 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 2/3): no available server
+🔄 Retrying in 2.4s...
+2025-06-23 03:14:54 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 2/3): no available server
+🔄 Retrying in 2.6s...
+2025-06-23 03:14:54 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 2/3): no available server
+🔄 Retrying in 3.0s...
+2025-06-23 03:14:54 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:54 - openai._base_client - INFO - Retrying request to /chat/completions in 0.428098 seconds
+2025-06-23 03:14:54 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:54 - openai._base_client - INFO - Retrying request to /chat/completions in 0.861462 seconds
+2025-06-23 03:14:55 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:55 - openai._base_client - INFO - Retrying request to /chat/completions in 0.479815 seconds
+2025-06-23 03:14:55 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:55 - openai._base_client - INFO - Retrying request to /chat/completions in 0.406846 seconds
+2025-06-23 03:14:55 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:55 - openai._base_client - INFO - Retrying request to /chat/completions in 0.451120 seconds
+2025-06-23 03:14:55 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 2/3): no available server
+🔄 Retrying in 2.8s...
+2025-06-23 03:14:55 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:55 - openai._base_client - INFO - Retrying request to /chat/completions in 0.494071 seconds
+2025-06-23 03:14:55 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:55 - openai._base_client - INFO - Retrying request to /chat/completions in 0.842988 seconds
+2025-06-23 03:14:56 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:56 - openai._base_client - INFO - Retrying request to /chat/completions in 0.430607 seconds
+2025-06-23 03:14:56 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:56 - openai._base_client - INFO - Retrying request to /chat/completions in 0.393770 seconds
+2025-06-23 03:14:56 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:56 - openai._base_client - INFO - Retrying request to /chat/completions in 0.920225 seconds
+2025-06-23 03:14:56 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:56 - openai._base_client - INFO - Retrying request to /chat/completions in 0.944300 seconds
+2025-06-23 03:14:56 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:56 - openai._base_client - INFO - Retrying request to /chat/completions in 0.448325 seconds
+2025-06-23 03:14:56 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:56 - openai._base_client - INFO - Retrying request to /chat/completions in 0.820555 seconds
+2025-06-23 03:14:56 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:56 - openai._base_client - INFO - Retrying request to /chat/completions in 0.814193 seconds
+2025-06-23 03:14:56 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:56 - openai._base_client - INFO - Retrying request to /chat/completions in 0.914817 seconds
+2025-06-23 03:14:56 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:56 - openai._base_client - INFO - Retrying request to /chat/completions in 0.472741 seconds
+2025-06-23 03:14:57 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+⚠️  Primary model gpt-4.1 failed (attempt 2/3): no available server
+🔄 Retrying in 2.2s...
+2025-06-23 03:14:57 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:57 - openai._base_client - INFO - Retrying request to /chat/completions in 0.902370 seconds
+2025-06-23 03:14:57 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+❌ Primary model gpt-4.1 failed definitively: no available server
+🔄 Using fallback model: gpt-4.1-nano
+2025-06-23 03:14:57 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:57 - openai._base_client - INFO - Retrying request to /chat/completions in 0.443697 seconds
+2025-06-23 03:14:57 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+❌ Primary model gpt-4.1 failed definitively: no available server
+🔄 Using fallback model: gpt-4.1-nano
+2025-06-23 03:14:57 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:57 - openai._base_client - INFO - Retrying request to /chat/completions in 0.918978 seconds
+2025-06-23 03:14:57 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+❌ Primary model gpt-4.1 failed definitively: no available server
+🔄 Using fallback model: gpt-4.1-nano
+2025-06-23 03:14:57 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+❌ Primary model gpt-4.1 failed definitively: no available server
+🔄 Using fallback model: gpt-4.1-nano
+2025-06-23 03:14:57 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+❌ Primary model gpt-4.1 failed definitively: no available server
+🔄 Using fallback model: gpt-4.1-nano
+2025-06-23 03:14:58 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:58 - openai._base_client - INFO - Retrying request to /chat/completions in 0.963212 seconds
+2025-06-23 03:14:58 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+✅ Fallback model gpt-4.1-nano succeeded
+2025-06-23 03:14:58 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+❌ Primary model gpt-4.1 failed definitively: no available server
+🔄 Using fallback model: gpt-4.1-nano
+2025-06-23 03:14:58 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+✅ Fallback model gpt-4.1-nano succeeded
+2025-06-23 03:14:58 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+✅ Fallback model gpt-4.1-nano succeeded
+2025-06-23 03:14:58 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:14:58 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+✅ Fallback model gpt-4.1-nano succeeded
+✅ Fallback model gpt-4.1-nano succeeded
+2025-06-23 03:14:58 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+❌ Primary model gpt-4.1 failed definitively: no available server
+🔄 Using fallback model: gpt-4.1-nano
+2025-06-23 03:14:58 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:58 - openai._base_client - INFO - Retrying request to /chat/completions in 0.436810 seconds
+2025-06-23 03:14:58 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+✅ Fallback model gpt-4.1-nano succeeded
+2025-06-23 03:14:59 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+❌ Primary model gpt-4.1 failed definitively: no available server
+🔄 Using fallback model: gpt-4.1-nano
+2025-06-23 03:14:59 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:14:59 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:59 - openai._base_client - INFO - Retrying request to /chat/completions in 0.385578 seconds
+✅ Fallback model gpt-4.1-nano succeeded
+2025-06-23 03:14:59 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:14:59 - openai._base_client - INFO - Retrying request to /chat/completions in 0.949538 seconds
+2025-06-23 03:14:59 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+✅ Fallback model gpt-4.1-nano succeeded
+2025-06-23 03:15:00 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-06-23 03:15:00 - openai._base_client - INFO - Retrying request to /chat/completions in 0.854475 seconds
+2025-06-23 03:15:00 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+❌ Primary model gpt-4.1 failed definitively: no available server
+🔄 Using fallback model: gpt-4.1-nano
+2025-06-23 03:15:01 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 503 Service Unavailable"
+❌ Primary model gpt-4.1 failed definitively: no available server
+🔄 Using fallback model: gpt-4.1-nano
+2025-06-23 03:15:01 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+✅ Fallback model gpt-4.1-nano succeeded
+2025-06-23 03:15:01 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+✅ Fallback model gpt-4.1-nano succeeded
+Attempting to use primary embedding model: dengcao/Qwen3-Embedding-0.6B:Q8_0
+✅ Primary embedding model dengcao/Qwen3-Embedding-0.6B:Q8_0 client created successfully
+Added <|endoftext|> token to 20 texts for Qwen3-Embedding compatibility
+2025-06-23 03:15:04 - httpx - INFO - HTTP Request: POST http://ollama:11434/v1/embeddings "HTTP/1.1 200 OK"
+2025-06-23 03:15:05 - httpx - INFO - HTTP Request: POST https://supabase.quantmind.com.br/rest/v1/crawled_pages?columns=%22source_id%22%2C%22url%22%2C%22metadata%22%2C%22chunk_number%22%2C%22content%22%2C%22embedding%22 "HTTP/2 201 Created"
+Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1
+
+
+
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully
+
+
+✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully
+
+✅ Primary chat model gpt-4.1 client created successfully
+2025-06-23 03:15:40 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:15:40 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1
+2025-06-23 03:15:40 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:15:40 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1
+2025-06-23 03:15:40 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+2025-06-23 03:15:40 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+2025-06-23 03:15:40 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:15:40 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully
+
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+2025-06-23 03:15:42 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+✅ Primary chat model gpt-4.1 client created successfully
+2025-06-23 03:16:06 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:16:06 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+2025-06-23 03:16:06 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:16:06 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+✅ Primary chat model gpt-4.1 client created successfully
+2025-06-23 03:16:14 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:16:14 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:16:14 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:16:14 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:16:14 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:16:15 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:16:17 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary embedding model: dengcao/Qwen3-Embedding-0.6B:Q8_0
+✅ Primary embedding model dengcao/Qwen3-Embedding-0.6B:Q8_0 client created successfully
+Added <|endoftext|> token to 20 texts for Qwen3-Embedding compatibility
+2025-06-23 03:16:21 - httpx - INFO - HTTP Request: POST http://ollama:11434/v1/embeddings "HTTP/1.1 200 OK"
+2025-06-23 03:16:23 - httpx - INFO - HTTP Request: POST https://supabase.quantmind.com.br/rest/v1/crawled_pages?columns=%22source_id%22%2C%22url%22%2C%22metadata%22%2C%22chunk_number%22%2C%22content%22%2C%22embedding%22 "HTTP/2 201 Created"
+Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1
+
+Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1
+
+
+
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully
+
+
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+
+
+2025-06-23 03:16:28 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+✅ Primary chat model gpt-4.1 client created successfully
+2025-06-23 03:16:54 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:16:54 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:16:54 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:16:54 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:16:54 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:16:54 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1
+
+
+Attempting to use primary chat model: gpt-4.1
+
+
+2025-06-23 03:16:54 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully
+
+
+✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully
+
+
+2025-06-23 03:16:57 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+✅ Primary chat model gpt-4.1 client created successfully
+2025-06-23 03:17:16 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:17:16 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:17:16 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary chat model: gpt-4.1
+2025-06-23 03:17:16 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:17:16 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:17:16 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+✅ Primary chat model gpt-4.1 client created successfully
+2025-06-23 03:17:22 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:17:22 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:17:22 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:17:25 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+2025-06-23 03:17:26 - httpx - INFO - HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 200 OK"
+Attempting to use primary embedding model: dengcao/Qwen3-Embedding-0.6B:Q8_0
+✅ Primary embedding model dengcao/Qwen3-Embedding-0.6B:Q8_0 client created successfully
+Added <|endoftext|> token to 20 texts for Qwen3-Embedding compatibility
+2025-06-23 03:17:29 - httpx - INFO - HTTP Request: POST http://ollama:11434/v1/embeddings "HTTP/1.1 200 OK"
+2025-06-23 03:17:30 - httpx - INFO - HTTP Request: POST https://supabase.quantmind.com.br/rest/v1/crawled_pages?columns=%22source_id%22%2C%22url%22%2C%22metadata%22%2C%22chunk_number%22%2C%22content%22%2C%22embedding%22 "HTTP/2 201 Created"
+Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1
+
+Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1
+
+Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1Attempting to use primary chat model: gpt-4.1
+Attempting to use primary chat model: gpt-4.1
+
+
+
+
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully
+✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully
+
+
+✅ Primary chat model gpt-4.1 client created successfully✅ Primary chat model gpt-4.1 client created successfully
+
+

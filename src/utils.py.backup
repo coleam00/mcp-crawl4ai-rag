@@ -125,11 +125,10 @@ def make_chat_completion_with_fallback(messages: list, **kwargs) -> any:
     Make a chat completion with automatic fallback on API failures.
     
     This function implements a robust fallback system that:
-    1. Checks if fallback is enabled via USE_CHAT_MODEL_FALLBACK flag
-    2. Tries the primary chat model first
-    3. On API failures (503, 429, 500, timeout), switches to fallback model (if enabled)
-    4. Implements exponential backoff retry logic
-    5. Provides clear logging for debugging
+    1. Tries the primary chat model first
+    2. On API failures (503, 429, 500, timeout), switches to fallback model
+    3. Implements exponential backoff retry logic
+    4. Provides clear logging for debugging
     
     Args:
         messages: List of message dictionaries for chat completion
@@ -145,14 +144,10 @@ def make_chat_completion_with_fallback(messages: list, **kwargs) -> any:
     import random
     from openai import OpenAI
     
-    # Check if fallback is enabled
-    use_fallback = os.getenv("USE_CHAT_MODEL_FALLBACK", "false").lower() == "true"
-    
     # Configuration
     max_retries = 3
     base_delay = 1.0
     max_delay = 10.0
-    primary_error = None
     
     # Try primary model first
     try:
@@ -182,70 +177,57 @@ def make_chat_completion_with_fallback(messages: list, **kwargs) -> any:
                     else:
                         # Either non-retryable error or max retries reached
                         print(f"❌ Primary model {model_name} failed definitively: {e}")
-                        primary_error = e
-                        if not use_fallback:
-                            print("⚠️  Chat model fallback is disabled (USE_CHAT_MODEL_FALLBACK=false)")
-                            raise e
-                        break
-    
-    except Exception as e:
-        primary_error = e
-        if not use_fallback:
-            print("⚠️  Chat model fallback is disabled (USE_CHAT_MODEL_FALLBACK=false)")
-            raise e
-        print(f"🔄 Primary model failed, attempting fallback due to: {e}")
-    
-    # Only try fallback if enabled and primary failed
-    if use_fallback and primary_error:
-        try:
-            # Get fallback configuration directly
-            fallback_model = os.getenv("CHAT_MODEL_FALLBACK")
-            fallback_api_base = os.getenv("CHAT_MODEL_FALLBACK_API_BASE")
-            fallback_api_key = os.getenv("CHAT_MODEL_FALLBACK_API_KEY")
-            
-            if not fallback_model or not fallback_api_key:
-                raise Exception("Fallback model not properly configured (missing CHAT_MODEL_FALLBACK or CHAT_MODEL_FALLBACK_API_KEY)")
-            
-            print(f"🔄 Using fallback model: {fallback_model}")
-            
-            # Create fallback client
-            client_args = {"api_key": fallback_api_key, "timeout": 60.0}
-            if fallback_api_base:
-                client_args["base_url"] = fallback_api_base
-            
-            fallback_client = OpenAI(**client_args)
-            
-            # Attempt fallback model with retry logic
-            for attempt in range(max_retries):
-                try:
-                    response = fallback_client.chat.completions.create(
-                        model=fallback_model,
-                        messages=messages,
-                        **kwargs
-                    )
-                    print(f"✅ Fallback model {fallback_model} succeeded" + (f" on attempt {attempt + 1}" if attempt > 0 else ""))
-                    return response
-                    
-                except Exception as e:
-                    if is_retryable_error(e) and attempt < max_retries - 1:
-                        # Calculate delay with exponential backoff and jitter
-                        delay = min(base_delay * (2 ** attempt) + random.uniform(0, 1), max_delay)
-                        print(f"⚠️  Fallback model {fallback_model} failed (attempt {attempt + 1}/{max_retries}): {e}")
-                        print(f"🔄 Retrying fallback in {delay:.1f}s...")
-                        time.sleep(delay)
-                        continue
-                    else:
-                        print(f"❌ Fallback model {fallback_model} failed definitively: {e}")
                         raise e
-                        
-        except Exception as fallback_error:
-            print(f"❌ Fallback model also failed: {fallback_error}")
-            raise Exception(f"Both primary and fallback chat models failed. Primary: {primary_error}. Fallback: {fallback_error}")
     
-    # If we reach here without fallback enabled, re-raise the primary error
-    if primary_error:
-        raise primary_error
+    except Exception as primary_error:
+        print(f"🔄 Primary model failed, attempting fallback due to: {primary_error}")
+    
+    # Try fallback model
+    try:
+        # Get fallback configuration directly
+        fallback_model = os.getenv("CHAT_MODEL_FALLBACK")
+        fallback_api_base = os.getenv("CHAT_MODEL_FALLBACK_API_BASE")
+        fallback_api_key = os.getenv("CHAT_MODEL_FALLBACK_API_KEY")
         
+        if not fallback_model or not fallback_api_key:
+            raise Exception("Fallback model not properly configured (missing CHAT_MODEL_FALLBACK or CHAT_MODEL_FALLBACK_API_KEY)")
+        
+        print(f"🔄 Using fallback model: {fallback_model}")
+        
+        # Create fallback client
+        client_args = {"api_key": fallback_api_key, "timeout": 60.0}
+        if fallback_api_base:
+            client_args["base_url"] = fallback_api_base
+        
+        fallback_client = OpenAI(**client_args)
+        
+        # Attempt fallback model with retry logic
+        for attempt in range(max_retries):
+            try:
+                response = fallback_client.chat.completions.create(
+                    model=fallback_model,
+                    messages=messages,
+                    **kwargs
+                )
+                print(f"✅ Fallback model {fallback_model} succeeded" + (f" on attempt {attempt + 1}" if attempt > 0 else ""))
+                return response
+                
+            except Exception as e:
+                if is_retryable_error(e) and attempt < max_retries - 1:
+                    # Calculate delay with exponential backoff and jitter
+                    delay = min(base_delay * (2 ** attempt) + random.uniform(0, 1), max_delay)
+                    print(f"⚠️  Fallback model {fallback_model} failed (attempt {attempt + 1}/{max_retries}): {e}")
+                    print(f"🔄 Retrying fallback in {delay:.1f}s...")
+                    time.sleep(delay)
+                    continue
+                else:
+                    print(f"❌ Fallback model {fallback_model} failed definitively: {e}")
+                    raise e
+                    
+    except Exception as fallback_error:
+        print(f"❌ Fallback model also failed: {fallback_error}")
+        raise Exception(f"Both primary and fallback chat models failed. Primary: {primary_error if 'primary_error' in locals() else 'Not attempted'}. Fallback: {fallback_error}")
+    
     # This should never be reached, but just in case
     raise Exception("Unexpected error in chat completion fallback system")
 
@@ -268,9 +250,6 @@ def create_embeddings_batch(texts: List[str]) -> List[List[float]]:
     """
     Create embeddings for multiple texts in a single API call.
     
-    This function now uses the robust fallback system that can switch to a 
-    fallback embedding model if the primary fails.
-    
     Args:
         texts: List of texts to create embeddings for
         
@@ -280,263 +259,123 @@ def create_embeddings_batch(texts: List[str]) -> List[List[float]]:
     if not texts:
         return []
     
-    # Use the new fallback system
-    try:
-        return create_embeddings_with_fallback(texts)
-    except Exception as e:
-        print(f"Both primary and fallback embedding models failed: {e}")
-        # Final fallback: return zero embeddings
-        embedding_dims = int(os.getenv("EMBEDDING_DIMENSIONS", "1536"))
-        print(f"⚠️  Returning zero embeddings as final fallback")
-        return [[0.0] * embedding_dims] * len(texts)
-
-
-def get_embedding_client_with_fallback() -> Tuple[openai.OpenAI, str, int, bool]:
-    """
-    Get an embedding client with automatic fallback support.
+    embedding_model = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
+    embedding_dims = int(os.getenv("EMBEDDING_DIMENSIONS", "1536"))
     
-    Returns:
-        Tuple containing:
-        - OpenAI client instance
-        - Model name being used
-        - Embedding dimensions
-        - Boolean indicating if fallback was used (True = fallback, False = primary)
-    """
-    # Primary model configuration
-    primary_model = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
-    primary_api_base = os.getenv("EMBEDDING_MODEL_API_BASE")
-    primary_api_key = os.getenv("EMBEDDING_MODEL_API_KEY") or os.getenv("OPENAI_API_KEY")
-    primary_dims = int(os.getenv("EMBEDDING_DIMENSIONS", "1536"))
-    
-    # Fallback model configuration
-    fallback_model = os.getenv("EMBEDDING_MODEL_FALLBACK")
-    fallback_api_base = os.getenv("EMBEDDING_MODEL_FALLBACK_API_BASE")
-    fallback_api_key = os.getenv("EMBEDDING_MODEL_FALLBACK_API_KEY")
-    fallback_dims = int(os.getenv("EMBEDDING_DIMENSIONS_FALLBACK", "1536"))
-    
-    # Validate primary configuration
-    if not primary_api_key:
+    embedding_api_base = os.getenv("EMBEDDING_MODEL_API_BASE")
+    api_key = os.getenv("EMBEDDING_MODEL_API_KEY") or os.getenv("OPENAI_API_KEY")
+    if not api_key:
         raise ValueError("EMBEDDING_MODEL_API_KEY or OPENAI_API_KEY must be set")
+    client_args = {"api_key": api_key}
+    if embedding_api_base:
+        client_args["base_url"] = embedding_api_base
     
-    # Try primary model first
+    # Check if using Ollama and log model information
+    is_ollama = embedding_api_base and "11434" in embedding_api_base
+    if is_ollama:
+        print(f"Using Ollama embedding model: {embedding_model} with {embedding_dims} dimensions")
+        # For Qwen3-Embedding models, validate dimensions
+        if "qwen3-embedding" in embedding_model.lower():
+            if "0.6b" in embedding_model.lower():
+                if embedding_dims <= 1024:
+                    print(f"✅ Qwen3-Embedding-0.6B: Using native {embedding_dims}D embeddings (optimal)")
+                else:
+                    print(f"Warning: Qwen3-Embedding-0.6B optimal dimensions are ≤1024, but configured for {embedding_dims}")
+            elif "8b" in embedding_model.lower():
+                if embedding_dims > 4096:
+                    print(f"Warning: Qwen3-Embedding-8B supports up to 4096 dimensions, but configured for {embedding_dims}")
+                else:
+                    print(f"Qwen3-Embedding-8B: Using {embedding_dims}D embeddings")
+    
     try:
-        print(f"Attempting to use primary embedding model: {primary_model}")
-        
-        client_args = {"api_key": primary_api_key, "timeout": 120.0}
-        if primary_api_base:
-            client_args["base_url"] = primary_api_base
-        
+        # Add timeout for local Ollama connections
+        client_args["timeout"] = 120.0  # 2 minutes timeout for embeddings
         client = openai.OpenAI(**client_args)
-        
-        print(f"✅ Primary embedding model {primary_model} client created successfully")
-        return client, primary_model, primary_dims, False
-        
     except Exception as e:
-        print(f"❌ Primary embedding model client creation failed: {e}")
+        print(f"Failed to create OpenAI client for embeddings: {e}")
+        return [[0.0] * embedding_dims] * len(texts)
     
-    # Primary model failed, try fallback
-    if fallback_model and fallback_api_key:
-        try:
-            print(f"🔄 Attempting embedding fallback to: {fallback_model}")
-            
-            client_args = {"api_key": fallback_api_key, "timeout": 120.0}
-            if fallback_api_base:
-                client_args["base_url"] = fallback_api_base
-            
-            client = openai.OpenAI(**client_args)
-            
-            print(f"✅ Fallback embedding model {fallback_model} client created successfully")
-            return client, fallback_model, fallback_dims, True
-            
-        except Exception as e:
-            print(f"❌ Fallback embedding model client creation failed: {e}")
-    else:
-        print("⚠️  No fallback embedding model configured")
-    
-    # Both primary and fallback failed
-    raise Exception(f"Both primary ({primary_model}) and fallback ({fallback_model}) embedding models failed")
-
-
-def handle_dimension_mismatch(embeddings: List[List[float]], target_dims: int) -> List[List[float]]:
-    """
-    Handle dimension mismatches between different embedding models.
-    
-    Args:
-        embeddings: List of embedding vectors
-        target_dims: Target dimension count
-        
-    Returns:
-        List of embeddings adjusted to target dimensions
-    """
-    if not embeddings or not embeddings[0]:
-        return embeddings
-    
-    current_dims = len(embeddings[0])
-    
-    if current_dims == target_dims:
-        return embeddings
-    elif current_dims > target_dims:
-        # Truncate to target dimensions (keep most informative dimensions)
-        print(f"📏 Truncating embeddings: {current_dims}D → {target_dims}D")
-        return [embedding[:target_dims] for embedding in embeddings]
-    else:
-        # Pad with zeros to reach target dimensions
-        print(f"📏 Padding embeddings: {current_dims}D → {target_dims}D")
-        padding_size = target_dims - current_dims
-        return [embedding + [0.0] * padding_size for embedding in embeddings]
-
-
-def create_embeddings_with_fallback(texts: List[str]) -> List[List[float]]:
-    """
-    Create embeddings with automatic fallback on API failures.
-    
-    This function implements a robust fallback system that:
-    1. Checks if fallback is enabled via USE_EMBEDDING_MODEL_FALLBACK flag
-    2. Tries the primary embedding model first
-    3. On API failures, switches to fallback model (if enabled)
-    4. Handles dimension mismatches between models
-    5. Implements exponential backoff retry logic
-    
-    Args:
-        texts: List of texts to create embeddings for
-        
-    Returns:
-        List of embeddings (each embedding is a list of floats)
-    """
-    if not texts:
-        return []
-    
-    # Check if fallback is enabled
-    use_fallback = os.getenv("USE_EMBEDDING_MODEL_FALLBACK", "false").lower() == "true"
-    
-    # Configuration
     max_retries = 3
-    base_delay = 1.0
-    max_delay = 10.0
-    primary_error = None
+    retry_delay = 1.0  # Start with 1 second delay
     
-    # Get target dimensions (primary model dimensions)
-    target_dims = int(os.getenv("EMBEDDING_DIMENSIONS", "1536"))
-    
-    # Try primary model first
-    try:
-        client, model_name, model_dims, is_fallback = get_embedding_client_with_fallback()
-        
-        if not is_fallback:
-            # Attempt primary model with retry logic
-            for attempt in range(max_retries):
-                try:
-                    # For Qwen3-Embedding models, append the required endoftext token
-                    processed_texts = texts
-                    is_ollama = os.getenv("EMBEDDING_MODEL_API_BASE") and "11434" in os.getenv("EMBEDDING_MODEL_API_BASE")
-                    if is_ollama and "qwen3-embedding" in model_name.lower():
-                        processed_texts = [text + "<|endoftext|>" for text in texts]
-                        print(f"Added <|endoftext|> token to {len(texts)} texts for Qwen3-Embedding compatibility")
-                    
-                    # Create embedding request
-                    embedding_params = {
-                        "model": model_name,
-                        "input": processed_texts
-                    }
-                    
-                    response = client.embeddings.create(**embedding_params)
-                    embeddings = [item.embedding for item in response.data]
-                    
-                    # Handle dimension adjustment
-                    embeddings = handle_dimension_mismatch(embeddings, target_dims)
-                    
-                    if attempt > 0:
-                        print(f"✅ Primary embedding model {model_name} succeeded on attempt {attempt + 1}")
-                    return embeddings
-                    
-                except Exception as e:
-                    if is_retryable_error(e) and attempt < max_retries - 1:
-                        # Calculate delay with exponential backoff and jitter
-                        import random
-                        delay = min(base_delay * (2 ** attempt) + random.uniform(0, 1), max_delay)
-                        print(f"⚠️  Primary embedding model {model_name} failed (attempt {attempt + 1}/{max_retries}): {e}")
-                        print(f"🔄 Retrying in {delay:.1f}s...")
-                        time.sleep(delay)
-                        continue
-                    else:
-                        # Either non-retryable error or max retries reached
-                        print(f"❌ Primary embedding model {model_name} failed definitively: {e}")
-                        primary_error = e
-                        if not use_fallback:
-                            print("⚠️  Embedding model fallback is disabled (USE_EMBEDDING_MODEL_FALLBACK=false)")
-                            raise e
-                        break
-    
-    except Exception as e:
-        primary_error = e
-        if not use_fallback:
-            print("⚠️  Embedding model fallback is disabled (USE_EMBEDDING_MODEL_FALLBACK=false)")
-            raise e
-        print(f"🔄 Primary embedding model failed, attempting fallback due to: {e}")
-    
-    # Only try fallback if enabled and primary failed
-    if use_fallback and primary_error:
+    for retry in range(max_retries):
         try:
-            # Get fallback configuration directly
-            fallback_model = os.getenv("EMBEDDING_MODEL_FALLBACK")
-            fallback_api_base = os.getenv("EMBEDDING_MODEL_FALLBACK_API_BASE")
-            fallback_api_key = os.getenv("EMBEDDING_MODEL_FALLBACK_API_KEY")
-            fallback_dims = int(os.getenv("EMBEDDING_DIMENSIONS_FALLBACK", "1536"))
+            # For Qwen3-Embedding models, append the required endoftext token
+            processed_texts = texts
+            if is_ollama and "qwen3-embedding" in embedding_model.lower():
+                processed_texts = [text + "<|endoftext|>" for text in texts]
+                print(f"Added <|endoftext|> token to {len(texts)} texts for Qwen3-Embedding compatibility")
             
-            if not fallback_model or not fallback_api_key:
-                raise Exception("Fallback embedding model not properly configured (missing EMBEDDING_MODEL_FALLBACK or EMBEDDING_MODEL_FALLBACK_API_KEY)")
+            # Create embedding request with custom dimensions if supported by model
+            embedding_params = {
+                "model": embedding_model,
+                "input": processed_texts
+            }
             
-            print(f"🔄 Using fallback embedding model: {fallback_model}")
+            # Note: Ollama currently doesn't support the dimensions parameter for MRL
+            # The truncation approach is actually efficient for the first N dimensions
+            if is_ollama and "qwen3-embedding" in embedding_model.lower():
+                if "0.6b" in embedding_model.lower() and embedding_dims <= 1024:
+                    print(f"Qwen3-Embedding-0.6B: Generating native {embedding_dims}D embeddings (no truncation needed)")
+                else:
+                    print(f"Qwen3-Embedding will generate 4096D → truncate to {embedding_dims}D (first dimensions contain most information)")
             
-            # Create fallback client
-            client_args = {"api_key": fallback_api_key, "timeout": 120.0}
-            if fallback_api_base:
-                client_args["base_url"] = fallback_api_base
+            response = client.embeddings.create(**embedding_params)
             
-            fallback_client = openai.OpenAI(**client_args)
+            # Truncate embeddings to configured dimensions if necessary
+            embeddings = [item.embedding for item in response.data]
+            if embeddings and len(embeddings[0]) > embedding_dims:
+                if is_ollama and "qwen3-embedding-0.6b" in embedding_model.lower() and embedding_dims <= 1024:
+                    print(f"Note: Qwen3-Embedding-0.6B generated {len(embeddings[0])}D but expected {embedding_dims}D")
+                else:
+                    print(f"Optimizing embeddings: {len(embeddings[0])}D → {embedding_dims}D (using most informative dimensions)")
+                embeddings = [embedding[:embedding_dims] for embedding in embeddings]
             
-            # Attempt fallback model with retry logic
-            for attempt in range(max_retries):
-                try:
-                    # Create embedding request (fallback models typically don't need special preprocessing)
-                    embedding_params = {
-                        "model": fallback_model,
-                        "input": texts
-                    }
-                    
-                    response = fallback_client.embeddings.create(**embedding_params)
-                    embeddings = [item.embedding for item in response.data]
-                    
-                    # Handle dimension adjustment (fallback might have different dimensions)
-                    embeddings = handle_dimension_mismatch(embeddings, target_dims)
-                    
-                    print(f"✅ Fallback embedding model {fallback_model} succeeded" + (f" on attempt {attempt + 1}" if attempt > 0 else ""))
-                    return embeddings
-                    
-                except Exception as e:
-                    if is_retryable_error(e) and attempt < max_retries - 1:
-                        # Calculate delay with exponential backoff and jitter
-                        import random
-                        delay = min(base_delay * (2 ** attempt) + random.uniform(0, 1), max_delay)
-                        print(f"⚠️  Fallback embedding model {fallback_model} failed (attempt {attempt + 1}/{max_retries}): {e}")
-                        print(f"🔄 Retrying fallback in {delay:.1f}s...")
-                        time.sleep(delay)
-                        continue
-                    else:
-                        print(f"❌ Fallback embedding model {fallback_model} failed definitively: {e}")
-                        raise e
+            return embeddings
+        except Exception as e:
+            if retry < max_retries - 1:
+                print(f"Error creating batch embeddings (attempt {retry + 1}/{max_retries}): {e}")
+                print(f"Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+                retry_delay *= 2  # Exponential backoff
+            else:
+                print(f"Failed to create batch embeddings after {max_retries} attempts: {e}")
+                # Try creating embeddings one by one as fallback
+                print("Attempting to create embeddings individually...")
+                embeddings = []
+                successful_count = 0
+                
+                for i, text in enumerate(texts):
+                    try:
+                        # Apply same preprocessing for individual texts
+                        processed_text = text
+                        if is_ollama and "qwen3-embedding" in embedding_model.lower():
+                            processed_text = text + "<|endoftext|>"
                         
-        except Exception as fallback_error:
-            print(f"❌ Fallback embedding model also failed: {fallback_error}")
-            raise Exception(f"Both primary and fallback embedding models failed. Primary: {primary_error}. Fallback: {fallback_error}")
-    
-    # If we reach here without fallback enabled, re-raise the primary error
-    if primary_error:
-        raise primary_error
-        
-    # This should never be reached, but just in case
-    raise Exception("Unexpected error in embedding fallback system")
-
+                        # Create embedding request with custom dimensions for individual text
+                        individual_params = {
+                            "model": embedding_model,
+                            "input": [processed_text]
+                        }
+                        
+                        # Note: Ollama doesn't support dimensions parameter yet
+                        
+                        individual_response = client.embeddings.create(**individual_params)
+                        
+                        embedding = individual_response.data[0].embedding
+                        # Truncate if necessary
+                        if len(embedding) > embedding_dims:
+                            embedding = embedding[:embedding_dims]
+                        
+                        embeddings.append(embedding)
+                        successful_count += 1
+                    except Exception as individual_error:
+                        print(f"Failed to create embedding for text {i}: {individual_error}")
+                        # Add zero embedding as fallback
+                        embeddings.append([0.0] * embedding_dims)
+                
+                print(f"Successfully created {successful_count}/{len(texts)} embeddings individually")
+                return embeddings
 
 def create_embedding(text: str) -> List[float]:
     """
@@ -899,8 +738,14 @@ def generate_code_example_summary(code: str, context_before: str, context_after:
     prompt = f"""<context_before>\n{context_before}\n</context_before>\n<code_example>\n{code}\n</code_example>\n<context_after>\n{context_after}\n</context_after>\n\nPlease provide a concise summary of what this code example demonstrates.\n"""
     
     try:
-        # Use the new fallback system
-        response = make_chat_completion_with_fallback(
+        # Get chat client with automatic fallback support
+        client, model_name, is_fallback = get_chat_client_with_fallback()
+        
+        if is_fallback:
+            print(f"🔄 Using fallback model {model_name} for code example summary")
+
+        response = client.chat.completions.create(
+            model=model_name,
             messages=[
                 {"role": "system", "content": "You are a helpful assistant that provides concise code example summaries."},
                 {"role": "user", "content": prompt}
@@ -1083,8 +928,15 @@ def extract_source_summary(source_id: str, content: str, max_length: int = 500) 
     prompt = f"""<library_or_tool_content>\n{truncated_content}\n</library_or_tool_content>\n\nPlease provide a concise summary of the above library, tool, or framework.\n"""
     
     try:
-        # Use robust chat completion with automatic fallback
-        response = make_chat_completion_with_fallback(
+        # Get chat client with automatic fallback support
+        client, model_name, is_fallback = get_chat_client_with_fallback()
+        
+        if is_fallback:
+            print(f"🔄 Using fallback model {model_name} for source summary of {source_id}")
+
+        # Call the OpenAI API to generate the summary
+        response = client.chat.completions.create(
+            model=model_name,
             messages=[
                 {"role": "system", "content": "You are a helpful assistant that provides concise library/tool/framework summaries."},
                 {"role": "user", "content": prompt}

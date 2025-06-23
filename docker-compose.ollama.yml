@@ -46,10 +46,7 @@ services:
         echo 'Pulling Qwen3-Embedding-0.6B (Q8_0 - 639MB)...' &&
         curl -X POST http://ollama:11434/api/pull -d '{\"name\":\"dengcao/Qwen3-Embedding-0.6B:Q8_0\"}' &&
         echo 'Qwen3-Embedding-0.6B pulled successfully!' &&
-        echo 'Pulling Qwen3-Embedding-8B (Q4_K_M - 4.7GB)...' &&
-        curl -X POST http://ollama:11434/api/pull -d '{\"name\":\"dengcao/Qwen3-Embedding-8B:Q4_K_M\"}' &&
-        echo 'Qwen3-Embedding-8B pulled successfully!' &&
-        echo 'All models pulled successfully!'
+        echo 'Model pulled successfully!'
       "
     restart: "no"
 

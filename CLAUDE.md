@@ -44,8 +44,17 @@ crawl4ai-setup
 
 **Environment Configuration:**
 - Copy `.env.example` to `.env` and configure required variables
-- Required: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `CHAT_MODEL_API_KEY`, `EMBEDDING_MODEL_API_KEY`
-- Optional: Neo4j variables for knowledge graph functionality
+- **Core Required Variables:**
+  - `SUPABASE_URL` - Supabase project URL
+  - `SUPABASE_SERVICE_KEY` - Supabase service role key
+  - `CHAT_MODEL_API_KEY` - Primary chat model API key
+  - `EMBEDDING_MODEL_API_KEY` - Embedding model API key
+- **Optional Variables:**
+  - `CHAT_MODEL_FALLBACK_API_KEY` - Fallback chat model for reliability
+  - `CHAT_MODEL_FALLBACK` - Fallback model name (e.g., gpt-3.5-turbo)
+  - Neo4j variables (`NEO4J_URI`, `NEO4J_USER`, `NEO4J_PASSWORD`) for knowledge graph functionality
+  - Transport configuration (`TRANSPORT=sse` or `stdio`)
+  - Performance tuning variables (workers, batch sizes)
 
 **Local Ollama Configuration:**
 For running with local Qwen3-Embedding models via Ollama:
@@ -73,7 +82,7 @@ SUPABASE_BATCH_SIZE=2        # Smaller batches for stability
 
 ### Database Setup
 
-Execute `crawled_pages.sql` in Supabase SQL Editor to create required tables and functions.
+Execute `crawled_pages_1024d.sql` in Supabase SQL Editor to create required tables and functions. This is the updated schema for 1024-dimensional embeddings.
 
 **Database Schema (updated for 1024D embeddings):**
 - Tables use `vector(1024)` for optimal compatibility with Qwen3-Embedding-0.6B
@@ -154,9 +163,10 @@ Supports both SSE and stdio transports via `TRANSPORT` environment variable, ena
 
 - **`pyproject.toml`** - Python dependencies and project metadata
 - **`.env`** - Environment variables for API keys, database URLs, and feature flags
-- **`crawled_pages.sql`** - Supabase database schema and functions
+- **`crawled_pages_1024d.sql`** - Supabase database schema and functions (1024D embeddings)
 - **`Dockerfile`** - Container configuration for deployment
 - **`docker-compose.yml`** - Multi-service orchestration including Ollama for local embeddings
+- **`batch_crawler/`** - Batch processing scripts for multiple URLs
 
 ## Local Embedding Models (Ollama)
 
@@ -273,6 +283,212 @@ HTTP Request: POST https://copilot.quantmind.com.br/chat/completions "HTTP/1.1 5
 - **Memory issues**: 0.6B model requires ~2GB RAM, 8B model requires ~8GB RAM
 - **SSL/network errors**: Ensure proper Docker network configuration
 
+## Robust Fallback System
+
+The MCP server includes a comprehensive fallback system for both chat models and embedding models to improve reliability when primary models fail. The system features individual control flags, API-level fallback (not just client creation), and intelligent retry logic.
+
+### Core Features
+
+- **Individual Control**: Separate enable/disable flags for chat and embedding fallbacks
+- **API-Level Fallback**: Handles actual API call failures (503, 429, timeout) not just client creation
+- **Intelligent Retry**: Exponential backoff with jitter for temporary failures
+- **Dimension Handling**: Automatic truncation/padding for different embedding model dimensions
+- **Clear Logging**: Detailed status messages for debugging and monitoring
+
+### Configuration
+
+#### Chat Model Fallback
+
+Enable chat model fallback and configure models in your `.env` file:
+
+```bash
+# Enable chat model fallback (default: false)
+USE_CHAT_MODEL_FALLBACK=true
+
+# Primary Chat Model
+CHAT_MODEL=qwen3:latest
+CHAT_MODEL_API_KEY=ollama
+CHAT_MODEL_API_BASE=http://localhost:11434/v1
+
+# Fallback Chat Model (used when primary fails)
+CHAT_MODEL_FALLBACK=gpt-4o-mini
+CHAT_MODEL_FALLBACK_API_KEY=your_openai_api_key
+CHAT_MODEL_FALLBACK_API_BASE=  # Optional, defaults to OpenAI
+```
+
+#### Embedding Model Fallback
+
+Enable embedding model fallback and configure models:
+
+```bash
+# Enable embedding model fallback (default: false)
+USE_EMBEDDING_MODEL_FALLBACK=true
+
+# Primary Embedding Model
+EMBEDDING_MODEL=dengcao/Qwen3-Embedding-0.6B:Q8_0
+EMBEDDING_MODEL_API_KEY=ollama
+EMBEDDING_MODEL_API_BASE=http://localhost:11434/v1
+EMBEDDING_DIMENSIONS=1024
+
+# Fallback Embedding Model (used when primary fails)
+EMBEDDING_MODEL_FALLBACK=text-embedding-3-small
+EMBEDDING_MODEL_FALLBACK_API_KEY=your_openai_api_key
+EMBEDDING_MODEL_FALLBACK_API_BASE=  # Optional, defaults to OpenAI
+EMBEDDING_DIMENSIONS_FALLBACK=1536  # Fallback model dimensions
+```
+
+### Common Fallback Scenarios
+
+#### Local-to-Cloud Fallback (Recommended)
+
+**Chat Models:**
+```bash
+USE_CHAT_MODEL_FALLBACK=true
+
+# Primary: Local Ollama (fast, free, private)
+CHAT_MODEL=qwen3:latest
+CHAT_MODEL_API_BASE=http://localhost:11434/v1
+CHAT_MODEL_API_KEY=ollama
+
+# Fallback: OpenAI (reliable, but costs money)
+CHAT_MODEL_FALLBACK=gpt-4o-mini
+CHAT_MODEL_FALLBACK_API_KEY=sk-...
+```
+
+**Embedding Models:**
+```bash
+USE_EMBEDDING_MODEL_FALLBACK=true
+
+# Primary: Local Qwen3-Embedding (1024D native)
+EMBEDDING_MODEL=dengcao/Qwen3-Embedding-0.6B:Q8_0
+EMBEDDING_MODEL_API_BASE=http://localhost:11434/v1
+EMBEDDING_MODEL_API_KEY=ollama
+EMBEDDING_DIMENSIONS=1024
+
+# Fallback: OpenAI (reliable, different dimensions)
+EMBEDDING_MODEL_FALLBACK=text-embedding-3-small
+EMBEDDING_MODEL_FALLBACK_API_KEY=sk-...
+EMBEDDING_DIMENSIONS_FALLBACK=1536
+```
+
+#### Cloud-to-Local Fallback
+
+```bash
+USE_CHAT_MODEL_FALLBACK=true
+USE_EMBEDDING_MODEL_FALLBACK=true
+
+# Primary: OpenAI (best quality)
+CHAT_MODEL=gpt-4o
+CHAT_MODEL_API_KEY=sk-...
+EMBEDDING_MODEL=text-embedding-3-large
+EMBEDDING_MODEL_API_KEY=sk-...
+
+# Fallback: Local Ollama (if OpenAI has issues)
+CHAT_MODEL_FALLBACK=qwen3:latest
+CHAT_MODEL_FALLBACK_API_KEY=ollama
+CHAT_MODEL_FALLBACK_API_BASE=http://localhost:11434/v1
+EMBEDDING_MODEL_FALLBACK=dengcao/Qwen3-Embedding-0.6B:Q8_0
+EMBEDDING_MODEL_FALLBACK_API_KEY=ollama
+EMBEDDING_MODEL_FALLBACK_API_BASE=http://localhost:11434/v1
+```
+
+### How It Works
+
+#### Chat Model Fallback Process
+
+1. **Primary Attempt**: Try primary chat model with exponential backoff retry
+2. **Error Detection**: Detect retryable errors (503, 429, 500, timeout)
+3. **Fallback Check**: If enabled (`USE_CHAT_MODEL_FALLBACK=true`), switch to fallback
+4. **Fallback Attempt**: Try fallback model with same retry logic
+5. **Clear Logging**: Status messages throughout the process
+
+#### Embedding Model Fallback Process
+
+1. **Primary Attempt**: Try primary embedding model with retry logic
+2. **Dimension Handling**: Process texts (add tokens if needed for Qwen3)
+3. **Error Detection**: Handle API failures and dimension mismatches
+4. **Fallback Attempt**: Switch to fallback model if enabled
+5. **Dimension Adjustment**: Automatically truncate or pad embeddings to match target dimensions
+
+### Error Types Handled
+
+The fallback system automatically handles these error conditions:
+
+- **HTTP 503**: Service Unavailable
+- **HTTP 429**: Rate Limit Exceeded  
+- **HTTP 500**: Internal Server Error
+- **HTTP 502**: Bad Gateway
+- **HTTP 504**: Gateway Timeout
+- **Connection Errors**: Network timeouts, refused connections
+- **Authentication Errors**: Invalid API keys (triggers fallback immediately)
+
+### Logging Examples
+
+```bash
+# Normal operation
+✅ Primary chat model qwen3:latest succeeded
+
+# Retry with recovery
+⚠️  Primary model qwen3:latest failed (attempt 1/3): HTTP 503 Service Unavailable
+🔄 Retrying in 1.2s...
+✅ Primary model qwen3:latest succeeded on attempt 2
+
+# Fallback activation
+❌ Primary model qwen3:latest failed definitively: HTTP 503 Service Unavailable
+🔄 Using fallback model: gpt-4o-mini
+✅ Fallback model gpt-4o-mini succeeded
+
+# Dimension handling
+📏 Truncating embeddings: 1536D → 1024D
+```
+
+### Functions Using Fallback System
+
+#### Chat Models
+- **`make_chat_completion_with_fallback()`** - Core chat completion with fallback
+- **Contextual Embeddings** (`USE_CONTEXTUAL_EMBEDDINGS=true`)
+- **Code Example Summaries** (`USE_AGENTIC_RAG=true`)
+- **Source Summaries** (automatic during crawling)
+
+#### Embedding Models
+- **`create_embeddings_with_fallback()`** - Core embedding creation with fallback
+- **Document Chunking and Indexing** (automatic during crawling)
+- **RAG Query Processing** (search and retrieval)
+- **Code Example Embedding** (`USE_AGENTIC_RAG=true`)
+
+### Testing the Fallback System
+
+Run the comprehensive test suite:
+
+```bash
+# Test both chat and embedding fallback systems
+python test_fallback.py
+```
+
+The test script validates:
+- Chat completion fallback with enable/disable flags
+- Embedding fallback with dimension handling
+- Client creation fallback (legacy system)
+- Error handling and retry logic
+
+### Best Practices
+
+#### Configuration
+- **Enable for production**: Set both `USE_CHAT_MODEL_FALLBACK=true` and `USE_EMBEDDING_MODEL_FALLBACK=true`
+- **Choose complementary models**: Fast local primary + reliable cloud fallback
+- **Test both models**: Verify configurations before deployment
+- **Monitor costs**: Fallback models may have different pricing
+
+#### Monitoring
+- **Watch logs**: Frequent fallback usage indicates primary model issues
+- **Set alerts**: Monitor for repeated fallback activation
+- **Track performance**: Compare response times between primary and fallback
+
+#### Optimization
+- **Adjust retry counts**: Modify `max_retries` in source code if needed
+- **Tune dimensions**: Use native dimensions when possible (1024D for Qwen3-0.6B)
+- **Batch size**: Reduce `SUPABASE_BATCH_SIZE` if fallback triggers frequently
+
 ## Testing
 
 No formal test suite exists. Test the server by:
@@ -281,3 +497,35 @@ No formal test suite exists. Test the server by:
 3. Testing knowledge graph functionality with GitHub repositories
 4. Validating MCP tool responses across different clients
 5. Health check: `curl http://localhost:8051/health`
+
+## Batch Processing
+
+The `batch_crawler/` directory contains utilities for processing multiple URLs sequentially:
+
+### Available Scripts
+- **`batch_crawler_working.py`** - Production-ready batch processor using stdio transport
+- **`batch_crawler.py`** - Original version (SSE transport limitations)
+- **`test_mcp_connection.py`** - Connection diagnostics and health checks
+
+### Usage
+```bash
+cd batch_crawler
+
+# Setup (Windows)
+setup.bat
+
+# Interactive mode (Windows)
+start.bat
+
+# Manual execution
+python batch_crawler_working.py urls.txt --output results.json --delay 1.0
+```
+
+### Features
+- Sequential URL processing with configurable delays
+- Automatic retry logic and error handling
+- Progress tracking and detailed logging
+- JSON output with comprehensive statistics
+- Windows automation scripts for easy setup and execution
+
+See `batch_crawler/README.md` for complete documentation.
