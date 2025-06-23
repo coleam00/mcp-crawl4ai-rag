@@ -30,6 +30,8 @@ REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", "30"))
 RATE_LIMIT_DELAY = float(os.getenv("RATE_LIMIT_DELAY", "0.5"))
 CIRCUIT_BREAKER_THRESHOLD = int(os.getenv("CIRCUIT_BREAKER_THRESHOLD", "3"))
 CLIENT_CACHE_TTL = int(os.getenv("CLIENT_CACHE_TTL", "3600"))  # 1 hour
+SUPABASE_BATCH_SIZE = int(os.getenv("SUPABASE_BATCH_SIZE", "20"))
+SUPABASE_MAX_RETRIES = int(os.getenv("SUPABASE_MAX_RETRIES", "3"))
 
 def get_global_semaphore():
     """Get or create global request semaphore."""
@@ -127,7 +129,7 @@ def get_chat_client_with_fallback() -> Tuple[openai.OpenAI, str, bool]:
     # Primary model configuration
     primary_model = os.getenv("CHAT_MODEL")
     primary_api_base = os.getenv("CHAT_MODEL_API_BASE")
-    primary_api_key = os.getenv("CHAT_MODEL_API_KEY") or os.getenv("OPENAI_API_KEY")
+    primary_api_key = os.getenv("CHAT_MODEL_API_KEY")
     
     # Fallback model configuration
     fallback_model = os.getenv("CHAT_MODEL_FALLBACK")
@@ -136,7 +138,7 @@ def get_chat_client_with_fallback() -> Tuple[openai.OpenAI, str, bool]:
     
     # Validate primary configuration
     if not primary_model or not primary_api_key:
-        raise ValueError("CHAT_MODEL and CHAT_MODEL_API_KEY (or OPENAI_API_KEY) must be set")
+        raise ValueError("CHAT_MODEL and CHAT_MODEL_API_KEY must be set")
     
     # Try primary model first (with caching)
     primary_key = f"chat_primary_{primary_model}_{primary_api_base or 'default'}"
@@ -430,7 +432,7 @@ def get_embedding_client_with_fallback() -> Tuple[openai.OpenAI, str, int, bool]
     # Primary model configuration
     primary_model = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
     primary_api_base = os.getenv("EMBEDDING_MODEL_API_BASE")
-    primary_api_key = os.getenv("EMBEDDING_MODEL_API_KEY") or os.getenv("OPENAI_API_KEY")
+    primary_api_key = os.getenv("EMBEDDING_MODEL_API_KEY")
     primary_dims = int(os.getenv("EMBEDDING_DIMENSIONS", "1536"))
     
     # Fallback model configuration
@@ -441,7 +443,7 @@ def get_embedding_client_with_fallback() -> Tuple[openai.OpenAI, str, int, bool]
     
     # Validate primary configuration
     if not primary_api_key:
-        raise ValueError("EMBEDDING_MODEL_API_KEY or OPENAI_API_KEY must be set")
+        raise ValueError("EMBEDDING_MODEL_API_KEY must be set")
     
     # Try primary model first (with caching)
     primary_key = f"embedding_primary_{primary_model}_{primary_api_base or 'default'}"
@@ -760,7 +762,7 @@ def add_documents_to_supabase(
     contents: List[str], 
     metadatas: List[Dict[str, Any]],
     url_to_full_document: Dict[str, str],
-    batch_size: int = 20
+    batch_size: int = None
 ) -> None:
     """
     Add documents to the Supabase crawled_pages table in batches.
@@ -775,6 +777,9 @@ def add_documents_to_supabase(
         url_to_full_document: Dictionary mapping URLs to their full document content
         batch_size: Size of each batch for insertion
     """
+    if batch_size is None:
+        batch_size = SUPABASE_BATCH_SIZE
+    
     # Get unique URLs to delete existing records
     unique_urls = list(set(urls))
     
@@ -874,7 +879,7 @@ def add_documents_to_supabase(
             batch_data.append(data)
         
         # Insert batch into Supabase with retry logic
-        max_retries = 3
+        max_retries = SUPABASE_MAX_RETRIES
         retry_delay = 1.0  # Start with 1 second delay
         
         for retry in range(max_retries):
@@ -1065,7 +1070,7 @@ def add_code_examples_to_supabase(
     code_examples: List[str],
     summaries: List[str],
     metadatas: List[Dict[str, Any]],
-    batch_size: int = 20
+    batch_size: int = None
 ):
     """
     Add code examples to the Supabase code_examples table in batches.
@@ -1079,6 +1084,9 @@ def add_code_examples_to_supabase(
         metadatas: List of metadata dictionaries
         batch_size: Size of each batch for insertion
     """
+    if batch_size is None:
+        batch_size = SUPABASE_BATCH_SIZE
+    
     if not urls:
         return
         
@@ -1090,7 +1098,6 @@ def add_code_examples_to_supabase(
         except Exception as e:
             print(f"Error deleting existing code examples for {url}: {e}")
     
-    batch_size = int(os.getenv("SUPABASE_BATCH_SIZE", "20"))
     # Process in batches
     total_items = len(urls)
     for i in range(0, total_items, batch_size):
@@ -1136,7 +1143,7 @@ def add_code_examples_to_supabase(
             })
         
         # Insert batch into Supabase with retry logic
-        max_retries = 3
+        max_retries = SUPABASE_MAX_RETRIES
         retry_delay = 1.0  # Start with 1 second delay
         
         for retry in range(max_retries):

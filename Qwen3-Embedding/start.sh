@@ -35,26 +35,26 @@ DISABLE_LOG_REQUESTS=${DISABLE_LOG_REQUESTS:-false}
 ENABLE_PREFIX_CACHING=${ENABLE_PREFIX_CACHING:-true}
 ENABLE_CHUNKED_PREFILL=${ENABLE_CHUNKED_PREFILL:-true}
 
-log "Iniciando Qwen3-Embedding Server..."
-log "Modelo: $MODEL_NAME"
-log "Tarefa: $TASK"
-log "Max Model Length: $MAX_MODEL_LEN"
-log "GPU Memory Utilization: $GPU_MEMORY_UTIL"
-log "Tensor Parallel Size: $TENSOR_PARALLEL_SIZE"
+log "🚀 Iniciando Qwen3-Embedding Server..."
+log "📦 Modelo: $MODEL_NAME"
+log "🎯 Tarefa: $TASK"
+log "📏 Max Model Length: $MAX_MODEL_LEN"
+log "🎮 GPU Memory Utilization: $GPU_MEMORY_UTIL"
+log "🔧 Tensor Parallel Size: $TENSOR_PARALLEL_SIZE"
 
 # Verificar se GPU está disponível
 if command -v nvidia-smi &> /dev/null; then
-    log "GPU detectada:"
+    log "🎮 GPU detectada:"
     nvidia-smi --query-gpu=name,memory.total,memory.free --format=csv,noheader,nounits
 else
-    warn "GPU não detectada, usando CPU"
+    warn "⚠️  GPU não detectada, usando CPU"
 fi
 
 # Criar diretórios necessários
 mkdir -p /app/logs /app/models
 
 # Verificar espaço em disco
-log "Verificando espaço em disco..."
+log "💾 Verificando espaço em disco..."
 df -h /app/models
 
 # Construir argumentos do vLLM
@@ -71,15 +71,15 @@ VLLM_ARGS=(
 
 # Adicionar argumentos opcionais
 if [ "$LOG_LEVEL" != "INFO" ]; then
-    VLLM_ARGS+=("--log-level" "$LOG_LEVEL")
+    VLLM_ARGS+=("--uvicorn-log-level" "$(echo $LOG_LEVEL | tr '[:upper:]' '[:lower:]')")
 fi
 
 if [ "$DISABLE_LOG_REQUESTS" = "true" ]; then
     VLLM_ARGS+=("--disable-log-requests")
 fi
 
-if [ "$ENABLE_PREFIX_CACHING" = "false" ]; then
-    VLLM_ARGS+=("--disable-prefix-caching")
+if [ "$ENABLE_PREFIX_CACHING" = "true" ]; then
+    VLLM_ARGS+=("--enable-prefix-caching")
 fi
 
 if [ "$ENABLE_CHUNKED_PREFILL" = "true" ]; then
@@ -91,21 +91,26 @@ if [ -n "$QUANTIZATION" ]; then
     VLLM_ARGS+=("--quantization" "$QUANTIZATION")
 fi
 
+# Adicionar HF Token se especificado
+if [ -n "$HUGGING_FACE_HUB_TOKEN" ] && [ "$HUGGING_FACE_HUB_TOKEN" != "your_hf_token_here" ]; then
+    VLLM_ARGS+=("--hf-token" "$HUGGING_FACE_HUB_TOKEN")
+fi
+
 # Configurar logging
 LOG_FILE="/app/logs/vllm-$(date +%Y%m%d-%H%M%S).log"
-log "Logs serão salvos em: $LOG_FILE"
+log "📝 Logs serão salvos em: $LOG_FILE"
 
 # Função para cleanup
 cleanup() {
-    log "Recebido sinal de parada, finalizando..."
-    pkill -P $$
+    log "🛑 Recebido sinal de parada, finalizando..."
+    pkill -P $$ 2>/dev/null || true
     exit 0
 }
 
 trap cleanup SIGTERM SIGINT
 
-log "Iniciando vLLM API Server..."
-log "Comando: python -m vllm.entrypoints.openai.api_server ${VLLM_ARGS[*]}"
+log "🔥 Iniciando vLLM API Server..."
+log "⚡ Comando: python -m vllm.entrypoints.openai.api_server ${VLLM_ARGS[*]}"
 
 # Executar vLLM com logging
 exec python -m vllm.entrypoints.openai.api_server "${VLLM_ARGS[@]}" 2>&1 | tee "$LOG_FILE" 

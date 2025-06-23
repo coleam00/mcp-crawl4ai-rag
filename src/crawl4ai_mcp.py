@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from typing import List, Dict, Any, Optional
 from urllib.parse import urlparse, urldefrag
 from xml.etree import ElementTree
-from dotenv import load_dotenv
+from config import config
 from supabase import Client
 from pathlib import Path
 from starlette.requests import Request
@@ -51,20 +51,16 @@ from parse_repo_into_neo4j import DirectNeo4jExtractor
 from ai_script_analyzer import AIScriptAnalyzer
 from hallucination_reporter import HallucinationReporter
 
-# Load environment variables from the project root .env file
-project_root = Path(__file__).resolve().parent.parent
-dotenv_path = project_root / '.env'
-
-# Force override of existing environment variables
-load_dotenv(dotenv_path, override=True)
+# Configuration is now handled by the Config class
+# which automatically detects the environment and loads .env when appropriate
 
 # Helper functions for Neo4j validation and error handling
 def validate_neo4j_connection() -> bool:
     """Check if Neo4j environment variables are configured."""
     return all([
-        os.getenv("NEO4J_URI"),
-        os.getenv("NEO4J_USER"),
-        os.getenv("NEO4J_PASSWORD")
+        config.NEO4J_URI,
+        config.NEO4J_USER,
+        config.NEO4J_PASSWORD
     ])
 
 def format_neo4j_error(error: Exception) -> str:
@@ -151,10 +147,9 @@ async def crawl4ai_lifespan(server: FastMCP) -> AsyncIterator[Crawl4AIContext]:
     
     # Initialize cross-encoder model for reranking if enabled
     reranking_model = None
-    if os.getenv("USE_RERANKING", "false") == "true":
+    if config.USE_RERANKING:
         try:
-            reranking_model_name = os.getenv("RERANKING_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2")
-            reranking_model = CrossEncoder(reranking_model_name)
+            reranking_model = CrossEncoder(config.RERANKING_MODEL)
         except Exception as e:
             print(f"Failed to load reranking model: {e}")
             reranking_model = None
@@ -164,12 +159,12 @@ async def crawl4ai_lifespan(server: FastMCP) -> AsyncIterator[Crawl4AIContext]:
     repo_extractor = None
     
     # Check if knowledge graph functionality is enabled
-    knowledge_graph_enabled = os.getenv("USE_KNOWLEDGE_GRAPH", "false") == "true"
+    knowledge_graph_enabled = config.USE_KNOWLEDGE_GRAPH
     
     if knowledge_graph_enabled:
-        neo4j_uri = os.getenv("NEO4J_URI")
-        neo4j_user = os.getenv("NEO4J_USER")
-        neo4j_password = os.getenv("NEO4J_PASSWORD")
+        neo4j_uri = config.NEO4J_URI
+        neo4j_user = config.NEO4J_USER
+        neo4j_password = config.NEO4J_PASSWORD
         
         if neo4j_uri and neo4j_user and neo4j_password:
             try:
@@ -223,14 +218,14 @@ mcp = FastMCP(
     "mcp-crawl4ai-rag",
     description="MCP server for RAG and web crawling with Crawl4AI",
     lifespan=crawl4ai_lifespan,
-    host=os.getenv("HOST", "0.0.0.0"),
-    port=os.getenv("PORT", "8051")
+    host=config.HOST,
+    port=config.PORT
 )
 
 async def check_ollama_status() -> Dict[str, Any]:
     """Check Ollama service status and available models."""
     try:
-        embedding_api_base = os.getenv("EMBEDDING_MODEL_API_BASE")
+        embedding_api_base = config.EMBEDDING_MODEL_API_BASE
         if not embedding_api_base or "11434" not in embedding_api_base:
             return {"status": "disabled", "reason": "Ollama not configured"}
         
@@ -238,7 +233,7 @@ async def check_ollama_status() -> Dict[str, Any]:
         base_url = embedding_api_base.replace("/v1", "")
         
         # Check if Ollama is responding
-        response = requests.get(f"{base_url}/api/tags", timeout=5)
+        response = requests.get(f"{base_url}/api/tags", timeout=config.OLLAMA_CHECK_TIMEOUT)
         if response.status_code != 200:
             return {"status": "error", "reason": f"HTTP {response.status_code}"}
         
@@ -246,7 +241,7 @@ async def check_ollama_status() -> Dict[str, Any]:
         models = [model["name"] for model in models_data.get("models", [])]
         
         # Check if configured embedding model is available
-        embedding_model = os.getenv("EMBEDDING_MODEL", "")
+        embedding_model = config.EMBEDDING_MODEL
         model_available = any(embedding_model in model for model in models)
         
         return {
@@ -276,7 +271,7 @@ async def check_supabase_status() -> Dict[str, Any]:
 
 async def check_neo4j_status() -> Dict[str, Any]:
     """Check Neo4j connection status if enabled."""
-    use_knowledge_graph = os.getenv("USE_KNOWLEDGE_GRAPH", "false").lower() == "true"
+    use_knowledge_graph = config.USE_KNOWLEDGE_GRAPH
     
     if not use_knowledge_graph:
         return {"status": "disabled", "reason": "Knowledge graph disabled"}
@@ -286,7 +281,7 @@ async def check_neo4j_status() -> Dict[str, Any]:
     
     try:
         # Test Neo4j connection (simplified check)
-        neo4j_uri = os.getenv("NEO4J_URI", "")
+        neo4j_uri = config.NEO4J_URI or ""
         return {"status": "healthy", "uri": neo4j_uri}
     except Exception as e:
         return {"status": "error", "reason": format_neo4j_error(e)}
@@ -583,7 +578,7 @@ async def crawl_single_page(ctx: Context, url: str) -> str:
             add_documents_to_supabase(supabase_client, urls, chunk_numbers, contents, metadatas, url_to_full_document)
             
             # Extract and process code examples only if enabled
-            extract_code_examples = os.getenv("USE_AGENTIC_RAG", "false") == "true"
+            extract_code_examples = config.USE_AGENTIC_RAG
             if extract_code_examples:
                 code_blocks = extract_code_blocks(result.markdown)
                 if code_blocks:
@@ -594,7 +589,7 @@ async def crawl_single_page(ctx: Context, url: str) -> str:
                     code_metadatas = []
                     
                     # Process code examples in parallel
-                    max_workers = int(os.getenv("MAX_WORKERS_SUMMARY", "10"))
+                    max_workers = config.MAX_WORKERS_SUMMARY
                     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
                         # Prepare arguments for parallel processing
                         summary_args = [(block['code'], block['context_before'], block['context_after']) 
@@ -677,9 +672,9 @@ async def smart_crawl_url(ctx: Context, url: str, max_depth: Optional[int] = Non
         supabase_client = ctx.request_context.lifespan_context.supabase_client
         
         # Set parameters from arguments or environment variables
-        max_depth = max_depth if max_depth is not None else int(os.getenv("MAX_CRAWL_DEPTH", 3))
-        max_concurrent = max_concurrent if max_concurrent is not None else int(os.getenv("MAX_CONCURRENT_CRAWLS", 10))
-        chunk_size = chunk_size if chunk_size is not None else int(os.getenv("CHUNK_SIZE", 5000))
+        max_depth = max_depth if max_depth is not None else config.MAX_CRAWL_DEPTH
+        max_concurrent = max_concurrent if max_concurrent is not None else config.MAX_CONCURRENT_CRAWLS
+        chunk_size = chunk_size if chunk_size is not None else config.CHUNK_SIZE
         
         # Determine the crawl strategy
         crawl_results = []
@@ -763,7 +758,7 @@ async def smart_crawl_url(ctx: Context, url: str, max_depth: Optional[int] = Non
             url_to_full_document[doc['url']] = doc['markdown']
         
         # Update source information for each unique source FIRST (before inserting documents)
-        max_workers_source_summary = int(os.getenv("MAX_WORKERS_SOURCE_SUMMARY", "5"))
+        max_workers_source_summary = config.MAX_WORKERS_SOURCE_SUMMARY
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers_source_summary) as executor:
             source_summary_args = [(source_id, content) for source_id, content in source_content_map.items()]
             source_summaries = list(executor.map(lambda args: extract_source_summary(args[0], args[1]), source_summary_args))
@@ -776,7 +771,7 @@ async def smart_crawl_url(ctx: Context, url: str, max_depth: Optional[int] = Non
         add_documents_to_supabase(supabase_client, urls, chunk_numbers, contents, metadatas, url_to_full_document)
         
         # Extract and process code examples from all documents only if enabled
-        extract_code_examples_enabled = os.getenv("USE_AGENTIC_RAG", "false") == "true"
+        extract_code_examples_enabled = config.USE_AGENTIC_RAG
         if extract_code_examples_enabled:
             all_code_blocks = []
             code_urls = []
@@ -793,7 +788,7 @@ async def smart_crawl_url(ctx: Context, url: str, max_depth: Optional[int] = Non
                 
                 if code_blocks:
                     # Process code examples in parallel
-                    max_workers_summary = int(os.getenv("MAX_WORKERS_SUMMARY", "10"))
+                    max_workers_summary = config.MAX_WORKERS_SUMMARY
                     with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers_summary) as executor:
                         # Prepare arguments for parallel processing
                         summary_args = [(block['code'], block['context_before'], block['context_after']) 
@@ -916,10 +911,10 @@ async def perform_rag_query(ctx: Context, query: str, source: str = None, match_
         supabase_client = ctx.request_context.lifespan_context.supabase_client
         
         # Set match_count from argument or environment variable
-        match_count = match_count if match_count is not None else int(os.getenv("DEFAULT_MATCH_COUNT", 5))
+        match_count = match_count if match_count is not None else config.DEFAULT_MATCH_COUNT
         
         # Check if hybrid search is enabled
-        use_hybrid_search = os.getenv("USE_HYBRID_SEARCH", "false") == "true"
+        use_hybrid_search = config.USE_HYBRID_SEARCH
         
         # Prepare filter if source is provided and not empty
         filter_metadata = None
@@ -1001,7 +996,7 @@ async def perform_rag_query(ctx: Context, query: str, source: str = None, match_
             )
         
         # Apply reranking if enabled
-        use_reranking = os.getenv("USE_RERANKING", "false") == "true"
+        use_reranking = config.USE_RERANKING
         if use_reranking and ctx.request_context.lifespan_context.reranking_model:
             results = rerank_results(ctx.request_context.lifespan_context.reranking_model, query, results, content_key="content")
         
@@ -1056,10 +1051,10 @@ async def search_code_examples(ctx: Context, query: str, source_id: str = None, 
         JSON string with the search results
     """
     # Set match_count from argument or environment variable
-    match_count = match_count if match_count is not None else int(os.getenv("DEFAULT_MATCH_COUNT", 5))
+    match_count = match_count if match_count is not None else config.DEFAULT_MATCH_COUNT
 
     # Check if code example extraction is enabled
-    extract_code_examples_enabled = os.getenv("USE_AGENTIC_RAG", "false") == "true"
+    extract_code_examples_enabled = config.USE_AGENTIC_RAG
     if not extract_code_examples_enabled:
         return json.dumps({
             "success": False,
@@ -1071,7 +1066,7 @@ async def search_code_examples(ctx: Context, query: str, source_id: str = None, 
         supabase_client = ctx.request_context.lifespan_context.supabase_client
         
         # Check if hybrid search is enabled
-        use_hybrid_search = os.getenv("USE_HYBRID_SEARCH", "false") == "true"
+        use_hybrid_search = config.USE_HYBRID_SEARCH
         
         # Prepare filter if source is provided and not empty
         filter_metadata = None
@@ -1159,7 +1154,7 @@ async def search_code_examples(ctx: Context, query: str, source_id: str = None, 
             )
         
         # Apply reranking if enabled
-        use_reranking = os.getenv("USE_RERANKING", "false") == "true"
+        use_reranking = config.USE_RERANKING
         if use_reranking and ctx.request_context.lifespan_context.reranking_model:
             results = rerank_results(ctx.request_context.lifespan_context.reranking_model, query, results, content_key="content")
         
@@ -1220,7 +1215,7 @@ async def check_ai_script_hallucinations(ctx: Context, script_path: str) -> str:
     """
     try:
         # Check if knowledge graph functionality is enabled
-        knowledge_graph_enabled = os.getenv("USE_KNOWLEDGE_GRAPH", "false") == "true"
+        knowledge_graph_enabled = config.USE_KNOWLEDGE_GRAPH
         if not knowledge_graph_enabled:
             return json.dumps({
                 "success": False,
@@ -1359,7 +1354,7 @@ async def query_knowledge_graph(ctx: Context, command: str) -> str:
     """
     try:
         # Check if knowledge graph functionality is enabled
-        knowledge_graph_enabled = os.getenv("USE_KNOWLEDGE_GRAPH", "false") == "true"
+        knowledge_graph_enabled = config.USE_KNOWLEDGE_GRAPH
         if not knowledge_graph_enabled:
             return json.dumps({
                 "success": False,
@@ -1770,7 +1765,7 @@ async def parse_github_repository(ctx: Context, repo_url: str) -> str:
     """
     try:
         # Check if knowledge graph functionality is enabled
-        knowledge_graph_enabled = os.getenv("USE_KNOWLEDGE_GRAPH", "false") == "true"
+        knowledge_graph_enabled = config.USE_KNOWLEDGE_GRAPH
         if not knowledge_graph_enabled:
             return json.dumps({
                 "success": False,
@@ -1805,7 +1800,7 @@ async def parse_github_repository(ctx: Context, repo_url: str) -> str:
             import asyncio
             await asyncio.wait_for(
                 repo_extractor.analyze_repository(repo_url),
-                timeout=1800  # 30 minutes max
+                timeout=config.REPO_ANALYSIS_TIMEOUT
             )
             print(f"Repository analysis completed for: {repo_name}")
         except asyncio.TimeoutError:
@@ -2000,8 +1995,7 @@ async def crawl_recursive_internal_links(crawler: AsyncWebCrawler, start_urls: L
     return results_all
 
 async def main():
-    transport = os.getenv("TRANSPORT", "sse")
-    if transport == 'sse':
+    if config.TRANSPORT == 'sse':
         # Run the MCP server with sse transport
         await mcp.run_sse_async()
     else:
