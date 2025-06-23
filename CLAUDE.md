@@ -44,17 +44,22 @@ crawl4ai-setup
 
 **Environment Configuration:**
 - Copy `.env.example` to `.env` and configure required variables
+- The environment configuration is organized into logical sections:
+  - **Server Configuration**: HOST, PORT, TRANSPORT settings
+  - **Database Connections**: Supabase and Neo4j credentials
+  - **AI Model Configuration**: Primary and fallback models
+  - **Feature Flags & RAG Strategies**: Enable/disable RAG enhancements
+  - **Performance & Optimization**: Rate limiting, concurrency, and batch settings
 - **Core Required Variables:**
   - `SUPABASE_URL` - Supabase project URL
   - `SUPABASE_SERVICE_KEY` - Supabase service role key
   - `CHAT_MODEL_API_KEY` - Primary chat model API key
   - `EMBEDDING_MODEL_API_KEY` - Embedding model API key
-- **Optional Variables:**
-  - `CHAT_MODEL_FALLBACK_API_KEY` - Fallback chat model for reliability
-  - `CHAT_MODEL_FALLBACK` - Fallback model name (e.g., gpt-3.5-turbo)
-  - Neo4j variables (`NEO4J_URI`, `NEO4J_USER`, `NEO4J_PASSWORD`) for knowledge graph functionality
-  - Transport configuration (`TRANSPORT=sse` or `stdio`)
-  - Performance tuning variables (workers, batch sizes)
+- **Rate Limiting Variables (New):**
+  - `MAX_CONCURRENT_REQUESTS` - Global simultaneous request limit
+  - `RATE_LIMIT_DELAY` - Minimum delay between requests
+  - `CIRCUIT_BREAKER_THRESHOLD` - Failures before triggering fallback
+  - `CLIENT_CACHE_TTL` - OpenAI client cache duration
 
 **Local Ollama Configuration:**
 For running with local Qwen3-Embedding models via Ollama:
@@ -65,7 +70,7 @@ EMBEDDING_MODEL_API_KEY=ollama  # Required but ignored
 EMBEDDING_MODEL=dengcao/Qwen3-Embedding-0.6B:Q8_0  # Primary: compact & efficient
 EMBEDDING_DIMENSIONS=1024  # Native dimensions for 0.6B model (no truncation)
 
-# Alternative: High-capacity model
+# Note: Alternative high-capacity model no longer included in Docker configurations
 # EMBEDDING_MODEL=dengcao/Qwen3-Embedding-8B:Q4_K_M  # 4.7GB, up to 4096D
 
 # Optional: Local chat model
@@ -162,11 +167,11 @@ Supports both SSE and stdio transports via `TRANSPORT` environment variable, ena
 ## Configuration Files
 
 - **`pyproject.toml`** - Python dependencies and project metadata
-- **`.env`** - Environment variables for API keys, database URLs, and feature flags
+- **`.env`** / **`.env.example`** - Environment variables organized in logical sections
 - **`crawled_pages_1024d.sql`** - Supabase database schema and functions (1024D embeddings)
 - **`Dockerfile`** - Container configuration for deployment
 - **`docker-compose.yml`** - Multi-service orchestration including Ollama for local embeddings
-- **`batch_crawler/`** - Batch processing scripts for multiple URLs
+- **`docker-compose.published.yml`** - Published Docker Hub image configuration
 
 ## Local Embedding Models (Ollama)
 
@@ -176,9 +181,7 @@ The project supports running locally with Qwen3-Embedding models via Ollama for 
 - **`dengcao/Qwen3-Embedding-0.6B:Q8_0`** - **Recommended** compact model (639MB, 0.6B parameters)
   - Native 1024D output (no truncation needed)
   - Optimal for most use cases with excellent performance/efficiency ratio
-- **`dengcao/Qwen3-Embedding-8B:Q4_K_M`** - High-capacity model (4.7GB, 8B parameters)
-  - Up to 4096D output (typically truncated to 1024D)
-  - Better for specialized domains requiring maximum accuracy
+  - Default model in all Docker configurations
 
 ### Features
 - **Multi-language Support**: 100+ languages including programming languages
@@ -193,10 +196,9 @@ The project supports running locally with Qwen3-Embedding models via Ollama for 
 # Start Ollama and MCP server
 docker-compose up -d
 
-# Models are automatically pulled on first startup (0.6B prioritized)
-# Or manually pull models:
+# Model is automatically pulled on first startup
+# Or manually pull model:
 docker-compose exec ollama ollama pull dengcao/Qwen3-Embedding-0.6B:Q8_0
-docker-compose exec ollama ollama pull dengcao/Qwen3-Embedding-8B:Q4_K_M
 
 # Using published image (faster startup)
 docker-compose -f docker-compose.published.yml up -d
@@ -208,9 +210,8 @@ docker-compose -f docker-compose.published.yml up -d
 curl -fsSL https://ollama.com/install.sh | sh
 ollama serve
 
-# Pull embedding models (0.6B recommended)
+# Pull embedding model (0.6B recommended)
 ollama pull dengcao/Qwen3-Embedding-0.6B:Q8_0
-ollama pull dengcao/Qwen3-Embedding-8B:Q4_K_M
 
 # Optional: Pull chat models
 ollama pull qwen3:latest
@@ -221,10 +222,10 @@ ollama pull qwen3:latest
   - Native output, no truncation overhead
   - 639MB model size, ~2GB RAM usage
   - Optimal performance/efficiency ratio
-- **High-Accuracy Scenarios**: `Qwen3-Embedding-8B:Q4_K_M` with `EMBEDDING_DIMENSIONS=1024`
-  - 4.7GB model size, ~8GB RAM usage  
-  - Better for specialized domains
-- **Concurrency Settings**: Use reduced workers to prevent API 503 errors
+- **Rate Limiting**: New anti-503 system with automatic controls
+  - `MAX_CONCURRENT_REQUESTS=5` (global request limit)
+  - `RATE_LIMIT_DELAY=0.5` (minimum delay between requests)
+- **Legacy Concurrency**: Still useful for fine-tuning
   - `MAX_WORKERS_SUMMARY=1`
   - `SUPABASE_BATCH_SIZE=2`
 
@@ -244,9 +245,8 @@ docker-compose -f docker-compose.published.yml up -d
 ```
 
 ### Build and Push Scripts
-- **`build-and-push.bat`** - Automated build, test, and Docker Hub upload
-- **`build.bat`** - Local build with full service stack
-- **`build-ollama.bat`** - Standalone Ollama container build
+- **`build-and-push.bat`** / **`build-and-push.sh`** - Automated build, test, and Docker Hub upload
+- **`start-published.bat`** / **`start-published.sh`** - Quick start with published Docker image
 
 ## Troubleshooting
 
@@ -302,9 +302,10 @@ The MCP server now includes a comprehensive **Rate Limiting & Circuit Breaker Sy
 
 ### Common Issues
 - **Git not found in container**: Fixed in latest Docker image
-- **Embedding dimension mismatch**: Use 1024D for Qwen3-Embedding-0.6B
-- **Memory issues**: 0.6B model requires ~2GB RAM, 8B model requires ~8GB RAM
+- **Embedding dimension mismatch**: Use 1024D for Qwen3-Embedding-0.6B (native dimensions)
+- **Memory issues**: 0.6B model requires ~2GB RAM for optimal performance
 - **SSL/network errors**: Ensure proper Docker network configuration
+- **503 Service Unavailable**: Now automatically handled by rate limiting system
 
 ## Robust Fallback System
 
@@ -514,44 +515,18 @@ The test script validates:
 
 ## Testing
 
-No formal test suite exists. Test the server by:
+### Available Tests
+- **`test_fallback.py`** - Comprehensive fallback system validation
+- **Health Check**: `curl http://localhost:8051/health`
+
+### Manual Testing
+Test the server by:
 1. Running with different RAG strategy combinations
 2. Crawling various URL types (regular pages, sitemaps, text files)
 3. Testing knowledge graph functionality with GitHub repositories
 4. Validating MCP tool responses across different clients
-5. Health check: `curl http://localhost:8051/health`
+5. Testing rate limiting under load conditions
 
-## Batch Processing
-
-The `batch_crawler/` directory contains utilities for processing multiple URLs sequentially:
-
-### Available Scripts
-- **`batch_crawler_working.py`** - Production-ready batch processor using stdio transport
-- **`batch_crawler.py`** - Original version (SSE transport limitations)
-- **`test_mcp_connection.py`** - Connection diagnostics and health checks
-
-### Usage
-```bash
-cd batch_crawler
-
-# Setup (Windows)
-setup.bat
-
-# Interactive mode (Windows)
-start.bat
-
-# Manual execution
-python batch_crawler_working.py urls.txt --output results.json --delay 1.0
-```
-
-### Features
-- Sequential URL processing with configurable delays
-- Automatic retry logic and error handling
-- Progress tracking and detailed logging
-- JSON output with comprehensive statistics
-- Windows automation scripts for easy setup and execution
-
-See `batch_crawler/README.md` for complete documentation.
 
 ## Recent Updates (v2.0 - Rate Limiting & Circuit Breaker)
 
