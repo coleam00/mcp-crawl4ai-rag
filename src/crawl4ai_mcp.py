@@ -454,6 +454,8 @@ async def crawl_single_page(ctx: Context, url: str) -> str:
             
             # Extract and process code examples only if enabled
             extract_code_examples = os.getenv("USE_AGENTIC_RAG", "false") == "true"
+            code_blocks = []
+            code_examples = []
             if extract_code_examples:
                 code_blocks = extract_code_blocks(result.markdown)
                 if code_blocks:
@@ -645,7 +647,8 @@ async def smart_crawl_url(ctx: Context, url: str, max_depth: int = 3, max_concur
         # Add documentation chunks to Supabase (AFTER sources exist)
         batch_size = 20
         add_documents_to_supabase(supabase_client, urls, chunk_numbers, contents, metadatas, url_to_full_document, batch_size=batch_size)
-        
+        code_blocks = []
+        code_examples = []
         # Extract and process code examples from all documents only if enabled
         extract_code_examples_enabled = os.getenv("USE_AGENTIC_RAG", "false") == "true"
         if extract_code_examples_enabled:
