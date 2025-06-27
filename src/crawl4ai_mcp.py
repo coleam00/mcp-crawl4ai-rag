@@ -1619,6 +1619,183 @@ async def _handle_query_command(session, command: str, cypher_query: str) -> str
         }, indent=2)
 
 
+# Reusable query for getting repository statistics
+REPO_STATS_QUERY = """
+MATCH (r:Repository {name: $repo_name})
+OPTIONAL MATCH (r)-[:CONTAINS]->(f:File)
+OPTIONAL MATCH (f)-[:DEFINES]->(c:Class)
+OPTIONAL MATCH (c)-[:HAS_METHOD]->(m:Method)
+OPTIONAL MATCH (f)-[:DEFINES]->(func:Function)
+OPTIONAL MATCH (c)-[:HAS_ATTRIBUTE]->(a:Attribute)
+WITH r, 
+     count(DISTINCT f) as files_count,
+     count(DISTINCT c) as classes_count,
+     count(DISTINCT m) as methods_count,
+     count(DISTINCT func) as functions_count,
+     count(DISTINCT a) as attributes_count
+// Get some sample module names
+OPTIONAL MATCH (r)-[:CONTAINS]->(sample_f:File)
+WITH r, files_count, classes_count, methods_count, functions_count, attributes_count,
+     collect(DISTINCT sample_f.module_name)[0..5] as sample_modules
+RETURN 
+    r.name as repo_name,
+    files_count,
+    classes_count, 
+    methods_count,
+    functions_count,
+    attributes_count,
+    sample_modules
+"""
+
+async def _analyze_and_store_repository(ctx: Context, repo_identifier: str, is_local: bool = False) -> dict:
+    """
+    Analyze and store a repository in the Neo4j knowledge graph.
+    
+    This is a shared helper function that handles both GitHub and local repository analysis.
+    It validates the input, analyzes the repository, and returns detailed statistics.
+    
+    Args:
+        ctx: The MCP server context containing the repository extractor
+        repo_identifier: Either a GitHub URL or a local folder path
+        is_local: If True, treat repo_identifier as a local path; otherwise as a GitHub URL
+        
+    Returns:
+        dict: A dictionary containing:
+            - success (bool): Whether the operation was successful
+            - repo_name (str): Name of the analyzed repository
+            - message (str): Human-readable status message
+            - stats (dict, optional): Repository statistics if successful
+            - error (str, optional): Error message if unsuccessful
+            - type (str, optional): Type of error if unsuccessful
+            - repo_url/folder_path (str): The original identifier
+    """
+    # Check if knowledge graph functionality is enabled
+    knowledge_graph_enabled = os.getenv("USE_KNOWLEDGE_GRAPH", "false").lower() == "true"
+    if not knowledge_graph_enabled:
+        return {
+            "success": False,
+            "error": "Knowledge graph functionality is disabled. Set USE_KNOWLEDGE_GRAPH=true in environment.",
+            "type": "ConfigurationError"
+        }
+    
+    # Get the repository extractor from context
+    repo_extractor = getattr(getattr(ctx, 'request_context', None), 'lifespan_context', None) and ctx.request_context.lifespan_context.repo_extractor
+    
+    if not repo_extractor:
+        return {
+            "success": False,
+            "error": "Repository extractor not available. Check Neo4j configuration in environment variables.",
+            "type": "ConfigurationError"
+        }
+    
+    # Validate the repository identifier based on type
+    if is_local:
+        # Validate local folder path
+        if not repo_identifier or not isinstance(repo_identifier, str):
+            return {
+                "success": False,
+                "error": "Folder path is required and must be a string",
+                "folder_path": repo_identifier,
+                "type": "ValidationError"
+            }
+            
+        if not os.path.isabs(repo_identifier):
+            return {
+                "success": False,
+                "error": f"Folder path must be an absolute path. Got: {repo_identifier}",
+                "folder_path": repo_identifier,
+                "type": "ValidationError"
+            }
+            
+        if not os.path.exists(repo_identifier):
+            return {
+                "success": False,
+                "error": f"Folder does not exist: {repo_identifier}",
+                "folder_path": repo_identifier,
+                "type": "ValidationError"
+            }
+            
+        if not os.path.isdir(repo_identifier):
+            return {
+                "success": False,
+                "error": f"Path is not a directory: {repo_identifier}",
+                "folder_path": repo_identifier,
+                "type": "ValidationError"
+            }
+        
+        repo_name = os.path.basename(os.path.normpath(repo_identifier))
+        repo_url = f"file://{os.path.abspath(repo_identifier)}"
+        
+    else:
+        # Validate GitHub URL
+        validation = validate_github_url(repo_identifier)
+        if not validation["valid"]:
+            return {
+                "success": False,
+                "error": f"Invalid GitHub URL: {validation.get('error', 'Unknown error')}",
+                "repo_url": repo_identifier,
+                "type": "ValidationError"
+            }
+        
+        repo_name = validation["repo_name"]
+        repo_url = repo_identifier
+    
+    try:
+        # Analyze the repository (includes cloning for GitHub, direct analysis for local)
+        print(f"Starting repository analysis for: {repo_name}")
+        await repo_extractor.analyze_repository(repo_url, temp_dir=repo_identifier if is_local else None)
+        print(f"Repository analysis completed for: {repo_name}")
+        
+        # Query Neo4j for statistics about the parsed repository
+        async with repo_extractor.driver.session() as session:
+            result = await session.run(REPO_STATS_QUERY, repo_name=repo_name)
+            record = await result.single()
+            
+            if not record:
+                return {
+                    "success": False,
+                    "error": f"Repository '{repo_name}' not found in database after parsing. The repository may be empty or contain no Python files.",
+                    "repo_name": repo_name,
+                    "type": "AnalysisError"
+                }
+            
+            stats = {
+                "repository": record['repo_name'],
+                "files_processed": record['files_count'] or 0,
+                "classes_created": record['classes_count'] or 0,
+                "methods_created": record['methods_count'] or 0,
+                "functions_created": record['functions_count'] or 0,
+                "attributes_created": record['attributes_count'] or 0,
+                "sample_modules": record['sample_modules'] or []
+            }
+            
+            result_data = {
+                "success": True,
+                "repo_name": repo_name,
+                "message": f"Successfully parsed {'local repository' if is_local else 'repository'} '{repo_name}' into knowledge graph",
+                "stats": stats,
+                "type": "success"
+            }
+            
+            # Add the appropriate identifier field based on type
+            result_data["folder_path" if is_local else "repo_url"] = repo_identifier
+            
+            return result_data
+    
+    except Exception as e:
+        error_type = type(e).__name__
+        error_msg = str(e)
+        print(f"Error parsing {'local repository' if is_local else 'repository'}: {error_type}: {error_msg}", file=sys.stderr)
+        
+        return {
+            "success": False,
+            "error": f"Error parsing {'local repository' if is_local else 'repository'}: {error_msg}",
+            "type": error_type,
+            "repo_name": repo_name,
+            "folder_path" if is_local else "repo_url": repo_identifier
+        }
+
+
 @mcp.tool()
 async def parse_github_repository(ctx: Context, repo_url: str) -> str:
     """
@@ -1641,112 +1818,56 @@ async def parse_github_repository(ctx: Context, repo_url: str) -> str:
     Returns:
         JSON string with parsing results, statistics, and repository information
     """
-    try:
-        # Check if knowledge graph functionality is enabled
-        knowledge_graph_enabled = os.getenv("USE_KNOWLEDGE_GRAPH", "false") == "true"
-        if not knowledge_graph_enabled:
-            return json.dumps({
-                "success": False,
-                "error": "Knowledge graph functionality is disabled. Set USE_KNOWLEDGE_GRAPH=true in environment."
-            }, indent=2)
-        
-        # Get the repository extractor from context
-        repo_extractor = ctx.request_context.lifespan_context.repo_extractor
-        
-        if not repo_extractor:
-            return json.dumps({
-                "success": False,
-                "error": "Repository extractor not available. Check Neo4j configuration in environment variables."
-            }, indent=2)
-        
-        # Validate repository URL
-        validation = validate_github_url(repo_url)
-        if not validation["valid"]:
-            return json.dumps({
-                "success": False,
-                "repo_url": repo_url,
-                "error": validation["error"]
-            }, indent=2)
-        
-        repo_name = validation["repo_name"]
-        
-        # Parse the repository (this includes cloning, analysis, and Neo4j storage)
-        print(f"Starting repository analysis for: {repo_name}")
-        await repo_extractor.analyze_repository(repo_url)
-        print(f"Repository analysis completed for: {repo_name}")
-        
-        # Query Neo4j for statistics about the parsed repository
-        async with repo_extractor.driver.session() as session:
-            # Get comprehensive repository statistics
-            stats_query = """
-            MATCH (r:Repository {name: $repo_name})
-            OPTIONAL MATCH (r)-[:CONTAINS]->(f:File)
-            OPTIONAL MATCH (f)-[:DEFINES]->(c:Class)
-            OPTIONAL MATCH (c)-[:HAS_METHOD]->(m:Method)
-            OPTIONAL MATCH (f)-[:DEFINES]->(func:Function)
-            OPTIONAL MATCH (c)-[:HAS_ATTRIBUTE]->(a:Attribute)
-            WITH r, 
-                 count(DISTINCT f) as files_count,
-                 count(DISTINCT c) as classes_count,
-                 count(DISTINCT m) as methods_count,
-                 count(DISTINCT func) as functions_count,
-                 count(DISTINCT a) as attributes_count
-            
-            // Get some sample module names
-            OPTIONAL MATCH (r)-[:CONTAINS]->(sample_f:File)
-            WITH r, files_count, classes_count, methods_count, functions_count, attributes_count,
-                 collect(DISTINCT sample_f.module_name)[0..5] as sample_modules
-            
-            RETURN 
-                r.name as repo_name,
-                files_count,
-                classes_count, 
-                methods_count,
-                functions_count,
-                attributes_count,
-                sample_modules
-            """
-            
-            result = await session.run(stats_query, repo_name=repo_name)
-            record = await result.single()
-            
-            if record:
-                stats = {
-                    "repository": record['repo_name'],
-                    "files_processed": record['files_count'],
-                    "classes_created": record['classes_count'],
-                    "methods_created": record['methods_count'], 
-                    "functions_created": record['functions_count'],
-                    "attributes_created": record['attributes_count'],
-                    "sample_modules": record['sample_modules'] or []
-                }
-            else:
-                return json.dumps({
-                    "success": False,
-                    "repo_url": repo_url,
-                    "error": f"Repository '{repo_name}' not found in database after parsing"
-                }, indent=2)
-        
-        return json.dumps({
-            "success": True,
-            "repo_url": repo_url,
-            "repo_name": repo_name,
-            "message": f"Successfully parsed repository '{repo_name}' into knowledge graph",
-            "statistics": stats,
+    result = await _analyze_and_store_repository(ctx, repo_url, is_local=False)
+    
+    # Add additional fields specific to GitHub repository parsing
+    if result.get('success'):
+        result.update({
             "ready_for_validation": True,
             "next_steps": [
                 "Repository is now available for hallucination detection",
-                f"Use check_ai_script_hallucinations to validate scripts against {repo_name}",
+                f"Use check_ai_script_hallucinations to validate scripts against {result.get('repo_name', 'the repository')}",
                 "The knowledge graph contains classes, methods, and functions from this repository"
             ]
-        }, indent=2)
-        
-    except Exception as e:
-        return json.dumps({
-            "success": False,
-            "repo_url": repo_url,
-            "error": f"Repository parsing failed: {str(e)}"
-        }, indent=2)
+        })
+    
+    return json.dumps(result, indent=2)
+
+
+@mcp.tool()
+async def parse_local_repository(ctx: Context, folder_path: str) -> str:
+    """
+    Parse a local repository into the Neo4j knowledge graph.
+    
+    This tool analyzes a local folder containing Python code and stores the code structure 
+    (classes, methods, functions, imports) in Neo4j for use in hallucination detection. The tool:
+    
+    - Analyzes Python files in the specified folder to extract code structure
+    - Stores classes, methods, functions, and imports in Neo4j
+    - Provides detailed statistics about the parsing results
+    - Automatically handles module name detection for imports
+    
+    Args:
+        ctx: The MCP server provided context
+        folder_path: Absolute path to the local repository folder
+    
+    Returns:
+        JSON string with parsing results and statistics
+    """
+    result = await _analyze_and_store_repository(ctx, folder_path, is_local=True)
+    
+    # Add additional fields specific to local repository parsing
+    if result.get('success'):
+        result.update({
+            "ready_for_validation": True,
+            "next_steps": [
+                "Repository is now available for hallucination detection",
+                f"Use check_ai_script_hallucinations to validate scripts against {result.get('repo_name', 'the repository')}",
+                "The knowledge graph contains classes, methods, and functions from this repository"
+            ]
+        })
+    
+    return json.dumps(result, indent=2)
 
 async def crawl_markdown_file(crawler: AsyncWebCrawler, url: str) -> List[Dict[str, Any]]:
     """
