@@ -215,13 +215,27 @@ async def crawl4ai_lifespan(server: FastMCP) -> AsyncIterator[Crawl4AIContext]:
                 print(f"Error closing repository extractor: {e}")
 
 # Initialize FastMCP server
-mcp = FastMCP(
-    "mcp-crawl4ai-rag",
-    description="MCP server for RAG and web crawling with Crawl4AI",
-    lifespan=crawl4ai_lifespan,
-    host=os.getenv("HOST", "0.0.0.0"),
-    port=os.getenv("PORT", "8051")
-)
+transport = os.getenv("TRANSPORT", "sse")
+
+if transport == "stdio":
+    # For stdio transport, don't pass host/port
+    mcp = FastMCP(
+        "mcp-crawl4ai-rag",
+        description="MCP server for RAG and web crawling with Crawl4AI",
+        lifespan=crawl4ai_lifespan
+    )
+else:
+    # For SSE transport, use host/port
+    port_str = os.getenv("PORT", "8051")
+    port = int(port_str) if port_str else 8051
+    
+    mcp = FastMCP(
+        "mcp-crawl4ai-rag",
+        description="MCP server for RAG and web crawling with Crawl4AI",
+        lifespan=crawl4ai_lifespan,
+        host=os.getenv("HOST", "0.0.0.0"),
+        port=port
+    )
 
 def rerank_results(model: CrossEncoder, query: str, results: List[Dict[str, Any]], content_key: str = "content") -> List[Dict[str, Any]]:
     """
