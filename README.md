@@ -134,11 +134,11 @@ Before running the server, you need to set up the database with the pgvector ext
 
 ## Knowledge Graph Setup (Optional)
 
-To enable AI hallucination detection and repository analysis features, you need to set up Neo4j.
+To enable AI hallucination detection and repository analysis features, you need to set up Neo4j:
 
-Also, the knowledge graph implementation isn't fully compatible with Docker yet, so I would recommend right now running directly through uv if you want to use the hallucination detection within the MCP server!
+> **Note:** The Docker version of the MCP server now fully supports knowledge graph features, including repository parsing and hallucination detection, as long as you set up Neo4j and use the provided Dockerfile (which installs Git for repo cloning).
 
-For installing Neo4j:
+for installing Neo4j:
 
 ### Local AI Package (Recommended)
 
@@ -190,6 +190,10 @@ OPENAI_API_KEY=your_openai_api_key
 
 # LLM for summaries and contextual embeddings
 MODEL_CHOICE=gpt-4.1-nano
+
+# LLM API Rate Limit Settings
+LLM_MAX_CONCURRENCY=3
+LLM_REQUEST_DELAY=0
 
 # RAG Strategies (set to "true" or "false", default to "false")
 USE_CONTEXTUAL_EMBEDDINGS=false
