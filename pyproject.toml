@@ -11,4 +11,5 @@ dependencies = [
     "openai==1.71.0",
     "dotenv==0.9.9",
     "sentence-transformers>=4.1.0",
+    "neo4j>=5.28.1",
 ]
