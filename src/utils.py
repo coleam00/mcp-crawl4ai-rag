@@ -44,41 +44,80 @@ def create_embeddings_batch(texts: List[str]) -> List[List[float]]:
     
     max_retries = 3
     retry_delay = 1.0  # Start with 1 second delay
-    
+    rate_limit_count = 0
     for retry in range(max_retries):
         try:
+            print(f"[Embedding] Batch request, attempt {retry+1}/{max_retries}")
             response = openai.embeddings.create(
-                model="text-embedding-3-small", # Hardcoding embedding model for now, will change this later to be more dynamic
+                model="text-embedding-3-small",
                 input=texts
             )
+            print("[Embedding] Batch request successful.")
             return [item.embedding for item in response.data]
         except Exception as e:
-            if retry < max_retries - 1:
-                print(f"Error creating batch embeddings (attempt {retry + 1}/{max_retries}): {e}")
-                print(f"Retrying in {retry_delay} seconds...")
+            error_str = str(e)
+            is_rate_limit = False
+            wait_time = retry_delay
+            if '429' in error_str or 'rate limit' in error_str.lower():
+                rate_limit_count += 1
+                is_rate_limit = True
+                import re
+                match = re.search(r'Please try again in (\d+)ms', error_str)
+                if match:
+                    wait_time = int(match.group(1)) / 1000.0
+                else:
+                    wait_time = retry_delay
+                wait_time = min(wait_time, 10)  # 최대 10초까지만 대기
+                print(f"[Embedding] Rate limit hit. Waiting {wait_time} seconds before retry... (rate_limit_count={rate_limit_count})")
+                time.sleep(wait_time)
+                retry_delay *= 2
+                if rate_limit_count >= 3:
+                    print("[Embedding] Too many rate limits. Aborting batch embedding.")
+                    break
+            elif retry < max_retries - 1:
+                print(f"[Embedding] Error creating batch embeddings (attempt {retry + 1}/{max_retries}): {e}")
+                print(f"[Embedding] Retrying in {retry_delay} seconds...")
                 time.sleep(retry_delay)
-                retry_delay *= 2  # Exponential backoff
+                retry_delay *= 2
             else:
-                print(f"Failed to create batch embeddings after {max_retries} attempts: {e}")
-                # Try creating embeddings one by one as fallback
-                print("Attempting to create embeddings individually...")
+                print(f"[Embedding] Failed to create batch embeddings after {max_retries} attempts: {e}")
+                print("[Embedding] Attempting to create embeddings individually...")
                 embeddings = []
                 successful_count = 0
-                
                 for i, text in enumerate(texts):
-                    try:
-                        individual_response = openai.embeddings.create(
-                            model="text-embedding-3-small",
-                            input=[text]
-                        )
-                        embeddings.append(individual_response.data[0].embedding)
-                        successful_count += 1
-                    except Exception as individual_error:
-                        print(f"Failed to create embedding for text {i}: {individual_error}")
-                        # Add zero embedding as fallback
-                        embeddings.append([0.0] * 1536)
-                
-                print(f"Successfully created {successful_count}/{len(texts)} embeddings individually")
+                    single_rate_limit_count = 0
+                    for single_retry in range(max_retries):
+                        try:
+                            print(f"[Embedding] Single request for text {i}, attempt {single_retry+1}/{max_retries}")
+                            individual_response = openai.embeddings.create(
+                                model="text-embedding-3-small",
+                                input=[text]
+                            )
+                            embeddings.append(individual_response.data[0].embedding)
+                            successful_count += 1
+                            print(f"[Embedding] Single request for text {i} successful.")
+                            break
+                        except Exception as individual_error:
+                            error_str2 = str(individual_error)
+                            if '429' in error_str2 or 'rate limit' in error_str2.lower():
+                                single_rate_limit_count += 1
+                                match2 = re.search(r'Please try again in (\d+)ms', error_str2)
+                                wait_time2 = int(match2.group(1)) / 1000.0 if match2 else retry_delay
+                                wait_time2 = min(wait_time2, 10)
+                                print(f"[Embedding] Rate limit hit (single). Waiting {wait_time2} seconds before retry... (single_rate_limit_count={single_rate_limit_count})")
+                                time.sleep(wait_time2)
+                                if single_rate_limit_count >= 3:
+                                    print(f"[Embedding] Too many rate limits for text {i}. Skipping.")
+                                    embeddings.append([0.0] * 1536)
+                                    break
+                            elif single_retry < max_retries - 1:
+                                print(f"[Embedding] Failed to create embedding for text {i} (attempt {single_retry + 1}/{max_retries}): {individual_error}")
+                                print(f"[Embedding] Retrying in {retry_delay} seconds...")
+                                time.sleep(retry_delay)
+                            else:
+                                print(f"[Embedding] Failed to create embedding for text {i}: {individual_error}")
+                                embeddings.append([0.0] * 1536)
+                print(f"[Embedding] Successfully created {successful_count}/{len(texts)} embeddings individually")
                 return embeddings
 
 def create_embedding(text: str) -> List[float]:
@@ -113,40 +152,56 @@ def generate_contextual_embedding(full_document: str, chunk: str) -> Tuple[str, 
         - Boolean indicating if contextual embedding was performed
     """
     model_choice = os.getenv("MODEL_CHOICE")
-    
-    try:
-        # Create the prompt for generating contextual information
-        prompt = f"""<document> 
-{full_document[:25000]} 
-</document>
-Here is the chunk we want to situate within the whole document 
-<chunk> 
-{chunk}
-</chunk> 
-Please give a short succinct context to situate this chunk within the overall document for the purposes of improving search retrieval of the chunk. Answer only with the succinct context and nothing else."""
-
-        # Call the OpenAI API to generate contextual information
-        response = openai.chat.completions.create(
-            model=model_choice,
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant that provides concise contextual information."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.3,
-            max_tokens=200
-        )
-        
-        # Extract the generated context
-        context = response.choices[0].message.content.strip()
-        
-        # Combine the context with the original chunk
-        contextual_text = f"{context}\n---\n{chunk}"
-        
-        return contextual_text, True
-    
-    except Exception as e:
-        print(f"Error generating contextual embedding: {e}. Using original chunk instead.")
-        return chunk, False
+    max_retries = 3
+    retry_delay = 1.0
+    rate_limit_count = 0
+    for retry in range(max_retries):
+        try:
+            print(f"[Contextual Embedding] Request, attempt {retry+1}/{max_retries}")
+            prompt = f"""<document> \n{full_document[:25000]} \n</document>\nHere is the chunk we want to situate within the whole document \n<chunk> \n{chunk}\n</chunk> \nPlease give a short succinct context to situate this chunk within the overall document for the purposes of improving search retrieval of the chunk. Answer only with the succinct context and nothing else."""
+            response = openai.chat.completions.create(
+                model=model_choice,
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant that provides concise contextual information."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.3,
+                max_tokens=200
+            )
+            context = response.choices[0].message.content.strip()
+            contextual_text = f"{context}\n---\n{chunk}"
+            print("[Contextual Embedding] Success.")
+            return contextual_text, True
+        except Exception as e:
+            error_str = str(e)
+            is_rate_limit = False
+            wait_time = retry_delay
+            if '429' in error_str or 'rate limit' in error_str.lower():
+                rate_limit_count += 1
+                is_rate_limit = True
+                import re
+                match = re.search(r'Please try again in (\d+)ms', error_str)
+                if match:
+                    wait_time = int(match.group(1)) / 1000.0
+                else:
+                    wait_time = retry_delay
+                wait_time = min(wait_time, 10)
+                print(f"[Contextual Embedding] Rate limit hit. Waiting {wait_time} seconds before retry... (rate_limit_count={rate_limit_count})")
+                time.sleep(wait_time)
+                retry_delay *= 2
+                if rate_limit_count >= 3:
+                    print("[Contextual Embedding] Too many rate limits. Aborting contextual embedding.")
+                    break
+            elif retry < max_retries - 1:
+                print(f"[Contextual Embedding] Error (attempt {retry + 1}/{max_retries}): {e}")
+                print(f"[Contextual Embedding] Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+                retry_delay *= 2
+            else:
+                print(f"[Contextual Embedding] Error: {e}. Using original chunk instead.")
+                return chunk, False
+    print("[Contextual Embedding] Failed. Using original chunk.")
+    return chunk, False
 
 def process_chunk_with_context(args):
     """
@@ -450,39 +505,54 @@ def generate_code_example_summary(code: str, context_before: str, context_after:
         A summary of what the code example demonstrates
     """
     model_choice = os.getenv("MODEL_CHOICE")
-    
-    # Create the prompt
-    prompt = f"""<context_before>
-{context_before[-500:] if len(context_before) > 500 else context_before}
-</context_before>
-
-<code_example>
-{code[:1500] if len(code) > 1500 else code}
-</code_example>
-
-<context_after>
-{context_after[:500] if len(context_after) > 500 else context_after}
-</context_after>
-
-Based on the code example and its surrounding context, provide a concise summary (2-3 sentences) that describes what this code example demonstrates and its purpose. Focus on the practical application and key concepts illustrated.
-"""
-    
-    try:
-        response = openai.chat.completions.create(
-            model=model_choice,
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant that provides concise code example summaries."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.3,
-            max_tokens=100
-        )
-        
-        return response.choices[0].message.content.strip()
-    
-    except Exception as e:
-        print(f"Error generating code example summary: {e}")
-        return "Code example for demonstration purposes."
+    prompt = f"""<context_before>\n{context_before[-500:] if len(context_before) > 500 else context_before}\n</context_before>\n\n<code_example>\n{code[:1500] if len(code) > 1500 else code}\n</code_example>\n\n<context_after>\n{context_after[:500] if len(context_after) > 500 else context_after}\n</context_after>\n\nBased on the code example and its surrounding context, provide a concise summary (2-3 sentences) that describes what this code example demonstrates and its purpose. Focus on the practical application and key concepts illustrated.\n"""
+    max_retries = 3
+    retry_delay = 1.0
+    rate_limit_count = 0
+    for retry in range(max_retries):
+        try:
+            print(f"[Code Example Summary] Request, attempt {retry+1}/{max_retries}")
+            response = openai.chat.completions.create(
+                model=model_choice,
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant that provides concise code example summaries."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.3,
+                max_tokens=100
+            )
+            print("[Code Example Summary] Success.")
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            error_str = str(e)
+            is_rate_limit = False
+            wait_time = retry_delay
+            if '429' in error_str or 'rate limit' in error_str.lower():
+                rate_limit_count += 1
+                is_rate_limit = True
+                import re
+                match = re.search(r'Please try again in (\d+)ms', error_str)
+                if match:
+                    wait_time = int(match.group(1)) / 1000.0
+                else:
+                    wait_time = retry_delay
+                wait_time = min(wait_time, 10)
+                print(f"[Code Example Summary] Rate limit hit. Waiting {wait_time} seconds before retry... (rate_limit_count={rate_limit_count})")
+                time.sleep(wait_time)
+                retry_delay *= 2
+                if rate_limit_count >= 3:
+                    print("[Code Example Summary] Too many rate limits. Aborting code example summary.")
+                    break
+            elif retry < max_retries - 1:
+                print(f"[Code Example Summary] Error (attempt {retry + 1}/{max_retries}): {e}")
+                print(f"[Code Example Summary] Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+                retry_delay *= 2
+            else:
+                print(f"[Code Example Summary] Error: {e}")
+                return "Code example for demonstration purposes."
+    print("[Code Example Summary] Failed. Returning default summary.")
+    return "Code example for demonstration purposes."
 
 
 def add_code_examples_to_supabase(
@@ -641,50 +711,62 @@ def extract_source_summary(source_id: str, content: str, max_length: int = 500) 
     Returns:
         A summary string
     """
-    # Default summary if we can't extract anything meaningful
     default_summary = f"Content from {source_id}"
-    
     if not content or len(content.strip()) == 0:
         return default_summary
-    
-    # Get the model choice from environment variables
     model_choice = os.getenv("MODEL_CHOICE")
-    
-    # Limit content length to avoid token limits
     truncated_content = content[:25000] if len(content) > 25000 else content
-    
-    # Create the prompt for generating the summary
-    prompt = f"""<source_content>
-{truncated_content}
-</source_content>
-
-The above content is from the documentation for '{source_id}'. Please provide a concise summary (3-5 sentences) that describes what this library/tool/framework is about. The summary should help understand what the library/tool/framework accomplishes and the purpose.
-"""
-    
-    try:
-        # Call the OpenAI API to generate the summary
-        response = openai.chat.completions.create(
-            model=model_choice,
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant that provides concise library/tool/framework summaries."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.3,
-            max_tokens=150
-        )
-        
-        # Extract the generated summary
-        summary = response.choices[0].message.content.strip()
-        
-        # Ensure the summary is not too long
-        if len(summary) > max_length:
-            summary = summary[:max_length] + "..."
-            
-        return summary
-    
-    except Exception as e:
-        print(f"Error generating summary with LLM for {source_id}: {e}. Using default summary.")
-        return default_summary
+    prompt = f"""<source_content>\n{truncated_content}\n</source_content>\n\nThe above content is from the documentation for '{source_id}'. Please provide a concise summary (3-5 sentences) that describes what this library/tool/framework is about. The summary should help understand what the library/tool/framework accomplishes and the purpose.\n"""
+    max_retries = 3
+    retry_delay = 1.0
+    rate_limit_count = 0
+    for retry in range(max_retries):
+        try:
+            print(f"[Source Summary] Request, attempt {retry+1}/{max_retries}")
+            response = openai.chat.completions.create(
+                model=model_choice,
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant that provides concise library/tool/framework summaries."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.3,
+                max_tokens=150
+            )
+            summary = response.choices[0].message.content.strip()
+            if len(summary) > max_length:
+                summary = summary[:max_length] + "..."
+            print("[Source Summary] Success.")
+            return summary
+        except Exception as e:
+            error_str = str(e)
+            is_rate_limit = False
+            wait_time = retry_delay
+            if '429' in error_str or 'rate limit' in error_str.lower():
+                rate_limit_count += 1
+                is_rate_limit = True
+                import re
+                match = re.search(r'Please try again in (\d+)ms', error_str)
+                if match:
+                    wait_time = int(match.group(1)) / 1000.0
+                else:
+                    wait_time = retry_delay
+                wait_time = min(wait_time, 10)
+                print(f"[Source Summary] Rate limit hit. Waiting {wait_time} seconds before retry... (rate_limit_count={rate_limit_count})")
+                time.sleep(wait_time)
+                retry_delay *= 2
+                if rate_limit_count >= 3:
+                    print(f"[Source Summary] Too many rate limits. Aborting source summary for {source_id}.")
+                    break
+            elif retry < max_retries - 1:
+                print(f"[Source Summary] Error (attempt {retry + 1}/{max_retries}): {e}")
+                print(f"[Source Summary] Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+                retry_delay *= 2
+            else:
+                print(f"[Source Summary] Error generating summary with LLM for {source_id}: {e}. Using default summary.")
+                return default_summary
+    print(f"[Source Summary] Failed for {source_id}. Using default summary.")
+    return default_summary
 
 
 def search_code_examples(
