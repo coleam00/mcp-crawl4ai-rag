@@ -1,7 +1,37 @@
+# Environment files
 .env
+
+# Virtual environments
 .venv
+
+# Python
 __pycache__
 crawl4ai_mcp.egg-info
+
+# Project specific
 repos
 .claude
 test_script_hallucination*
+
+# Neo4j data and logs (persistent but not in git)
+neo4j/data/
+neo4j/logs/
+
+# Docker
+.dockerignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
