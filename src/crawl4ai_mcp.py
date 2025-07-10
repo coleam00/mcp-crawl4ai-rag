@@ -1829,13 +1829,31 @@ async def crawl_recursive_internal_links(crawler: AsyncWebCrawler, start_urls: L
         for result in results:
             norm_url = normalize_url(result.url)
             visited.add(norm_url)
-
+            
             if result.success and result.markdown:
                 results_all.append({'url': result.url, 'markdown': result.markdown})
                 for link in result.links.get("internal", []):
-                    next_url = normalize_url(link["href"])
-                    if next_url not in visited:
-                        next_level_urls.add(next_url)
+                    # The crawler is not handling internal links correctly, so let's fix it here as a work around
+                    # Check if norm_url is substring of internal link href
+                    if norm_url in link["href"]:
+                        # Normalise the link first
+                        norm_link = normalize_url(link["href"])
+                        # Cut norm_url from internal to get relative path
+                        relative_path = norm_link.replace(norm_url, "")
+                        # prune leading / from relative path to avoid empty string later
+                        if relative_path.startswith("/"):
+                            relative_path = relative_path[1:]
+                        # if rel path not empty 
+                        if relative_path:
+                            # Trim page/file ref from norm_url (everything after last '/')
+                            base_url = norm_url.rsplit('/', 1)[0]
+                            # Concat proper relative path to trimmed norm_url
+                            corrected_url = f"{base_url}/{relative_path}" 
+                            # now this is sorted, we will stick with the established var names for consitency
+                            next_url = corrected_url 
+                            if next_url not in visited:
+                                next_level_urls.add(next_url)
+
 
         current_urls = next_level_urls
 
