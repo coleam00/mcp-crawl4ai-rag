@@ -37,6 +37,7 @@ from utils import (
     extract_code_blocks,
     generate_code_example_summary,
     add_code_examples_to_supabase,
+    extract_source_id,
     update_source_info,
     extract_source_summary,
     search_code_examples
@@ -413,8 +414,7 @@ async def crawl_single_page(ctx: Context, url: str) -> str:
         
         if result.success and result.markdown:
             # Extract source_id
-            parsed_url = urlparse(url)
-            source_id = parsed_url.netloc or parsed_url.path
+            source_id = extract_source_id(url)
             
             # Chunk the content
             chunks = smart_chunk_markdown(result.markdown)
@@ -601,8 +601,7 @@ async def smart_crawl_url(ctx: Context, url: str, max_depth: int = 3, max_concur
             chunks = smart_chunk_markdown(md, chunk_size=chunk_size)
             
             # Extract source_id
-            parsed_url = urlparse(source_url)
-            source_id = parsed_url.netloc or parsed_url.path
+            source_id = extract_source_id(source_url)
             
             # Store content for source summary generation
             if source_id not in source_content_map:
@@ -673,8 +672,7 @@ async def smart_crawl_url(ctx: Context, url: str, max_depth: int = 3, max_concur
                         summaries = list(executor.map(process_code_example, summary_args))
                     
                     # Prepare code example data
-                    parsed_url = urlparse(source_url)
-                    source_id = parsed_url.netloc or parsed_url.path
+                    source_id = extract_source_id(source_url)
                     
                     for i, (block, summary) in enumerate(zip(code_blocks, summaries)):
                         code_urls.append(source_url)
