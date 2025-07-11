@@ -37,6 +37,7 @@ from utils import (
     extract_code_blocks,
     generate_code_example_summary,
     add_code_examples_to_supabase,
+    extract_source_id,
     update_source_info,
     extract_source_summary,
     search_code_examples
@@ -413,8 +414,7 @@ async def crawl_single_page(ctx: Context, url: str) -> str:
         
         if result.success and result.markdown:
             # Extract source_id
-            parsed_url = urlparse(url)
-            source_id = parsed_url.netloc or parsed_url.path
+            source_id = extract_source_id(url)
             
             # Chunk the content
             chunks = smart_chunk_markdown(result.markdown)
@@ -601,8 +601,7 @@ async def smart_crawl_url(ctx: Context, url: str, max_depth: int = 3, max_concur
             chunks = smart_chunk_markdown(md, chunk_size=chunk_size)
             
             # Extract source_id
-            parsed_url = urlparse(source_url)
-            source_id = parsed_url.netloc or parsed_url.path
+            source_id = extract_source_id(source_url)
             
             # Store content for source summary generation
             if source_id not in source_content_map:
@@ -673,8 +672,7 @@ async def smart_crawl_url(ctx: Context, url: str, max_depth: int = 3, max_concur
                         summaries = list(executor.map(process_code_example, summary_args))
                     
                     # Prepare code example data
-                    parsed_url = urlparse(source_url)
-                    source_id = parsed_url.netloc or parsed_url.path
+                    source_id = extract_source_id(source_url)
                     
                     for i, (block, summary) in enumerate(zip(code_blocks, summaries)):
                         code_urls.append(source_url)
@@ -1829,13 +1827,31 @@ async def crawl_recursive_internal_links(crawler: AsyncWebCrawler, start_urls: L
         for result in results:
             norm_url = normalize_url(result.url)
             visited.add(norm_url)
-
+            
             if result.success and result.markdown:
                 results_all.append({'url': result.url, 'markdown': result.markdown})
                 for link in result.links.get("internal", []):
-                    next_url = normalize_url(link["href"])
-                    if next_url not in visited:
-                        next_level_urls.add(next_url)
+                    # The crawler is not handling internal links correctly, so let's fix it here as a work around
+                    # Check if norm_url is substring of internal link href
+                    if norm_url in link["href"]:
+                        # Normalise the link first
+                        norm_link = normalize_url(link["href"])
+                        # Cut norm_url from internal to get relative path
+                        relative_path = norm_link.replace(norm_url, "")
+                        # prune leading / from relative path to avoid empty string later
+                        if relative_path.startswith("/"):
+                            relative_path = relative_path[1:]
+                        # if rel path not empty 
+                        if relative_path:
+                            # Trim page/file ref from norm_url (everything after last '/')
+                            base_url = norm_url.rsplit('/', 1)[0]
+                            # Concat proper relative path to trimmed norm_url
+                            corrected_url = f"{base_url}/{relative_path}" 
+                            # now this is sorted, we will stick with the established var names for consitency
+                            next_url = corrected_url 
+                            if next_url not in visited:
+                                next_level_urls.add(next_url)
+
 
         current_urls = next_level_urls
 

@@ -14,6 +14,33 @@ import time
 # Load OpenAI API key for embeddings
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+def extract_source_id(url: str) -> str:
+    """
+    Extract source_id from URL with special handling for GitHub repositories.
+    
+    For GitHub URLs, returns the full repo path (e.g., 'github.com/user/repo').
+    For other URLs, returns the domain.
+    
+    Args:
+        url: The URL to extract source_id from
+        
+    Returns:
+        Source ID string
+    """
+    parsed_url = urlparse(url)
+    
+    # Special handling for GitHub URLs
+    if parsed_url.netloc == 'github.com':
+        # Extract user/repo from path like '/user/repo' or '/user/repo.git'
+        path_parts = parsed_url.path.strip('/').split('/')
+        if len(path_parts) >= 2:
+            user = path_parts[0]
+            repo = path_parts[1].replace('.git', '')  # Remove .git if present
+            return f"github.com/{user}/{repo}"
+    
+    # Default behavior for non-GitHub URLs
+    return parsed_url.netloc or parsed_url.path
+
 def get_supabase_client() -> Client:
     """
     Get a Supabase client with the URL and key from environment variables.
@@ -265,8 +292,7 @@ def add_documents_to_supabase(
             chunk_size = len(contextual_contents[j])
             
             # Extract source_id from URL
-            parsed_url = urlparse(batch_urls[j])
-            source_id = parsed_url.netloc or parsed_url.path
+            source_id = extract_source_id(batch_urls[j])
             
             # Prepare data for insertion
             data = {
@@ -548,8 +574,7 @@ def add_code_examples_to_supabase(
             idx = i + j
             
             # Extract source_id from URL
-            parsed_url = urlparse(urls[idx])
-            source_id = parsed_url.netloc or parsed_url.path
+            source_id = extract_source_id(urls[idx])
             
             batch_data.append({
                 'url': urls[idx],
