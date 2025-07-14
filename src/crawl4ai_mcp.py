@@ -146,49 +146,12 @@ async def crawl4ai_lifespan(server: FastMCP) -> AsyncIterator[Crawl4AIContext]:
     # Initialize Supabase client
     supabase_client = get_supabase_client()
     
-    # Initialize cross-encoder model for reranking if enabled
+    # Initialize components as None - they will be loaded lazily when needed
     reranking_model = None
-    if os.getenv("USE_RERANKING", "false") == "true":
-        try:
-            reranking_model = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
-        except Exception as e:
-            print(f"Failed to load reranking model: {e}")
-            reranking_model = None
-    
-    # Initialize Neo4j components if configured and enabled
     knowledge_validator = None
     repo_extractor = None
     
-    # Check if knowledge graph functionality is enabled
-    knowledge_graph_enabled = os.getenv("USE_KNOWLEDGE_GRAPH", "false") == "true"
-    
-    if knowledge_graph_enabled:
-        neo4j_uri = os.getenv("NEO4J_URI")
-        neo4j_user = os.getenv("NEO4J_USER")
-        neo4j_password = os.getenv("NEO4J_PASSWORD")
-        
-        if neo4j_uri and neo4j_user and neo4j_password:
-            try:
-                print("Initializing knowledge graph components...")
-                
-                # Initialize knowledge graph validator
-                knowledge_validator = KnowledgeGraphValidator(neo4j_uri, neo4j_user, neo4j_password)
-                await knowledge_validator.initialize()
-                print("✓ Knowledge graph validator initialized")
-                
-                # Initialize repository extractor
-                repo_extractor = DirectNeo4jExtractor(neo4j_uri, neo4j_user, neo4j_password)
-                await repo_extractor.initialize()
-                print("✓ Repository extractor initialized")
-                
-            except Exception as e:
-                print(f"Failed to initialize Neo4j components: {format_neo4j_error(e)}")
-                knowledge_validator = None
-                repo_extractor = None
-        else:
-            print("Neo4j credentials not configured - knowledge graph tools will be unavailable")
-    else:
-        print("Knowledge graph functionality disabled - set USE_KNOWLEDGE_GRAPH=true to enable")
+    print("✓ Basic components initialized (lazy loading enabled for heavy components)")
     
     try:
         yield Crawl4AIContext(
@@ -213,6 +176,55 @@ async def crawl4ai_lifespan(server: FastMCP) -> AsyncIterator[Crawl4AIContext]:
                 print("✓ Repository extractor closed")
             except Exception as e:
                 print(f"Error closing repository extractor: {e}")
+
+# Add lazy loading functions
+async def get_reranking_model(ctx: Crawl4AIContext) -> Optional[CrossEncoder]:
+    """Lazy load the reranking model only when needed."""
+    if ctx.reranking_model is None and os.getenv("USE_RERANKING", "false") == "true":
+        try:
+            print("Loading reranking model...")
+            ctx.reranking_model = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
+            print("✓ Reranking model loaded")
+        except Exception as e:
+            print(f"Failed to load reranking model: {e}")
+            ctx.reranking_model = None
+    return ctx.reranking_model
+
+async def get_knowledge_validator(ctx: Crawl4AIContext) -> Optional[Any]:
+    """Lazy load the knowledge graph validator only when needed."""
+    if ctx.knowledge_validator is None and os.getenv("USE_KNOWLEDGE_GRAPH", "false") == "true":
+        neo4j_uri = os.getenv("NEO4J_URI")
+        neo4j_user = os.getenv("NEO4J_USER")
+        neo4j_password = os.getenv("NEO4J_PASSWORD")
+        
+        if neo4j_uri and neo4j_user and neo4j_password:
+            try:
+                print("Loading knowledge graph validator...")
+                ctx.knowledge_validator = KnowledgeGraphValidator(neo4j_uri, neo4j_user, neo4j_password)
+                await ctx.knowledge_validator.initialize()
+                print("✓ Knowledge graph validator loaded")
+            except Exception as e:
+                print(f"Failed to initialize knowledge validator: {format_neo4j_error(e)}")
+                ctx.knowledge_validator = None
+    return ctx.knowledge_validator
+
+async def get_repo_extractor(ctx: Crawl4AIContext) -> Optional[Any]:
+    """Lazy load the repository extractor only when needed."""
+    if ctx.repo_extractor is None and os.getenv("USE_KNOWLEDGE_GRAPH", "false") == "true":
+        neo4j_uri = os.getenv("NEO4J_URI")
+        neo4j_user = os.getenv("NEO4J_USER")
+        neo4j_password = os.getenv("NEO4J_PASSWORD")
+        
+        if neo4j_uri and neo4j_user and neo4j_password:
+            try:
+                print("Loading repository extractor...")
+                ctx.repo_extractor = DirectNeo4jExtractor(neo4j_uri, neo4j_user, neo4j_password)
+                await ctx.repo_extractor.initialize()
+                print("✓ Repository extractor loaded")
+            except Exception as e:
+                print(f"Failed to initialize repository extractor: {format_neo4j_error(e)}")
+                ctx.repo_extractor = None
+    return ctx.repo_extractor
 
 # Initialize FastMCP server
 mcp = FastMCP(
@@ -878,8 +890,11 @@ async def perform_rag_query(ctx: Context, query: str, source: str = None, match_
         
         # Apply reranking if enabled
         use_reranking = os.getenv("USE_RERANKING", "false") == "true"
-        if use_reranking and ctx.request_context.lifespan_context.reranking_model:
-            results = rerank_results(ctx.request_context.lifespan_context.reranking_model, query, results, content_key="content")
+        reranking_model = None
+        if use_reranking:
+            reranking_model = await get_reranking_model(ctx.request_context.lifespan_context)
+            if reranking_model:
+                results = rerank_results(reranking_model, query, results, content_key="content")
         
         # Format the results
         formatted_results = []
@@ -900,7 +915,7 @@ async def perform_rag_query(ctx: Context, query: str, source: str = None, match_
             "query": query,
             "source_filter": source,
             "search_mode": "hybrid" if use_hybrid_search else "vector",
-            "reranking_applied": use_reranking and ctx.request_context.lifespan_context.reranking_model is not None,
+            "reranking_applied": use_reranking and reranking_model is not None,
             "results": formatted_results,
             "count": len(formatted_results)
         }, indent=2)
@@ -1033,8 +1048,11 @@ async def search_code_examples(ctx: Context, query: str, source_id: str = None, 
         
         # Apply reranking if enabled
         use_reranking = os.getenv("USE_RERANKING", "false") == "true"
-        if use_reranking and ctx.request_context.lifespan_context.reranking_model:
-            results = rerank_results(ctx.request_context.lifespan_context.reranking_model, query, results, content_key="content")
+        reranking_model = None
+        if use_reranking:
+            reranking_model = await get_reranking_model(ctx.request_context.lifespan_context)
+            if reranking_model:
+                results = rerank_results(reranking_model, query, results, content_key="content")
         
         # Format the results
         formatted_results = []
@@ -1057,7 +1075,7 @@ async def search_code_examples(ctx: Context, query: str, source_id: str = None, 
             "query": query,
             "source_filter": source_id,
             "search_mode": "hybrid" if use_hybrid_search else "vector",
-            "reranking_applied": use_reranking and ctx.request_context.lifespan_context.reranking_model is not None,
+            "reranking_applied": use_reranking and reranking_model is not None,
             "results": formatted_results,
             "count": len(formatted_results)
         }, indent=2)
@@ -1101,7 +1119,7 @@ async def check_ai_script_hallucinations(ctx: Context, script_path: str) -> str:
             }, indent=2)
         
         # Get the knowledge validator from context
-        knowledge_validator = ctx.request_context.lifespan_context.knowledge_validator
+        knowledge_validator = await get_knowledge_validator(ctx.request_context.lifespan_context)
         
         if not knowledge_validator:
             return json.dumps({
@@ -1240,7 +1258,7 @@ async def query_knowledge_graph(ctx: Context, command: str) -> str:
             }, indent=2)
         
         # Get Neo4j driver from context
-        repo_extractor = ctx.request_context.lifespan_context.repo_extractor
+        repo_extractor = await get_repo_extractor(ctx.request_context.lifespan_context)
         if not repo_extractor or not repo_extractor.driver:
             return json.dumps({
                 "success": False,
@@ -1651,7 +1669,7 @@ async def parse_github_repository(ctx: Context, repo_url: str) -> str:
             }, indent=2)
         
         # Get the repository extractor from context
-        repo_extractor = ctx.request_context.lifespan_context.repo_extractor
+        repo_extractor = await get_repo_extractor(ctx.request_context.lifespan_context)
         
         if not repo_extractor:
             return json.dumps({
