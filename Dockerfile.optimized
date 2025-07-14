@@ -1,0 +1,45 @@
+# Multi-Stage Build für minimale Image-Größe
+FROM python:3.12-slim as builder
+
+WORKDIR /app
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv
+RUN pip install uv
+
+# Copy requirements and install dependencies
+COPY pyproject.toml uv.lock ./
+RUN uv pip install --system -e .
+
+# Production stage
+FROM python:3.12-slim
+
+ARG PORT=8051
+
+WORKDIR /app
+
+# Install only runtime dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Copy installed packages from builder
+COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Copy application code
+COPY . .
+
+# Run crawl4ai setup
+RUN crawl4ai-setup
+
+EXPOSE ${PORT}
+
+# Command to run the MCP server
+CMD ["python", "src/crawl4ai_mcp.py"] 

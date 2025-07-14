@@ -1,15 +1,13 @@
-FROM python:3.12-slim
+# Alpine-based Dockerfile for smaller image size
+# Fixes Issue #56: https://github.com/coleam00/mcp-crawl4ai-rag/issues/56
+FROM python:3.12-alpine
 
 ARG PORT=8051
 
 WORKDIR /app
 
-# Install system dependencies (Git für Repository-Parsing)
-# Fixes Issue #56: https://github.com/coleam00/mcp-crawl4ai-rag/issues/56
-RUN apt-get update && apt-get install -y \
-    git \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
+# Install git (Alpine package manager is faster than apt-get)
+RUN apk add --no-cache git
 
 # Install uv
 RUN pip install uv
@@ -25,4 +23,4 @@ RUN uv pip install --system -e . && \
 EXPOSE ${PORT}
 
 # Command to run the MCP server
-CMD ["python", "src/crawl4ai_mcp.py"]
+CMD ["python", "src/crawl4ai_mcp.py"] 
