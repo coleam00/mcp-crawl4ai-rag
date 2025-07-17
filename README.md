@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/coleam00-mcp-crawl4ai-rag-badge.png)](https://mseep.ai/app/coleam00-mcp-crawl4ai-rag)
+
 <h1 align="center">Crawl4AI RAG MCP Server</h1>
 
 <p align="center">
