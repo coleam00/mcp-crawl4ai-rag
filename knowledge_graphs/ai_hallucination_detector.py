@@ -15,9 +15,9 @@ from typing import Optional, List
 
 from dotenv import load_dotenv
 
-from ai_script_analyzer import AIScriptAnalyzer, analyze_ai_script
-from knowledge_graph_validator import KnowledgeGraphValidator
-from hallucination_reporter import HallucinationReporter
+from .ai_script_analyzer import AIScriptAnalyzer
+from .knowledge_graph_validator import KnowledgeGraphValidator
+from .hallucination_reporter import HallucinationReporter
 
 # Configure logging
 logging.basicConfig(
@@ -184,13 +184,13 @@ class AIHallucinationDetector:
         print(f"Average Confidence: {avg_confidence:.1%}")
         print(f"Total Hallucinations: {total_hallucinations}")
         
-        print(f"\nAggregated Results:")
+        print("\nAggregated Results:")
         print(f"  ✅ Valid: {total_valid} ({total_valid/total_validations:.1%})")
         print(f"  ❌ Invalid: {total_invalid} ({total_invalid/total_validations:.1%})")
         print(f"  🔍 Not Found: {total_not_found} ({total_not_found/total_validations:.1%})")
         
         # Show worst performing scripts
-        print(f"\n🚨 Scripts with Most Hallucinations:")
+        print("\n🚨 Scripts with Most Hallucinations:")
         sorted_results = sorted(results, key=lambda x: len(x['hallucinations_detected']), reverse=True)
         for result in sorted_results[:5]:
             script_name = Path(result['analysis_metadata']['script_path']).name

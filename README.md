@@ -315,6 +315,22 @@ uv run src/crawl4ai_mcp.py
 
 The server will start and listen on the configured host and port.
 
+## Development Commands
+
+This project includes a Makefile for streamlined development workflows:
+
+```bash
+make help          # Show all available commands
+make install-dev   # Install dev dependencies
+make start         # Run the MCP server
+make test          # Run unit and e2e tests
+make test-unit     # Run unit tests
+make test-e2e      # Run E2E tests (requires server running)
+make lint          # Run linting with fixes
+make format        # Format code
+make clean         # Remove temp files and caches
+```
+
 ## Integration with MCP Clients
 
 ### SSE Configuration

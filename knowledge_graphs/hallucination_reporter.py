@@ -8,11 +8,10 @@ detected in Python scripts. Supports multiple output formats.
 import json
 import logging
 from datetime import datetime, timezone
-from pathlib import Path
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 
-from knowledge_graph_validator import (
-    ScriptValidationResult, ValidationStatus, ValidationResult
+from .knowledge_graph_validator import (
+    ScriptValidationResult, ValidationStatus
 )
 
 logger = logging.getLogger(__name__)
@@ -502,7 +501,7 @@ class HallucinationReporter:
         print(f"Overall Confidence: {report['validation_summary']['overall_confidence']:.1%}")
         
         summary = report['validation_summary']
-        print(f"\nValidation Results:")
+        print("\nValidation Results:")
         print(f"  ✅ Valid: {summary['valid_count']}")
         print(f"  ❌ Invalid: {summary['invalid_count']}")
         print(f"  🔍 Not Found: {summary['not_found_count']}")
@@ -516,7 +515,7 @@ class HallucinationReporter:
                 print(f"    {hall['description']}")
         
         if report['recommendations']:
-            print(f"\n💡 Recommendations:")
+            print("\n💡 Recommendations:")
             for rec in report['recommendations'][:3]:  # Show first 3
                 print(f"  - {rec}")
         

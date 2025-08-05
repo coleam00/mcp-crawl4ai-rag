@@ -10,7 +10,6 @@ import asyncio
 import os
 from dotenv import load_dotenv
 from neo4j import AsyncGraphDatabase
-from typing import List, Dict, Any
 import argparse
 
 
@@ -264,7 +263,7 @@ class KnowledgeGraphQuerier:
     
     async def run_custom_query(self, query: str):
         """Run a custom Cypher query"""
-        print(f"\n🔍 Running Custom Query:")
+        print("\n🔍 Running Custom Query:")
         print("=" * 60)
         print(f"Query: {query}")
         print("-" * 60)

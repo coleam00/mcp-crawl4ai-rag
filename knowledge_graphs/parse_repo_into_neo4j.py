@@ -16,13 +16,13 @@ import logging
 import os
 import subprocess
 import shutil
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional, Dict, Any, Set
 import ast
 
 from dotenv import load_dotenv
 from neo4j import AsyncGraphDatabase
+from supabase import Client
 
 # Configure logging
 logging.basicConfig(
@@ -396,12 +396,13 @@ class Neo4jCodeAnalyzer:
 class DirectNeo4jExtractor:
     """Creates nodes and relationships directly in Neo4j"""
     
-    def __init__(self, neo4j_uri: str, neo4j_user: str, neo4j_password: str):
+    def __init__(self, neo4j_uri: str, neo4j_user: str, neo4j_password: str, supabase_client: Optional[Client] = None):
         self.neo4j_uri = neo4j_uri
         self.neo4j_user = neo4j_user
         self.neo4j_password = neo4j_password
         self.driver = None
         self.analyzer = Neo4jCodeAnalyzer()
+        self.supabase_client = supabase_client
     
     async def initialize(self):
         """Initialize Neo4j connection"""
@@ -589,6 +590,32 @@ class DirectNeo4jExtractor:
             print(f"Import relationships: {total_imports}")
             
             logger.info(f"Successfully created Neo4j graph for {repo_name}")
+            
+            # Process documentation if Supabase client is available
+            docs_result = None
+            if self.supabase_client:
+                logger.info("Processing repository documentation...")
+                try:
+                    # Import the process_repository_docs function
+                    from src.utils import process_repository_docs
+                    
+                    docs_result = await process_repository_docs(
+                        self.supabase_client, repo_path, repo_name, repo_url
+                    )
+                    logger.info(f"Documentation processing completed: {docs_result}")
+                except Exception as e:
+                    logger.error(f"Documentation processing failed: {e}")
+                    docs_result = {
+                        "files_processed": 0,
+                        "chunks_created": 0,
+                        "code_examples_extracted": 0,
+                        "error": str(e)
+                    }
+            else:
+                logger.info("Supabase client not available, skipping documentation processing")
+            
+            # Return comprehensive results
+            return repo_name, modules_data, docs_result
             
         finally:
             if os.path.exists(temp_dir):

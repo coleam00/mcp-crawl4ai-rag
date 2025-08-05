@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Dict, List, Optional
+from typing import List, Optional
 from dataclasses import dataclass
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv

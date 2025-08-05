@@ -22,13 +22,7 @@ import json
 import os
 import re
 import concurrent.futures
-import sys
-
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig, CacheMode, MemoryAdaptiveDispatcher
-
-# Add knowledge_graphs folder to path for importing knowledge graph modules
-knowledge_graphs_path = Path(__file__).resolve().parent.parent / 'knowledge_graphs'
-sys.path.append(str(knowledge_graphs_path))
 
 from utils import (
     get_supabase_client, 
@@ -39,14 +33,14 @@ from utils import (
     add_code_examples_to_supabase,
     update_source_info,
     extract_source_summary,
-    search_code_examples
+    search_code_examples,
+    smart_chunk_markdown
 )
 
-# Import knowledge graph modules
-from knowledge_graph_validator import KnowledgeGraphValidator
-from parse_repo_into_neo4j import DirectNeo4jExtractor
-from ai_script_analyzer import AIScriptAnalyzer
-from hallucination_reporter import HallucinationReporter
+from knowledge_graphs.knowledge_graph_validator import KnowledgeGraphValidator
+from knowledge_graphs.parse_repo_into_neo4j import DirectNeo4jExtractor
+from knowledge_graphs.ai_script_analyzer import AIScriptAnalyzer
+from knowledge_graphs.hallucination_reporter import HallucinationReporter
 
 # Load environment variables from the project root .env file
 project_root = Path(__file__).resolve().parent.parent
@@ -177,7 +171,7 @@ async def crawl4ai_lifespan(server: FastMCP) -> AsyncIterator[Crawl4AIContext]:
                 print("✓ Knowledge graph validator initialized")
                 
                 # Initialize repository extractor
-                repo_extractor = DirectNeo4jExtractor(neo4j_uri, neo4j_user, neo4j_password)
+                repo_extractor = DirectNeo4jExtractor(neo4j_uri, neo4j_user, neo4j_password, supabase_client)
                 await repo_extractor.initialize()
                 print("✓ Repository extractor initialized")
                 
@@ -307,50 +301,7 @@ def parse_sitemap(sitemap_url: str) -> List[str]:
 
     return urls
 
-def smart_chunk_markdown(text: str, chunk_size: int = 5000) -> List[str]:
-    """Split text into chunks, respecting code blocks and paragraphs."""
-    chunks = []
-    start = 0
-    text_length = len(text)
 
-    while start < text_length:
-        # Calculate end position
-        end = start + chunk_size
-
-        # If we're at the end of the text, just take what's left
-        if end >= text_length:
-            chunks.append(text[start:].strip())
-            break
-
-        # Try to find a code block boundary first (```)
-        chunk = text[start:end]
-        code_block = chunk.rfind('```')
-        if code_block != -1 and code_block > chunk_size * 0.3:
-            end = start + code_block
-
-        # If no code block, try to break at a paragraph
-        elif '\n\n' in chunk:
-            # Find the last paragraph break
-            last_break = chunk.rfind('\n\n')
-            if last_break > chunk_size * 0.3:  # Only break if we're past 30% of chunk_size
-                end = start + last_break
-
-        # If no paragraph break, try to break at a sentence
-        elif '. ' in chunk:
-            # Find the last sentence break
-            last_period = chunk.rfind('. ')
-            if last_period > chunk_size * 0.3:  # Only break if we're past 30% of chunk_size
-                end = start + last_period + 1
-
-        # Extract chunk and clean it up
-        chunk = text[start:end].strip()
-        if chunk:
-            chunks.append(chunk)
-
-        # Move start position for next chunk
-        start = end
-
-    return chunks
 
 def extract_section_info(chunk: str) -> Dict[str, Any]:
     """
@@ -1622,17 +1573,26 @@ async def _handle_query_command(session, command: str, cypher_query: str) -> str
 @mcp.tool()
 async def parse_github_repository(ctx: Context, repo_url: str) -> str:
     """
-    Parse a GitHub repository into the Neo4j knowledge graph.
+    Parse a GitHub repository into both Neo4j knowledge graph and Supabase documentation storage.
     
-    This tool clones a GitHub repository, analyzes its Python files, and stores
-    the code structure (classes, methods, functions, imports) in Neo4j for use
-    in hallucination detection. The tool:
+    This enhanced tool clones a GitHub repository and performs dual processing:
     
-    - Clones the repository to a temporary location
+    **Code Analysis (Neo4j):**
     - Analyzes Python files to extract code structure
     - Stores classes, methods, functions, and imports in Neo4j
-    - Provides detailed statistics about the parsing results
-    - Automatically handles module name detection for imports
+    - Enables hallucination detection for AI-generated code
+    
+    **Documentation Processing (Supabase):**
+    - Discovers documentation files (.md, .rst, .txt, .ipynb)
+    - Processes Jupyter notebooks with built-in JSON parsing
+    - Chunks and embeds documentation for semantic search
+    - Extracts code examples for agentic RAG (if enabled)
+    
+    The tool:
+    - Clones the repository to a temporary location
+    - Processes both code and documentation in parallel
+    - Provides comprehensive statistics for both processing types
+    - Handles errors gracefully with partial success reporting
     
     Args:
         ctx: The MCP server provided context
@@ -1640,6 +1600,7 @@ async def parse_github_repository(ctx: Context, repo_url: str) -> str:
     
     Returns:
         JSON string with parsing results, statistics, and repository information
+        including both code analysis and documentation processing results
     """
     try:
         # Check if knowledge graph functionality is enabled
@@ -1653,7 +1614,7 @@ async def parse_github_repository(ctx: Context, repo_url: str) -> str:
         # Get the repository extractor from context
         repo_extractor = ctx.request_context.lifespan_context.repo_extractor
         
-        if not repo_extractor:
+        if not repo_extractor or not getattr(repo_extractor, 'driver', None):
             return json.dumps({
                 "success": False,
                 "error": "Repository extractor not available. Check Neo4j configuration in environment variables."
@@ -1672,7 +1633,8 @@ async def parse_github_repository(ctx: Context, repo_url: str) -> str:
         
         # Parse the repository (this includes cloning, analysis, and Neo4j storage)
         print(f"Starting repository analysis for: {repo_name}")
-        await repo_extractor.analyze_repository(repo_url)
+        repo_name, modules_data, docs_result = await repo_extractor.analyze_repository(repo_url)
+            
         print(f"Repository analysis completed for: {repo_name}")
         
         # Query Neo4j for statistics about the parsed repository
@@ -1727,7 +1689,8 @@ async def parse_github_repository(ctx: Context, repo_url: str) -> str:
                     "error": f"Repository '{repo_name}' not found in database after parsing"
                 }, indent=2)
         
-        return json.dumps({
+        # Prepare response maintaining original API structure
+        response = {
             "success": True,
             "repo_url": repo_url,
             "repo_name": repo_name,
@@ -1739,7 +1702,20 @@ async def parse_github_repository(ctx: Context, repo_url: str) -> str:
                 f"Use check_ai_script_hallucinations to validate scripts against {repo_name}",
                 "The knowledge graph contains classes, methods, and functions from this repository"
             ]
-        }, indent=2)
+        }
+        
+        # Add documentation processing results if available
+        if docs_result is not None:
+            response["documentation_processing"] = docs_result
+            if docs_result.get("files_processed", 0) > 0:
+                response["next_steps"].append("Documentation is available for semantic search in Supabase")
+                response["next_steps"].append("Use search_documents to find relevant documentation")
+        else:
+            response["documentation_processing"] = {
+                "message": "Documentation processing skipped - Supabase client not available"
+            }
+        
+        return json.dumps(response, indent=2)
         
     except Exception as e:
         return json.dumps({

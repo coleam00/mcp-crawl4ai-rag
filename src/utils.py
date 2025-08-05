@@ -5,11 +5,12 @@ import os
 import concurrent.futures
 from typing import List, Dict, Any, Optional, Tuple
 import json
-from supabase import create_client, Client
-from urllib.parse import urlparse
-import openai
 import re
+from supabase import create_client, Client
+from urllib.parse import urlparse, urljoin
+import openai
 import time
+from pathlib import Path
 
 # Load OpenAI API key for embeddings
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -264,9 +265,15 @@ def add_documents_to_supabase(
             # Extract metadata fields
             chunk_size = len(contextual_contents[j])
             
-            # Extract source_id from URL
-            parsed_url = urlparse(batch_urls[j])
-            source_id = parsed_url.netloc or parsed_url.path
+            # Use source_id from metadata if available, otherwise extract from URL
+            source_id = batch_metadatas[j].get("source_id")
+            if not source_id:
+                # Fallback to extracting from URL for backward compatibility
+                parsed_url = urlparse(batch_urls[j])
+                source_id = parsed_url.netloc or parsed_url.path
+            
+            # Prepare metadata without source_id (since it's a separate field)
+            metadata_clean = {k: v for k, v in batch_metadatas[j].items() if k != "source_id"}
             
             # Prepare data for insertion
             data = {
@@ -275,7 +282,7 @@ def add_documents_to_supabase(
                 "content": contextual_contents[j],  # Store original content
                 "metadata": {
                     "chunk_size": chunk_size,
-                    **batch_metadatas[j]
+                    **metadata_clean
                 },
                 "source_id": source_id,  # Add source_id field
                 "embedding": batch_embeddings[j]  # Use embedding from contextual content
@@ -400,7 +407,7 @@ def extract_code_blocks(markdown_content: str, min_length: int = 1000) -> List[D
         if len(lines) > 1:
             # Check if first line is a language specifier (no spaces, common language names)
             first_line = lines[0].strip()
-            if first_line and not ' ' in first_line and len(first_line) < 20:
+            if first_line and ' ' not in first_line and len(first_line) < 20:
                 language = first_line
                 code_content = lines[1].strip() if len(lines) > 1 else ""
             else:
@@ -492,6 +499,7 @@ def add_code_examples_to_supabase(
     code_examples: List[str],
     summaries: List[str],
     metadatas: List[Dict[str, Any]],
+    source_id: str = None,
     batch_size: int = 20
 ):
     """
@@ -504,6 +512,7 @@ def add_code_examples_to_supabase(
         code_examples: List of code example contents
         summaries: List of code example summaries
         metadatas: List of metadata dictionaries
+        source_id: Source ID for all code examples (optional, will extract from URL if not provided)
         batch_size: Size of each batch for insertion
     """
     if not urls:
@@ -537,7 +546,7 @@ def add_code_examples_to_supabase(
             if embedding and not all(v == 0.0 for v in embedding):
                 valid_embeddings.append(embedding)
             else:
-                print(f"Warning: Zero or invalid embedding detected, creating new one...")
+                print("Warning: Zero or invalid embedding detected, creating new one...")
                 # Try to create a single embedding as fallback
                 single_embedding = create_embedding(batch_texts[len(valid_embeddings)])
                 valid_embeddings.append(single_embedding)
@@ -547,9 +556,12 @@ def add_code_examples_to_supabase(
         for j, embedding in enumerate(valid_embeddings):
             idx = i + j
             
-            # Extract source_id from URL
-            parsed_url = urlparse(urls[idx])
-            source_id = parsed_url.netloc or parsed_url.path
+            # Use provided source_id or extract from URL
+            if source_id:
+                code_source_id = source_id
+            else:
+                parsed_url = urlparse(urls[idx])
+                code_source_id = parsed_url.netloc or parsed_url.path
             
             batch_data.append({
                 'url': urls[idx],
@@ -557,7 +569,7 @@ def add_code_examples_to_supabase(
                 'content': code_examples[idx],
                 'summary': summaries[idx],
                 'metadata': metadatas[idx],  # Store as JSON object, not string
-                'source_id': source_id,
+                'source_id': code_source_id,
                 'embedding': embedding
             })
         
@@ -736,3 +748,587 @@ def search_code_examples(
     except Exception as e:
         print(f"Error searching code examples: {e}")
         return []
+
+
+# ==============================================================================
+# TEXT PROCESSING FUNCTIONS
+# ==============================================================================
+
+def smart_chunk_markdown(text: str, chunk_size: int = 5000) -> List[str]:
+    """Split text into chunks, respecting code blocks and paragraphs."""
+    chunks = []
+    start = 0
+    text_length = len(text)
+
+    while start < text_length:
+        # Calculate end position
+        end = start + chunk_size
+
+        # If we're at the end of the text, just take what's left
+        if end >= text_length:
+            chunks.append(text[start:].strip())
+            break
+
+        # Try to find a code block boundary first (```)
+        chunk = text[start:end]
+        code_block = chunk.rfind('```')
+        if code_block != -1 and code_block > chunk_size * 0.3:
+            end = start + code_block
+
+        # If no code block, try to break at a paragraph
+        elif '\n\n' in chunk:
+            # Find the last paragraph break
+            last_break = chunk.rfind('\n\n')
+            if last_break > chunk_size * 0.3:  # Only break if we're past 30% of chunk_size
+                end = start + last_break
+
+        # If no paragraph break, try to break at a sentence
+        elif '. ' in chunk:
+            # Find the last sentence break
+            last_period = chunk.rfind('. ')
+            if last_period > chunk_size * 0.3:  # Only break if we're past 30% of chunk_size
+                end = start + last_period + 1
+
+        # Extract chunk and clean it up
+        chunk = text[start:end].strip()
+        if chunk:
+            chunks.append(chunk)
+
+        # Move start position for next chunk
+        start = end
+
+    return chunks
+
+
+# ==============================================================================
+# DOCUMENTATION PROCESSING FUNCTIONS
+# ==============================================================================
+
+def convert_notebook_to_markdown(notebook_path: Path) -> str:
+    """
+    Convert Jupyter notebook to markdown using only standard Python libraries.
+    
+    Args:
+        notebook_path: Path to the .ipynb file
+        
+    Returns:
+        Markdown content as string
+        
+    Raises:
+        Exception: If notebook cannot be parsed or converted
+    """
+    
+    with open(notebook_path, 'r', encoding='utf-8') as f:
+        notebook = json.load(f)
+    
+    markdown_parts = []
+    
+    # Add notebook title if available
+    if 'metadata' in notebook and 'kernelspec' in notebook['metadata']:
+        kernel_name = notebook['metadata']['kernelspec'].get('display_name', 'Notebook')
+        markdown_parts.append(f"# {kernel_name}\n")
+    
+    # Process each cell
+    for cell in notebook.get('cells', []):
+        cell_type = cell.get('cell_type', '')
+        source = cell.get('source', [])
+        
+        # Join source lines into content
+        if isinstance(source, list):
+            content = ''.join(source)
+        else:
+            content = str(source)
+        
+        if cell_type == 'markdown':
+            # Add markdown cell content directly
+            markdown_parts.append(content)
+            
+        elif cell_type == 'code':
+            # Add code cell as markdown code block
+            if content.strip():
+                language = _detect_code_language(notebook)
+                markdown_parts.append(f"```{language}\n{content}\n```")
+                
+                # Optionally include outputs
+                outputs = cell.get('outputs', [])
+                if outputs:
+                    for output in outputs:
+                        if output.get('output_type') == 'stream':
+                            # Add stream output
+                            stream_text = ''.join(output.get('text', []))
+                            if stream_text.strip():
+                                markdown_parts.append(f"```\n{stream_text}\n```")
+                        elif output.get('output_type') in ['execute_result', 'display_data']:
+                            # Add text representation of output
+                            data = output.get('data', {})
+                            if 'text/plain' in data:
+                                text_output = ''.join(data['text/plain'])
+                                if text_output.strip():
+                                    markdown_parts.append(f"```\n{text_output}\n```")
+        
+        # Add spacing between cells
+        markdown_parts.append("\n")
+    
+    return '\n'.join(markdown_parts)
+
+
+def _detect_code_language(notebook: dict) -> str:
+    """
+    Detect the programming language from notebook metadata.
+    
+    Args:
+        notebook: Parsed notebook JSON
+        
+    Returns:
+        Language identifier for code blocks
+    """
+    if 'metadata' in notebook and 'kernelspec' in notebook['metadata']:
+        # First try the explicit language field
+        language = notebook['metadata']['kernelspec'].get('language', '')
+        if language:
+            return language.lower()
+        
+        # Fall back to kernel name with simple processing
+        kernel_name = notebook['metadata']['kernelspec'].get('name', '').lower()
+        if kernel_name:
+            # Handle special case for R
+            if kernel_name == 'ir':
+                return 'r'
+            
+            # Remove version numbers (python3 -> python, python2 -> python)
+            clean_name = re.sub(r'\d+$', '', kernel_name)
+            return clean_name if clean_name else kernel_name
+    
+    return 'python'  # Default to Python
+
+def discover_documentation_files(repo_path: Path) -> List[Path]:
+    """
+    Discover documentation files with practical filtering.
+    
+    Includes extensions: .md, .rst, .txt, .mdx, .ipynb
+    Excludes directories: tests, __pycache__, .git, venv, node_modules, build, dist, examples
+    Size limit: Skip files larger than 500KB
+    
+    Args:
+        repo_path: Path to the repository root
+        
+    Returns:
+        List of Path objects for documentation files
+    """
+    doc_extensions = {'.md', '.mdx', '.rst', '.ipynb', '.txt'}
+    exclude_dirs = {
+        'tests', 'test', '__pycache__', '.git', 'venv', 'env',
+        'node_modules', 'build', 'dist', '.pytest_cache',
+        'examples', 'example', 'demo', 'benchmark', '.tox',
+        'htmlcov', 'coverage', '.coverage', '.mypy_cache'
+    }
+    
+    doc_files = []
+    max_file_size = 500 * 1024  # 500KB limit
+    
+    try:
+        for root, dirs, files in os.walk(repo_path):
+            # Filter out excluded directories
+            dirs[:] = [d for d in dirs if d not in exclude_dirs and not d.startswith('.')]
+            
+            for file in files:
+                file_path = Path(root) / file
+                
+                # Check extension
+                if file_path.suffix.lower() in doc_extensions:
+                    try:
+                        # Check file size
+                        if file_path.stat().st_size <= max_file_size:
+                            doc_files.append(file_path)
+                        else:
+                            print(
+                                f"Skipping large file {file_path.relative_to(repo_path)} "
+                                f"({file_path.stat().st_size} bytes > {max_file_size} bytes limit)"
+                            )
+                    except Exception as e:
+                        print(f"Error checking file {file_path}: {e}")
+                        continue
+    
+    except Exception as e:
+        print(f"Error discovering documentation files: {e}")
+        return []
+    
+    return doc_files
+
+
+def process_document_files(doc_files: List[Path], repo_path: Path) -> List[Dict[str, str]]:
+    """
+    Process documentation files with notebook support.
+    
+    - Jupyter notebooks: Convert to markdown using built-in JSON parsing
+    - Regular files: Read as UTF-8 text
+    - Return list of {"url": relative_path, "markdown": content}
+    
+    Args:
+        doc_files: List of documentation file paths
+        repo_path: Repository root path
+        
+    Returns:
+        List of dictionaries with url and markdown content
+    """
+    docs_content = []
+    
+    for doc_file in doc_files:
+        try:
+            relative_path = str(doc_file.relative_to(repo_path))
+            
+            if doc_file.suffix == '.ipynb':
+                # Process Jupyter notebook
+                try:
+                    markdown_content = convert_notebook_to_markdown(doc_file)
+                except Exception as e:
+                    print(f"Error converting notebook {relative_path}: {e}")
+                    continue
+            else:
+                # Process regular text file
+                try:
+                    with open(doc_file, 'r', encoding='utf-8') as f:
+                        markdown_content = f.read()
+                except UnicodeDecodeError:
+                    # Try with different encoding
+                    try:
+                        with open(doc_file, 'r', encoding='latin-1') as f:
+                            markdown_content = f.read()
+                    except Exception as e:
+                        print(f"Error reading file {relative_path} with latin-1 encoding: {e}")
+                        continue
+                except Exception as e:
+                    print(f"Error reading file {relative_path}: {e}")
+                    continue
+            
+            # Only add if we got meaningful content
+            if markdown_content.strip():
+                docs_content.append({
+                    "url": relative_path,
+                    "markdown": markdown_content
+                })
+            
+        except Exception as e:
+            print(f"Skipping file {doc_file} due to processing error: {e}")
+            continue
+    
+    return docs_content
+
+
+def create_repository_source_id(repo_url: str) -> str:
+    """
+    Create repository-level source ID for documentation.
+    
+    Normalizes both SSH and HTTPS URLs to a consistent format.
+    
+    Examples:
+    - https://github.com/user/repo.git -> github.com/user/repo
+    - git@github.com:user/repo.git -> github.com/user/repo
+    
+    Args:
+        repo_url: Repository URL (SSH or HTTPS format)
+        
+    Returns:
+        Repository source ID string in format: domain/user/repo
+    """
+    try:
+        # Handle SSH URLs (git@github.com:user/repo.git)
+        if repo_url.startswith('git@'):
+            # Extract the part after 'git@' and before ':'
+            ssh_parts = repo_url.split('@', 1)[1]  # Remove 'git@'
+            if ':' in ssh_parts:
+                domain, path = ssh_parts.split(':', 1)
+                # Remove .git suffix if present
+                path = path.rstrip('.git')
+                return f"{domain}/{path}"
+        
+        # Handle HTTPS/HTTP URLs
+        parsed_url = urlparse(repo_url)
+        if parsed_url.netloc and parsed_url.path:
+            # Remove .git suffix and leading slash if present
+            path = parsed_url.path.lstrip('/').rstrip('.git')
+            return f"{parsed_url.netloc}/{path}"
+            
+    except Exception as e:
+        print(f"Error creating source ID: {e}")
+    
+    # Fallback to simple string manipulation
+    fallback = repo_url.replace('.git', '').replace('https://', '').replace('http://', '')
+    if fallback.startswith('git@'):
+        fallback = fallback.replace('git@', '').replace(':', '/')
+    return fallback
+
+
+def create_documentation_url(repo_url: str, doc_path: str) -> str:
+    """
+    Create URL for individual documentation files (for chunk identification).
+    
+    Examples:
+    - github.com/user/repo/docs/api.md
+    - github.com/user/repo/README.md
+    
+    Args:
+        repo_url: Repository URL
+        doc_path: Relative path to documentation file
+        
+    Returns:
+        Documentation file URL string
+    """
+    try:
+        parsed_url = urlparse(repo_url)
+        # Remove .git suffix if present
+        path = parsed_url.path.rstrip('.git')
+        return f"{parsed_url.netloc}{path}/{doc_path}"
+    except Exception as e:
+        print(f"Error creating documentation URL: {e}")
+        # Fallback to simple concatenation
+        return f"{repo_url.replace('.git', '')}/{doc_path}"
+
+
+def construct_doc_url(repo_source_id: str, doc_path: str) -> str:
+    """
+    Construct URL for documentation files using repository source ID.
+    
+    Args:
+        repo_source_id: Repository source ID (e.g., "github.com/user/repo")
+        doc_path: Relative path to documentation file
+        
+    Returns:
+        Constructed URL string
+    """
+    return urljoin(repo_source_id.rstrip('/') + '/', doc_path.lstrip('/'))
+
+
+def create_documentation_metadata(
+    doc_file_info: Dict[str, str], 
+    repo_info: Dict[str, Any]
+) -> Dict[str, Any]:
+    """
+    Create enhanced metadata for documentation.
+    
+    Args:
+        doc_file_info: Dictionary with 'url' and 'markdown' keys
+        repo_info: Repository information (name, url, etc.)
+        
+    Returns:
+        Enhanced metadata dictionary
+    """
+    doc_path = doc_file_info["url"]
+    content = doc_file_info["markdown"]
+    
+    # Determine documentation category
+    doc_category = "documentation"
+    filename = Path(doc_path).name.lower()
+    
+    if filename in ["readme.md", "readme.rst", "readme.txt"]:
+        doc_category = "readme"
+    elif "api" in filename or "reference" in filename:
+        doc_category = "api"
+    elif "tutorial" in filename or "guide" in filename or "getting" in filename:
+        doc_category = "tutorial"
+    elif "changelog" in filename or "history" in filename or "news" in filename:
+        doc_category = "changelog"
+    elif "license" in filename:
+        doc_category = "license"
+    elif "contrib" in filename or "develop" in filename:
+        doc_category = "contributing"
+    
+    # Count code blocks if agentic RAG is enabled
+    code_example_count = 0
+    if os.getenv("USE_AGENTIC_RAG", "false") == "true":
+        code_example_count = len(extract_code_blocks(content, min_length=200))
+    
+    return {
+        "repository_name": repo_info.get("name", "unknown"),
+        "repository_url": repo_info.get("url", ""),
+        "file_type": Path(doc_path).suffix[1:] if Path(doc_path).suffix else "txt",
+        "file_path": doc_path,
+        "documentation_category": doc_category,
+        "content_length": len(content),
+        "code_example_count": code_example_count,
+        "processed_at": time.time()
+    }
+
+
+async def process_repository_docs(
+    supabase_client: Client,
+    repo_path: Path, 
+    repo_name: str,
+    repo_url: str = ""
+) -> Dict[str, Any]:
+    """
+    Main entry point for documentation processing.
+    
+    Args:
+        supabase_client: Supabase client for storage
+        repo_path: Path to cloned repository
+        repo_name: Repository name
+        repo_url: Repository URL (optional)
+        
+    Returns:
+        Dictionary with processing results:
+        {"files_processed": int, "chunks_created": int, "code_examples_extracted": int}
+    """
+    print(f"Starting documentation processing for repository: {repo_name}")
+    
+    try:
+        # Step 1: Discover documentation files
+        print("Discovering documentation files...")
+        doc_files = discover_documentation_files(repo_path)
+        print(f"Found {len(doc_files)} documentation files")
+        
+        if not doc_files:
+            return {
+                "files_processed": 0,
+                "chunks_created": 0,
+                "code_examples_extracted": 0,
+                "message": "No documentation files found"
+            }
+        
+        # Step 2: Process documentation files
+        print("Processing documentation content...")
+        docs_content = process_document_files(doc_files, repo_path)
+        print(f"Successfully processed {len(docs_content)} files")
+        
+        if not docs_content:
+            return {
+                "files_processed": 0,
+                "chunks_created": 0,
+                "code_examples_extracted": 0,
+                "message": "No valid documentation content found"
+            }
+        
+        # Step 3: Prepare data for Supabase
+        print("Preparing content for Supabase storage...")
+        all_urls = []
+        all_chunk_numbers = []
+        all_contents = []
+        all_metadatas = []
+        url_to_full_document = {}
+        total_code_examples = 0
+        
+        # Create single repository source ID
+        repo_source_id = create_repository_source_id(repo_url)
+        
+        repo_info = {
+            "name": repo_name,
+            "url": repo_url
+        }
+        
+        # Collect all content for repository-level summary
+        all_repo_content = []
+        
+        for doc_info in docs_content:
+            doc_path = doc_info["url"]
+            content = doc_info["markdown"]
+            
+            # Create individual documentation URL for chunk identification
+            doc_url = create_documentation_url(repo_url, doc_path)
+            
+            # Create metadata
+            metadata = create_documentation_metadata(doc_info, repo_info)
+            total_code_examples += metadata["code_example_count"]
+            
+            # Chunk the content
+            chunks = smart_chunk_markdown(content)
+            
+            # Store full document for contextual embeddings (using doc URL)
+            url_to_full_document[doc_url] = content
+            
+            # Collect content for repository summary
+            all_repo_content.append(content)
+            
+            # Add chunked data - ALL chunks use the same repository source ID
+            for i, chunk in enumerate(chunks):
+                all_urls.append(doc_url)  # Individual doc URL for chunk identification
+                all_chunk_numbers.append(i)
+                all_contents.append(chunk)
+                # Add source_id to metadata for foreign key reference
+                metadata_with_source = metadata.copy()
+                metadata_with_source["source_id"] = repo_source_id
+                all_metadatas.append(metadata_with_source)
+        
+        # Step 4: Create single repository source record
+        print(f"Creating repository source record: {repo_source_id}")
+        
+        # Combine all documentation content for repository-level summary
+        combined_content = "\n\n".join(all_repo_content)
+        
+        # Extract repository-level summary and word count
+        repo_summary = extract_source_summary(repo_source_id, combined_content[:5000])  # Use first 5000 chars
+        repo_word_count = len(combined_content.split())
+        
+        # Create/update single source record for the entire repository
+        update_source_info(supabase_client, repo_source_id, repo_summary, repo_word_count)
+        
+        # Step 5: Store document chunks in Supabase
+        print(f"Storing {len(all_contents)} chunks in Supabase...")
+        add_documents_to_supabase(
+            supabase_client, 
+            all_urls, 
+            all_chunk_numbers,
+            all_contents, 
+            all_metadatas,
+            url_to_full_document
+        )
+        
+        # Step 6: Process code examples if enabled
+        if os.getenv("USE_AGENTIC_RAG", "false") == "true" and total_code_examples > 0:
+            print("Processing code examples...")
+            try:
+                # Extract and store code examples - all using the same repository source ID
+                for doc_info in docs_content:
+                    content = doc_info["markdown"]
+                    
+                    code_blocks = extract_code_blocks(content)
+                    if code_blocks:
+                        summaries = []
+                        for block in code_blocks:
+                            summary = generate_code_example_summary(
+                                block['code'], 
+                                block['context_before'], 
+                                block['context_after']
+                            )
+                            summaries.append(summary)
+                        
+                        # Use the repository source ID for all code examples
+                        codes_only = [block['code'] for block in code_blocks]
+                        urls = [construct_doc_url(repo_source_id, doc_info['url']) for _ in code_blocks]
+                        chunk_numbers = list(range(len(code_blocks)))
+                        metadatas = [
+                            {
+                                "file_path": doc_info['url'],
+                                "file_type": doc_info['url'].split('.')[-1] if '.' in doc_info['url'] else 'unknown',
+                                "language": block.get('language', ''),
+                                "char_count": len(block['code']),
+                                "word_count": len(block['code'].split()),
+                                "chunk_index": i,
+                                "repository_url": repo_url,
+                                "repository_name": repo_name,
+                                "documentation_category": "code_example"
+                            }
+                            for i, block in enumerate(code_blocks)
+                        ]
+                        add_code_examples_to_supabase(supabase_client, urls, chunk_numbers, codes_only, summaries, metadatas, repo_source_id)
+                        
+            except Exception as e:
+                print(f"Error processing code examples: {e}")
+                # Continue without failing the entire process
+        
+        print(f"Documentation processing completed for {repo_name}")
+        
+        return {
+            "files_processed": len(docs_content),
+            "chunks_created": len(all_contents),
+            "code_examples_extracted": total_code_examples,
+            "message": f"Successfully processed {len(docs_content)} documentation files"
+        }
+        
+    except Exception as e:
+        print(f"Error processing repository documentation: {e}")
+        return {
+            "files_processed": 0,
+            "chunks_created": 0,
+            "code_examples_extracted": 0,
+            "error": str(e)
+        }

@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "crawl4ai-mcp"
 version = "0.1.0"
@@ -6,10 +10,49 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "crawl4ai==0.6.2",
-    "mcp==1.7.1",
+    "mcp==1.10.1",
     "supabase==2.15.1",
     "openai==1.71.0",
     "dotenv==0.9.9",
     "sentence-transformers>=4.1.0",
     "neo4j>=5.28.1",
+    "httpx>=0.28.1",
 ]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-mock>=3.12.0",
+    "pytest-cov>=4.0.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "--cov=src --cov-report=term-missing --cov-report=html"
+markers = [
+    "e2e: marks tests as end-to-end tests",
+    "unit: marks tests as unit tests"
+]
+
+[tool.coverage.run]
+# Exclude E2E tests from coverage since they test external integration
+omit = ["tests/e2e/*"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.5",
+    "pytest-mock>=3.14.0",
+    "ruff>=0.12.7",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*", "knowledge_graphs*"]
+
+[tool.setuptools.package-dir]
+"" = "."
