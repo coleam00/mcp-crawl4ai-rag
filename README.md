@@ -208,6 +208,61 @@ NEO4J_USER=neo4j
 NEO4J_PASSWORD=your_neo4j_password
 ```
 
+### Configuring LLM Providers
+
+This server now supports multiple LLM providers for generating summaries, contextual embeddings, and other AI-powered features. You can choose between OpenAI, Google Gemini, and Open Router.
+
+#### Core LLM Configuration
+
+-   `LLM_PROVIDER`: The LLM provider to use. Can be `openai`, `gemini`, or `openrouter`. Defaults to `openai`.
+-   `MODEL_CHOICE`: The model to use for chat completions (e.g., `gpt-4.1-nano`, `gemini-pro`).
+-   `EMBEDDING_MODEL`: The model to use for creating embeddings (e.g., `text-embedding-3-small`, `models/embedding-001`).
+
+#### Provider-Specific Configuration
+
+**OpenAI:**
+
+-   `OPENAI_API_KEY`: Your OpenAI API key.
+
+**Google Gemini:**
+
+-   `GEMINI_API_KEY`: Your Google AI Studio API key.
+
+**Open Router:**
+
+-   `OPENROUTER_API_KEY`: Your Open Router API key.
+-   `OPENROUTER_REFERRER` (optional): The referrer URL to send with API requests. Defaults to `http://localhost:8051`.
+-   `OPENROUTER_TITLE` (optional): The title to send with API requests. Defaults to `Crawl4AI MCP`.
+
+Here is an example of how to configure the `.env` file for each provider:
+
+**OpenAI:**
+
+```
+LLM_PROVIDER=openai
+OPENAI_API_KEY=your_openai_api_key
+MODEL_CHOICE=gpt-4.1-nano
+EMBEDDING_MODEL=text-embedding-3-small
+```
+
+**Google Gemini:**
+
+```
+LLM_PROVIDER=gemini
+GEMINI_API_KEY=your_gemini_api_key
+MODEL_CHOICE=gemini-pro
+EMBEDDING_MODEL=models/embedding-001
+```
+
+**Open Router:**
+
+```
+LLM_PROVIDER=openrouter
+OPENROUTER_API_KEY=your_openrouter_api_key
+MODEL_CHOICE=google/gemini-pro
+EMBEDDING_MODEL=text-embedding-ada-002
+```
+
 ### RAG Strategy Options
 
 The Crawl4AI RAG MCP server supports four powerful RAG strategies that can be enabled independently:
