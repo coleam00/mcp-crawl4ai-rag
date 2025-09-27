@@ -177,6 +177,15 @@ Alternatively, install Neo4j directly:
 
 ## Configuration
 
+Quick setup:
+
+```bash
+cp .env.example .env
+# then open .env and fill the values
+```
+
+Alternatively, create a `.env` from scratch using the variables below.
+
 Create a `.env` file in the project root with the following variables:
 
 ```
