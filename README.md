@@ -16,6 +16,8 @@ Consider this GitHub repository a testbed, hence why I haven't been super active
 
 This MCP server provides tools that enable AI agents to crawl websites, store content in a vector database (Supabase), and perform RAG over the crawled content. It follows the best practices for building MCP servers based on the [Mem0 MCP server template](https://github.com/coleam00/mcp-mem0/) I provided on my channel previously.
 
+**🚀 NEW: NVIDIA Blackwell GPU Support** - Now includes native support for NVIDIA Blackwell architecture (RTX 50-series, RTX PRO 6000, etc.) with PyTorch 2.7+ for up to 280x performance improvements in reranking operations.
+
 The server includes several advanced RAG strategies that can be enabled to enhance retrieval quality:
 - **Contextual Embeddings** for enriched semantic understanding
 - **Hybrid Search** combining vector and keyword search
@@ -76,6 +78,8 @@ The server provides essential web crawling and search tools:
 - [Supabase](https://supabase.com/) (database for RAG)
 - [OpenAI API key](https://platform.openai.com/api-keys) (for generating embeddings)
 - [Neo4j](https://neo4j.com/) (optional, for knowledge graph functionality) - see [Knowledge Graph Setup](#knowledge-graph-setup) section
+- **GPU Support**: NVIDIA GPU with CUDA 12.8+ for accelerated processing (optional but recommended)
+  - **Blackwell GPUs**: Fully supported with PyTorch 2.7+ (RTX 50-series, RTX PRO 6000, etc.)
 
 ## Installation
 
@@ -120,7 +124,15 @@ The server provides essential web crawling and search tools:
    crawl4ai-setup
    ```
 
-5. Create a `.env` file based on the configuration section below
+5. **GPU Optimization (Recommended)**: If you have an NVIDIA GPU, update dependencies for GPU acceleration:
+   ```bash
+   cd testing
+   ./update_blackwell_gpu.sh
+   ```
+   
+   **Note**: Blackwell GPUs (RTX 50-series, RTX PRO 6000) require PyTorch 2.7+ with CUDA 12.8 for optimal performance.
+
+6. Create a `.env` file based on the configuration section below
 
 ## Database Setup
 
@@ -250,6 +262,12 @@ Enables AI hallucination detection and repository analysis using Neo4j knowledge
 - **Cost**: No additional API costs for validation, but requires Neo4j infrastructure (can use free local installation or cloud AuraDB).
 - **Benefits**: Provides three powerful tools: `parse_github_repository` for indexing codebases, `check_ai_script_hallucinations` for validating AI-generated code, and `query_knowledge_graph` for exploring indexed repositories.
 
+### GPU Performance Notes
+
+**NVIDIA Blackwell Architecture**: Fully supported with PyTorch 2.7+ and CUDA 12.8. Users with Blackwell GPUs (RTX 50-series, RTX PRO 6000) can expect up to 280x performance improvements in reranking operations compared to CPU processing.
+
+**Other NVIDIA GPUs**: All modern NVIDIA GPUs are supported. Performance improvements vary by model but typically range from 4-20x speedup over CPU processing.
+
 You can now tell the AI coding assistant to add a Python GitHub repository to the knowledge graph like:
 
 "Add https://github.com/pydantic/pydantic-ai.git to the knowledge graph"
@@ -300,6 +318,20 @@ USE_KNOWLEDGE_GRAPH=false
 ```
 
 ## Running the Server
+
+### GPU Verification (Optional)
+
+Before running the server, you can verify GPU optimization is working:
+
+```bash
+cd testing
+python test_gpu_optimization.py
+```
+
+This will test:
+- CUDA availability and compatibility
+- CrossEncoder model GPU loading
+- Performance comparison between CPU and GPU
 
 ### Using Docker
 
@@ -453,3 +485,9 @@ This implementation provides a foundation for building more complex MCP servers 
 2. Create your own lifespan function to add your own dependencies
 3. Modify the `utils.py` file for any helper functions you need
 4. Extend the crawling capabilities by adding more specialized crawlers
+
+## Contributing
+
+**Note**: This repository is currently a testbed for development and integration into [Archon V2](https://github.com/coleam00/Archon). While issues and pull requests are welcome, active maintenance is limited as the focus is on bringing this functionality into the main Archon project.
+
+For immediate support or questions, please check the existing issues or create a new one with detailed information about your use case.

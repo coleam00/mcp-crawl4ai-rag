@@ -5,6 +5,42 @@ This server provides tools to crawl websites using Crawl4AI, automatically detec
 the appropriate crawl method based on URL type (sitemap, txt file, or regular webpage).
 Also includes AI hallucination detection and repository parsing tools using Neo4j knowledge graphs.
 """
+import os
+import torch
+import warnings
+
+# GPU Compatibility Fix for Blackwell Architecture
+def initialize_gpu_compatibility():
+    """Initialize GPU with Blackwell compatibility fixes"""
+    if torch.cuda.is_available():
+        # Set environment variables for compatibility
+        os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+        os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'max_split_size_mb:512'
+        
+        # Initialize CUDA context
+        try:
+            torch.cuda.set_device(0)
+            torch.cuda.empty_cache()
+            
+            # Test basic GPU operation
+            test_tensor = torch.tensor([1.0]).cuda()
+            test_result = test_tensor * 2
+            
+            print(f"✓ GPU initialized: {torch.cuda.get_device_name(0)}")
+            print(f"✓ CUDA capability: {torch.cuda.get_device_capability(0)}")
+            return True
+        except Exception as e:
+            print(f"⚠ GPU detected but not usable: {e}")
+            print("  Falling back to CPU processing")
+            return False
+    return False
+
+# Initialize GPU before any ML imports
+gpu_available = initialize_gpu_compatibility()
+
+# Suppress CUDA compatibility warnings
+warnings.filterwarnings("ignore", message=".*CUDA capability.*not compatible.*")
+
 from mcp.server.fastmcp import FastMCP, Context
 from sentence_transformers import CrossEncoder
 from contextlib import asynccontextmanager
@@ -151,6 +187,19 @@ async def crawl4ai_lifespan(server: FastMCP) -> AsyncIterator[Crawl4AIContext]:
     if os.getenv("USE_RERANKING", "false") == "true":
         try:
             reranking_model = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
+            # Move model to GPU if available
+            if gpu_available and torch.cuda.is_available():
+                try:
+                    reranking_model.model = reranking_model.model.to('cuda')
+                    # Test GPU inference
+                    test_scores = reranking_model.predict([("test", "test")])
+                    print("✓ Reranking model loaded on GPU")
+                except Exception as gpu_error:
+                    print(f"⚠ GPU not usable for reranking, using CPU: {gpu_error}")
+                    reranking_model.model = reranking_model.model.to('cpu')
+                    print("✓ Reranking model loaded on CPU")
+            else:
+                print("✓ Reranking model loaded on CPU")
         except Exception as e:
             print(f"Failed to load reranking model: {e}")
             reranking_model = None
