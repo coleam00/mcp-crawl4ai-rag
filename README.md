@@ -392,7 +392,7 @@ Add this server to your MCP configuration for Claude Desktop, Windsurf, or any o
                "-e", "NEO4J_URI",
                "-e", "NEO4J_USER",
                "-e", "NEO4J_PASSWORD",
-               "mcp/crawl4ai"],
+               "mcp/crawl4ai-rag"],
       "env": {
         "TRANSPORT": "stdio",
         "OPENAI_API_KEY": "your_openai_api_key",
